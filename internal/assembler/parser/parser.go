@@ -83,6 +83,17 @@ func Parse(mnemonic string, args []string, labels map[string]uint16) (uint16, er
 		vx, _ := parseReg(args[0])
 		return encoder.OpRegOnly(encoder.MaskKEY, vx, 0xA1), nil
 
+	case "DB":
+		// Resolve the value (e.g., 0x82 -> 130)
+		val, err := resolveValue(args[0], labels)
+		if err != nil {
+			return 0, err
+		}
+		// Return it as a raw 16-bit value.
+		// If you only want 8 bits, you'll eventually need to
+		// refactor your assembler to handle byte-streams.
+		return uint16(val), nil
+
 	default:
 		return 0, fmt.Errorf("unknown mnemonic: %s", mnemonic)
 	}
