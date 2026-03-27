@@ -15,20 +15,22 @@ import (
 )
 
 type System struct {
-	CPU      *cpu.CentralProcessingUnit
-	Memory   *memory.Memory
-	Display  *display.Display
-	Keyboard *keyboard.Keyboard
-	Audio    *audio.Audio
+	CPU        *cpu.CentralProcessingUnit
+	Memory     *memory.Memory
+	Display    *display.Display
+	Keyboard   *keyboard.Keyboard
+	Audio      *audio.Audio
+	ClockSpeed uint32 // Instructions per second (in Hz)
 }
 
-func New() *System {
+func WithClockSpeed(clockSpeed uint32) *System {
 	s := &System{
-		CPU:      cpu.New(),
-		Memory:   memory.New(),
-		Display:  display.New(),
-		Keyboard: keyboard.New(),
-		Audio:    audio.New(),
+		CPU:        cpu.New(),
+		Memory:     memory.New(),
+		Display:    display.New(),
+		Keyboard:   keyboard.New(),
+		Audio:      audio.New(),
+		ClockSpeed: clockSpeed,
 	}
 
 	s.Memory.LoadFontSet()       // Load fonts into 0x000-0x050
@@ -45,7 +47,9 @@ func (s *System) LoadROM(filename string) error {
 
 	// Chip-8 programs start at 0x200
 	for i, b := range data {
-		s.Memory.Write(uint16(0x200+i), b)
+		if err := s.Memory.Write(uint16(0x200+i), b); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -53,8 +57,14 @@ func (s *System) LoadROM(filename string) error {
 // Step performs one CPU cycle
 func (s *System) Step() error {
 	// 1. Fetch
-	hi := s.Memory.Read(s.CPU.ProgramCounter)
-	lo := s.Memory.Read(s.CPU.ProgramCounter + 1)
+	hi, err := s.Memory.Read(s.CPU.ProgramCounter)
+	if err != nil {
+		return err
+	}
+	lo, err := s.Memory.Read(s.CPU.ProgramCounter + 1)
+	if err != nil {
+		return err
+	}
 	opcode := uint16(hi)<<8 | uint16(lo)
 
 	// 2. Increment PC before execution
@@ -81,24 +91,23 @@ func (s *System) UpdateTimers() {
 
 func (s *System) Run(romPath string) error {
 	// 1. Setup
-	if err := s.Display.InitSDL(); err != nil {
+	if err := s.Display.Init(); err != nil {
 		return fmt.Errorf("failed to init display: %w", err)
 	}
 
 	if err := s.Audio.Init(); err != nil {
 		// Log error but maybe don't crash? Some systems don't have speakers.
 		fmt.Printf("Warning: Audio failed to init: %v\n", err)
-	} else {
-		// CALL IT HERE: Pre-fill the audio buffer
-		if err := s.Audio.GenerateBeep(); err != nil {
-			return err
-		}
+	} else if err := s.Audio.GenerateBeep(); err != nil {
+		return err
 	}
 
 	defer func() {
 		if err := s.Display.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error closing display: %v\n", err)
 		}
+
+		s.Audio.Close()
 	}()
 
 	if err := s.LoadROM(romPath); err != nil {
@@ -107,8 +116,7 @@ func (s *System) Run(romPath string) error {
 
 	// 2. Timing logic
 	// We want the CPU to run fast, but Timers/Graphics at 60Hz.
-	cpuHz := 700
-	cpuInterval := time.Second / time.Duration(cpuHz)
+	cpuInterval := time.Second / time.Duration(s.ClockSpeed)
 	timerInterval := time.Second / 60
 
 	ticker := time.NewTicker(cpuInterval)
@@ -141,8 +149,6 @@ func (s *System) Run(romPath string) error {
 			lastTimerUpdate = time.Now()
 		}
 	}
-
-	s.Audio.Close()
 
 	return nil
 }

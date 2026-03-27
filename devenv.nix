@@ -32,7 +32,7 @@ in
     LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libraries}";
   };
 
-  scripts.run-emu.exec = "go run cmd/chip-8/main.go";
+  scripts.run-emu.exec = "go run cmd/chip-8/main.go $@";
   scripts.test-all.exec = "go test ./...";
 
   pre-commit.hooks = {

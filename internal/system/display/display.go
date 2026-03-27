@@ -1,6 +1,7 @@
 package display
 
 import (
+	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -33,7 +34,15 @@ func (d *Display) Clear() {
 
 // SetPixel toggles a pixel at (x, y) and returns true if a collision occurred.
 // Chip-8 uses XOR drawing: if a pixel is already on and we draw it again, it turns off.
-func (d *Display) SetPixel(x, y uint8) bool {
+func (d *Display) SetPixel(x, y uint8) (bool, error) {
+	var err *CoordinateError
+
+	// Check if the original coordinates were out of bounds
+	// even though we will wrap them below.
+	if x >= Width || y >= Height {
+		err = &CoordinateError{X: x, Y: y}
+	}
+
 	// Wrap coordinates (standard Chip-8 behavior)
 	x %= Width
 	y %= Height
@@ -46,31 +55,29 @@ func (d *Display) SetPixel(x, y uint8) bool {
 	// XOR the pixel
 	d.Pixels[index] ^= 1
 
-	return collision
+	// Returns collision status AND the error (which is nil if in-bounds)
+	return collision, err
 }
 
 // InitSDL sets up the window and renderer
-func (d *Display) InitSDL() error {
+func (d *Display) Init() error {
 	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
-		return err
+		return &SDLError{Subsystem: "Initialization", Err: err}
 	}
 
 	window, err := sdl.CreateWindow(
 		"Chip-8 Emulator",
-		int32(sdl.WINDOWPOS_CENTERED),
-		int32(sdl.WINDOWPOS_CENTERED),
-		int32(Width*Scale),
-		int32(Height*Scale),
+		int32(sdl.WINDOWPOS_CENTERED), int32(sdl.WINDOWPOS_CENTERED),
+		int32(Width*Scale), int32(Height*Scale),
 		uint32(sdl.WINDOW_SHOWN),
 	)
 	if err != nil {
-		return err
+		return &SDLError{Subsystem: "Window Creation", Err: err}
 	}
 
-	// Create a hardware-accelerated renderer
 	dr, err := sdl.CreateRenderer(window, -1, uint32(sdl.RENDERER_ACCELERATED))
 	if err != nil {
-		return err
+		return &SDLError{Subsystem: "Renderer Creation", Err: err}
 	}
 
 	d.window = window
@@ -80,20 +87,25 @@ func (d *Display) InitSDL() error {
 
 // Present draws the current Pixels buffer to the SDL window
 func (d *Display) Present() error {
-	// TODO: Add more consistant error handling
-	err := d.renderer.SetDrawColor(0, 0, 0, 255) // Black background
-	if err != nil {
-		return err
-	}
-	err = d.renderer.Clear()
-	if err != nil {
-		return err
+	if d.renderer == nil {
+		return &SDLError{Subsystem: "Renderer", Err: fmt.Errorf("renderer not initialized")}
 	}
 
-	err = d.renderer.SetDrawColor(255, 255, 255, 255) // White pixels
-	if err != nil {
-		return err
+	// 1. Set Background to Black
+	if err := d.renderer.SetDrawColor(0, 0, 0, 255); err != nil {
+		return &SDLError{Subsystem: "SetDrawColor (Background)", Err: err}
 	}
+
+	if err := d.renderer.Clear(); err != nil {
+		return &SDLError{Subsystem: "Clear", Err: err}
+	}
+
+	// 2. Set Pixel Color to White
+	if err := d.renderer.SetDrawColor(255, 255, 255, 255); err != nil {
+		return &SDLError{Subsystem: "SetDrawColor (Pixel)", Err: err}
+	}
+
+	// 3. Draw the active pixels
 	for i, val := range d.Pixels {
 		if val == 1 {
 			x := int32(i % Width)
@@ -105,25 +117,40 @@ func (d *Display) Present() error {
 				W: Scale,
 				H: Scale,
 			}
-			err = d.renderer.FillRect(&rect)
-			if err != nil {
-				return err
+
+			if err := d.renderer.FillRect(&rect); err != nil {
+				return &SDLError{Subsystem: "FillRect", Err: err}
 			}
 		}
 	}
+
+	// 4. Update screen
 	d.renderer.Present()
+
 	return nil
 }
 
 func (d *Display) Close() error {
-	err := d.renderer.Destroy()
-	if err != nil {
-		return err
+	lastErr := error(nil)
+
+	// 1. Attempt to destroy the renderer
+	if d.renderer != nil {
+		if err := d.renderer.Destroy(); err != nil {
+			lastErr = &SDLError{Subsystem: "Renderer Destruction", Err: err}
+		}
 	}
-	err = d.window.Destroy()
-	if err != nil {
-		return err
+
+	// 2. Attempt to destroy the window (even if renderer failed)
+	if d.window != nil {
+		if err := d.window.Destroy(); err != nil {
+			// We wrap the error, but if there was a previous error,
+			// you might want to log it or concatenate it.
+			lastErr = &SDLError{Subsystem: "Window Destruction", Err: err}
+		}
 	}
+
+	// 3. Global SDL Cleanup
 	sdl.Quit()
-	return nil
+
+	return lastErr
 }
