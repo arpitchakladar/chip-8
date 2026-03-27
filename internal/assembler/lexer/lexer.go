@@ -8,12 +8,23 @@ type Line struct {
 	Address  uint16
 }
 
-func ScanLabels(source string, startAddr uint16) (map[string]uint16, []Line) {
+type Lexer struct {
+	Source      string
+	CurrentAddr uint16
+}
+
+func New(source string, currentAddr uint16) *Lexer {
+	return &Lexer{
+		Source:      source,
+		CurrentAddr: currentAddr,
+	}
+}
+
+func (l *Lexer) ScanLabels() (map[string]uint16, []Line) {
 	labels := make(map[string]uint16)
 	var program []Line
-	currentAddr := startAddr
 
-	for raw := range strings.SplitSeq(source, "\n") {
+	for raw := range strings.SplitSeq(l.Source, "\n") {
 		content := strings.Split(raw, ";")[0] // Strip comments
 		content = strings.TrimSpace(content)
 		if content == "" {
@@ -21,18 +32,23 @@ func ScanLabels(source string, startAddr uint16) (map[string]uint16, []Line) {
 		}
 
 		if label, found := strings.CutSuffix(content, ":"); found {
-			labels[label] = currentAddr
+			labels[label] = l.CurrentAddr
 		} else {
 			parts := strings.Fields(strings.ReplaceAll(content, ",", " "))
 
 			// Safety check: ensure the line isn't empty before accessing parts[0]
 			if len(parts) > 0 {
+				mnemonic := strings.ToUpper(parts[0])
 				program = append(program, Line{
-					Mnemonic: strings.ToUpper(parts[0]),
+					Mnemonic: mnemonic,
 					Args:     parts[1:],
-					Address:  currentAddr,
+					Address:  l.CurrentAddr,
 				})
-				currentAddr += 2
+				if mnemonic != "DB" {
+					l.CurrentAddr += 2
+				} else {
+					l.CurrentAddr++
+				}
 			}
 		}
 	}

@@ -19,18 +19,22 @@ func New() *Assembler {
 }
 
 func (a *Assembler) Assemble(input string) ([]byte, error) {
-	labels, lines := lexer.ScanLabels(input, a.ProgramCounter)
+	lexer := lexer.New(input, a.ProgramCounter)
+	labels, lines := lexer.ScanLabels()
 	// TODO: REMOVE WHEN DEBUGGING IS OVER
 	fmt.Printf("Labels: %+v\n", labels)
 	fmt.Printf("Lines: %+v\n", lines)
 	var program []byte
 
+	parser := parser.WithLabels(labels)
+
 	for _, line := range lines {
-		opcode, err := parser.Parse(line.Mnemonic, line.Args, labels)
+		opcode, err := parser.Parse(line.Mnemonic, line.Args)
 		if err != nil {
 			return nil, err
 		}
-		program = append(program, byte(opcode>>8), byte(opcode&0xFF))
+		// Low byte comes before high byte
+		program = append(program, opcode...)
 	}
 
 	return program, nil
