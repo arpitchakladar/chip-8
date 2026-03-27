@@ -1,7 +1,23 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+
+	"github.com/arpitchakladar/chip-8/internal/system"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: <path-to-rom>")
+		return
+	}
+
+	chip8 := system.New()
+
+	// Everything is now encapsulated!
+	if err := chip8.Run(os.Args[1]); err != nil {
+		fmt.Fprintf(os.Stderr, "Emulation stopped: %v\n", err)
+		os.Exit(1)
+	}
 }
