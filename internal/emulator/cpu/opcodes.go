@@ -3,9 +3,9 @@ package cpu
 import (
 	"math/rand"
 
-	"github.com/arpitchakladar/chip-8/internal/system/display"
-	"github.com/arpitchakladar/chip-8/internal/system/keyboard"
-	"github.com/arpitchakladar/chip-8/internal/system/memory"
+	"github.com/arpitchakladar/chip-8/internal/emulator/display"
+	"github.com/arpitchakladar/chip-8/internal/emulator/keyboard"
+	"github.com/arpitchakladar/chip-8/internal/emulator/memory"
 )
 
 // Execute decodes and performs the operation specified by the 16-bit opcode.

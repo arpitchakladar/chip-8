@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/arpitchakladar/chip-8/internal/assembler"
-	"github.com/arpitchakladar/chip-8/internal/system"
+	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
 func main() {
@@ -37,7 +37,7 @@ func printUsage() {
 }
 
 func runEmulator(path string) {
-	vm := system.WithClockSpeed(1000)
+	vm := emulator.WithClockSpeed(1000)
 	fmt.Printf("Starting emulator with: %s\n", path)
 
 	content, err := os.ReadFile(path)
