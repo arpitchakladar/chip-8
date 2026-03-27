@@ -26,7 +26,7 @@ type Emulator struct {
 }
 
 func WithClockSpeed(clockSpeed uint32) *Emulator {
-	s := &Emulator{
+	e := &Emulator{
 		CPU:        cpu.New(),
 		Memory:     memory.New(),
 		Display:    display.New(),
@@ -36,15 +36,15 @@ func WithClockSpeed(clockSpeed uint32) *Emulator {
 		ClockSpeed: clockSpeed,
 	}
 
-	s.Memory.LoadFontSet()       // Load fonts into 0x000-0x050
-	s.CPU.ProgramCounter = 0x200 // Set PC to 0x200
-	return s
+	e.Memory.LoadFontSet()       // Load fonts into 0x000-0x050
+	e.CPU.ProgramCounter = 0x200 // Set PC to 0x200
+	return e
 }
 
 // LoadROM reads a .ch8 file and writes it into memory starting at 0x200
-func (s *Emulator) LoadROM(romData []byte) error { // Chip-8 programs start at 0x200
+func (e *Emulator) LoadROM(romData []byte) error { // Chip-8 programs start at 0x200
 	for i, b := range romData {
-		if err := s.Memory.Write(uint16(0x200+i), b); err != nil {
+		if err := e.Memory.Write(uint16(0x200+i), b); err != nil {
 			return err
 		}
 	}
@@ -52,65 +52,65 @@ func (s *Emulator) LoadROM(romData []byte) error { // Chip-8 programs start at 0
 }
 
 // Step performs one CPU cycle
-func (s *Emulator) Step() error {
+func (e *Emulator) Step() error {
 	// 1. Fetch
-	hi, err := s.Memory.Read(s.CPU.ProgramCounter)
+	hi, err := e.Memory.Read(e.CPU.ProgramCounter)
 	if err != nil {
 		return err
 	}
-	lo, err := s.Memory.Read(s.CPU.ProgramCounter + 1)
+	lo, err := e.Memory.Read(e.CPU.ProgramCounter + 1)
 	if err != nil {
 		return err
 	}
 	opcode := uint16(hi)<<8 | uint16(lo)
 
 	// 2. Increment PC before execution
-	s.CPU.ProgramCounter += 2
+	e.CPU.ProgramCounter += 2
 
 	// 3. Execute
-	return s.CPU.Execute(opcode, s.Memory, s.Display, s.Keyboard)
+	return e.CPU.Execute(opcode, e.Memory, e.Display, e.Keyboard)
 }
 
-func (s *Emulator) UpdateTimers() error {
-	if s.CPU.SoundTimer > 0 {
+func (e *Emulator) UpdateTimers() error {
+	if e.CPU.SoundTimer > 0 {
 		// Unpause the audio device to start the buzz
-		if err := s.Audio.GenerateBeep(); err != nil {
+		if err := e.Audio.GenerateBeep(); err != nil {
 			return err
 		}
-		s.Audio.Play()
-		s.CPU.SoundTimer--
+		e.Audio.Play()
+		e.CPU.SoundTimer--
 	} else {
 		// Pause the audio device when timer hits 0
-		s.Audio.Pause()
+		e.Audio.Pause()
 	}
 
-	if s.CPU.DelayTimer > 0 {
-		s.CPU.DelayTimer--
+	if e.CPU.DelayTimer > 0 {
+		e.CPU.DelayTimer--
 	}
 
 	return nil
 }
 
-func (s *Emulator) Run(romData []byte) error {
+func (e *Emulator) Run(romData []byte) error {
 	// 1. Setup
-	if err := s.Display.Init(); err != nil {
+	if err := e.Display.Init(); err != nil {
 		return fmt.Errorf("failed to init display: %w", err)
 	}
 
-	if err := s.Audio.Init(); err != nil {
-		// NOTE: Log error but maybe don't crash? Some systems don't have speakers.
+	if err := e.Audio.Init(); err != nil {
+		// NOTE: Log error but maybe don't crash? Some systems don't have speakere.
 		fmt.Printf("Warning: Audio failed to init: %v\n", err)
 	}
 
 	defer func() {
-		if err := s.Display.Close(); err != nil {
+		if err := e.Display.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error closing display: %v\n", err)
 		}
 
-		s.Audio.Close()
+		e.Audio.Close()
 	}()
 
-	if err := s.LoadROM(romData); err != nil {
+	if err := e.LoadROM(romData); err != nil {
 		return fmt.Errorf("failed to load ROM: %w", err)
 	}
 
@@ -121,7 +121,7 @@ func (s *Emulator) Run(romData []byte) error {
 	errChan := make(chan error, 1)
 
 	go func() {
-		cpuClock := time.NewTicker(time.Second / time.Duration(s.ClockSpeed))
+		cpuClock := time.NewTicker(time.Second / time.Duration(e.ClockSpeed))
 		defer cpuClock.Stop()
 
 		for {
@@ -129,9 +129,9 @@ func (s *Emulator) Run(romData []byte) error {
 			case <-stop:
 				return
 			case <-cpuClock.C:
-				s.MemoryLock.Lock()
-				err := s.Step()
-				s.MemoryLock.Unlock()
+				e.MemoryLock.Lock()
+				err := e.Step()
+				e.MemoryLock.Unlock()
 				if err != nil {
 					errChan <- err
 					return
@@ -154,16 +154,16 @@ func (s *Emulator) Run(romData []byte) error {
 				case *sdl.QuitEvent:
 					return nil
 				case *sdl.KeyboardEvent:
-					s.Keyboard.HandleKeyboard(t)
+					e.Keyboard.HandleKeyboard(t)
 				}
 			}
 
-			s.MemoryLock.Lock()
+			e.MemoryLock.Lock()
 			// B. Update Timers (60Hz)
-			timerErr := s.UpdateTimers()
+			timerErr := e.UpdateTimers()
 			// C. Display buffer (60Hz)
-			displayErr := s.Display.Present()
-			s.MemoryLock.Unlock()
+			displayErr := e.Display.Present()
+			e.MemoryLock.Unlock()
 
 			if timerErr != nil {
 				return timerErr
