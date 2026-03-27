@@ -133,7 +133,9 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 				if (spriteByte & (0x80 >> col)) != 0 {
 					posX := (c.Registers[x] + uint8(col)) % 64
 					posY := (c.Registers[y] + uint8(row)) % 32
-					if disp.SetPixel(posX, posY) {
+					// TODO: Handle the non-blocking error here
+					collision, _ := disp.SetPixel(posX, posY)
+					if collision {
 						c.Registers[0xF] = 1
 					}
 				}
