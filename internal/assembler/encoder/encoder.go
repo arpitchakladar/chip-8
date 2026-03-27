@@ -8,7 +8,7 @@ type Encoder struct {
 
 // New creates a new instance of the Encoder.
 func New() *Encoder {
-	return &Encoder{}
+	return new(Encoder)
 }
 
 // Instruction Masks (Constants associated with the Encoder logic)
