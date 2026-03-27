@@ -1,4 +1,4 @@
-package system
+package emulator
 
 import (
 	"fmt"
@@ -7,14 +7,14 @@ import (
 
 	"github.com/veandco/go-sdl2/sdl"
 
-	"github.com/arpitchakladar/chip-8/internal/system/audio"
-	"github.com/arpitchakladar/chip-8/internal/system/cpu"
-	"github.com/arpitchakladar/chip-8/internal/system/display"
-	"github.com/arpitchakladar/chip-8/internal/system/keyboard"
-	"github.com/arpitchakladar/chip-8/internal/system/memory"
+	"github.com/arpitchakladar/chip-8/internal/emulator/audio"
+	"github.com/arpitchakladar/chip-8/internal/emulator/cpu"
+	"github.com/arpitchakladar/chip-8/internal/emulator/display"
+	"github.com/arpitchakladar/chip-8/internal/emulator/keyboard"
+	"github.com/arpitchakladar/chip-8/internal/emulator/memory"
 )
 
-type System struct {
+type Emulator struct {
 	CPU        *cpu.CentralProcessingUnit
 	Memory     *memory.Memory
 	Display    *display.Display
@@ -23,8 +23,8 @@ type System struct {
 	ClockSpeed uint32 // Instructions per second (in Hz)
 }
 
-func WithClockSpeed(clockSpeed uint32) *System {
-	s := &System{
+func WithClockSpeed(clockSpeed uint32) *Emulator {
+	s := &Emulator{
 		CPU:        cpu.New(),
 		Memory:     memory.New(),
 		Display:    display.New(),
@@ -39,7 +39,7 @@ func WithClockSpeed(clockSpeed uint32) *System {
 }
 
 // LoadROM reads a .ch8 file and writes it into memory starting at 0x200
-func (s *System) LoadROM(romData []byte) error {	// Chip-8 programs start at 0x200
+func (s *Emulator) LoadROM(romData []byte) error {	// Chip-8 programs start at 0x200
 	for i, b := range romData {
 		if err := s.Memory.Write(uint16(0x200+i), b); err != nil {
 			return err
@@ -49,7 +49,7 @@ func (s *System) LoadROM(romData []byte) error {	// Chip-8 programs start at 0x2
 }
 
 // Step performs one CPU cycle
-func (s *System) Step() error {
+func (s *Emulator) Step() error {
 	// 1. Fetch
 	hi, err := s.Memory.Read(s.CPU.ProgramCounter)
 	if err != nil {
@@ -68,7 +68,7 @@ func (s *System) Step() error {
 	return s.CPU.Execute(opcode, s.Memory, s.Display, s.Keyboard)
 }
 
-func (s *System) UpdateTimers() {
+func (s *Emulator) UpdateTimers() {
 	if s.CPU.SoundTimer > 0 {
 		// Unpause the audio device to start the buzz
 		sdl.PauseAudioDevice(s.Audio.Device, false)
@@ -83,14 +83,14 @@ func (s *System) UpdateTimers() {
 	}
 }
 
-func (s *System) Run(romData []byte) error {
+func (s *Emulator) Run(romData []byte) error {
 	// 1. Setup
 	if err := s.Display.Init(); err != nil {
 		return fmt.Errorf("failed to init display: %w", err)
 	}
 
 	if err := s.Audio.Init(); err != nil {
-		// Log error but maybe don't crash? Some systems don't have speakers.
+		// NOTE: Log error but maybe don't crash? Some systems don't have speakers.
 		fmt.Printf("Warning: Audio failed to init: %v\n", err)
 	} else if err := s.Audio.GenerateBeep(); err != nil {
 		return err
