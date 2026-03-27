@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/arpitchakladar/chip-8/internal/system/display"
@@ -25,14 +24,25 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 		case 0x00E0: // CLS: Clear Display
 			disp.Clear()
 		case 0x00EE: // RET: Return from subroutine
+			if c.StackPointer == 0 {
+				return &StackError{
+					IsOverflow:     false,
+					ProgramCounter: c.ProgramCounter - 2,
+				}
+			}
 			c.StackPointer--
 			c.ProgramCounter = c.Stack[c.StackPointer]
+		default:
+			return &InvalidOpcodeError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2}
 		}
 
 	case 0x1000: // 1NNN: JP addr
 		c.ProgramCounter = nnn
 
 	case 0x2000: // 2NNN: CALL addr
+		if c.StackPointer >= 16 {
+			return &StackError{IsOverflow: true, ProgramCounter: c.ProgramCounter - 2}
+		}
 		c.Stack[c.StackPointer] = c.ProgramCounter
 		c.StackPointer++
 		c.ProgramCounter = nnn
@@ -113,13 +123,19 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 		// Draw logic triggers here
 		c.Registers[0xF] = 0 // Reset collision flag
 		for row := range uint16(n) {
-			spriteByte := mem.Read(c.IndexRegister + row)
+			spriteByte, err := mem.Read(c.IndexRegister + row)
+			if err != nil {
+				// Wrap the memory error into a CPU context
+				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+			}
 			for col := range uint16(8) {
 				// Check if the specific bit in the sprite byte is 1
 				if (spriteByte & (0x80 >> col)) != 0 {
 					posX := (c.Registers[x] + uint8(col)) % 64
 					posY := (c.Registers[y] + uint8(row)) % 32
-					if disp.SetPixel(posX, posY) {
+					// TODO: Handle the non-blocking error here
+					collision, _ := disp.SetPixel(posX, posY)
+					if collision {
 						c.Registers[0xF] = 1
 					}
 				}
@@ -171,23 +187,35 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 
 		case 0x33: // BCD: Store BCD representation of Vx in memory locations I, I+1, and I+2
 			val := c.Registers[x]
-			mem.Write(c.IndexRegister, val/100)       // Hundreds
-			mem.Write(c.IndexRegister+1, (val/10)%10) // Tens
-			mem.Write(c.IndexRegister+2, val%10)      // Ones
+			if err := mem.Write(c.IndexRegister, val/100); err != nil {
+				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+			}
+			if err := mem.Write(c.IndexRegister+1, (val/10)%10); err != nil {
+				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+			}
+			if err := mem.Write(c.IndexRegister+2, val%10); err != nil {
+				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+			}
 
 		case 0x55: // LD [I], Vx: Store registers V0 through Vx in memory starting at location I
 			for i := range x + 1 {
-				mem.Write(c.IndexRegister+i, c.Registers[i])
+				if err := mem.Write(c.IndexRegister+uint16(i), c.Registers[i]); err != nil {
+					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+				}
 			}
 
 		case 0x65: // LD Vx, [I]: Read registers V0 through Vx from memory starting at location I
 			for i := range x + 1 {
-				c.Registers[i] = mem.Read(c.IndexRegister + i)
+				val, err := mem.Read(c.IndexRegister + uint16(i))
+				if err != nil {
+					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+				}
+				c.Registers[i] = val
 			}
 		}
 
 	default:
-		return fmt.Errorf("unknown opcode: %04X", opcode)
+		return &InvalidOpcodeError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2}
 	}
 
 	return nil
