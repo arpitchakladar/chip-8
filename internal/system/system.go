@@ -7,11 +7,11 @@ import (
 
 	"github.com/veandco/go-sdl2/sdl"
 
-	"github.com/arpitchakladar/chip-8/internal/audio"
-	"github.com/arpitchakladar/chip-8/internal/cpu"
-	"github.com/arpitchakladar/chip-8/internal/display"
-	"github.com/arpitchakladar/chip-8/internal/keyboard"
-	"github.com/arpitchakladar/chip-8/internal/memory"
+	"github.com/arpitchakladar/chip-8/internal/system/audio"
+	"github.com/arpitchakladar/chip-8/internal/system/cpu"
+	"github.com/arpitchakladar/chip-8/internal/system/display"
+	"github.com/arpitchakladar/chip-8/internal/system/keyboard"
+	"github.com/arpitchakladar/chip-8/internal/system/memory"
 )
 
 type System struct {
