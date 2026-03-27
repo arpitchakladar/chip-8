@@ -1,10 +1,23 @@
 package encoder
 
 const (
-	MaskJP   = 0x1000
-	MaskCALL = 0x2000
-	MaskLDI  = 0xA000
-	MaskDRW  = 0xD000
+	MaskCLS  uint16 = 0x00E0
+	MaskRET  uint16 = 0x00EE
+	MaskJP   uint16 = 0x1000
+	MaskCALL uint16 = 0x2000
+	MaskSE   uint16 = 0x3000
+	MaskSNE  uint16 = 0x4000
+	MaskSER  uint16 = 0x5000 // SE Vx, Vy
+	MaskLD   uint16 = 0x6000
+	MaskADD  uint16 = 0x7000
+	MaskALU  uint16 = 0x8000 // Arithmetic family
+	MaskSNER uint16 = 0x9000 // SNE Vx, Vy
+	MaskLDI  uint16 = 0xA000
+	MaskJPV0 uint16 = 0xB000
+	MaskRND  uint16 = 0xC000
+	MaskDRW  uint16 = 0xD000
+	MaskKEY  uint16 = 0xE000
+	MaskMISC uint16 = 0xF000
 )
 
 /**
