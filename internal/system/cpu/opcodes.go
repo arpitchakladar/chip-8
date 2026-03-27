@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/arpitchakladar/chip-8/internal/system/display"
@@ -11,7 +10,7 @@ import (
 
 // Execute decodes and performs the operation specified by the 16-bit opcode.
 // It returns an error if the opcode is unknown.
-func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp *display.Display, keyb *keyboard.Keyboard) *CPUError {
+func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp *display.Display, keyb *keyboard.Keyboard) error {
 	// 0x F  X  Y  N
 	x := (opcode & 0x0F00) >> 8 // Register index
 	y := (opcode & 0x00F0) >> 4 // Register index
@@ -25,10 +24,16 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 		case 0x00E0: // CLS: Clear Display
 			disp.Clear()
 		case 0x00EE: // RET: Return from subroutine
+			if c.StackPointer == 0 {
+				return &StackError {
+					IsOverflow: false,
+					ProgramCounter: c.ProgramCounter - 2,
+				}
+			}
 			c.StackPointer--
 			c.ProgramCounter = c.Stack[c.StackPointer]
 		default:
-			return &CPUError{Opcode: opcode, PC: c.ProgramCounter - 2, Err: fmt.Errorf("unsupported RCA 1802 call")}
+			return &InvalidOpcodeError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2}
 		}
 
 	case 0x1000: // 1NNN: JP addr
@@ -36,7 +41,7 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 
 	case 0x2000: // 2NNN: CALL addr
 		if c.StackPointer >= 16 {
-			return &CPUError{Opcode: opcode, PC: c.ProgramCounter - 2, Err: fmt.Errorf("stack overflow")}
+			return &StackError{IsOverflow: true, ProgramCounter: c.ProgramCounter - 2}
 		}
 		c.Stack[c.StackPointer] = c.ProgramCounter
 		c.StackPointer++
@@ -118,7 +123,11 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 		// Draw logic triggers here
 		c.Registers[0xF] = 0 // Reset collision flag
 		for row := range uint16(n) {
-			spriteByte := mem.Read(c.IndexRegister + row)
+			spriteByte, err := mem.Read(c.IndexRegister + row)
+			if err != nil {
+				// Wrap the memory error into a CPU context
+				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+			}
 			for col := range uint16(8) {
 				// Check if the specific bit in the sprite byte is 1
 				if (spriteByte & (0x80 >> col)) != 0 {
@@ -176,27 +185,35 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 
 		case 0x33: // BCD: Store BCD representation of Vx in memory locations I, I+1, and I+2
 			val := c.Registers[x]
-			mem.Write(c.IndexRegister, val/100)       // Hundreds
-			mem.Write(c.IndexRegister+1, (val/10)%10) // Tens
-			mem.Write(c.IndexRegister+2, val%10)      // Ones
+			if err := mem.Write(c.IndexRegister, val/100); err != nil {
+				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+			}
+			if err := mem.Write(c.IndexRegister+1, (val/10)%10); err != nil {
+				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+			}
+			if err := mem.Write(c.IndexRegister+2, val%10); err != nil {
+				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+			}
 
 		case 0x55: // LD [I], Vx: Store registers V0 through Vx in memory starting at location I
 			for i := range x + 1 {
-				mem.Write(c.IndexRegister+i, c.Registers[i])
+				if err := mem.Write(c.IndexRegister+uint16(i), c.Registers[i]); err != nil {
+					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+				}
 			}
 
 		case 0x65: // LD Vx, [I]: Read registers V0 through Vx from memory starting at location I
 			for i := range x + 1 {
-				c.Registers[i] = mem.Read(c.IndexRegister + i)
+				val, err := mem.Read(c.IndexRegister + uint16(i))
+				if err != nil {
+					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+				}
+				c.Registers[i] = val
 			}
 		}
 
 	default:
-		return &CPUError{
-			Opcode: opcode,
-			PC:     c.ProgramCounter - 2, // Assuming Step() already moved forward
-			Err:    fmt.Errorf("unknown instruction"),
-		}
+		return &InvalidOpcodeError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2}
 	}
 
 	return nil
