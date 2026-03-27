@@ -39,7 +39,14 @@ func printUsage() {
 func runEmulator(path string) {
 	vm := system.WithClockSpeed(1000)
 	fmt.Printf("Starting emulator with: %s\n", path)
-	if err := vm.Run(path); err != nil {
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Runtime Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := vm.Run(content); err != nil {
 		fmt.Fprintf(os.Stderr, "Runtime Error: %v\n", err)
 		os.Exit(1)
 	}
