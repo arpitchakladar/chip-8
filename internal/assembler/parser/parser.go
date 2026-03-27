@@ -9,15 +9,16 @@ import (
 )
 
 type Parser struct {
-	Labels map[string]uint16
+	Labels  map[string]uint16
+	Encoder *encoder.Encoder
 }
 
 func WithLabels(labels map[string]uint16) *Parser {
 	return &Parser{
-		Labels: labels,
+		Labels:  labels,
+		Encoder: encoder.New(),
 	}
 }
-
 
 // Parse takes a mnemonic and its arguments, resolving any labels to their addresses.
 func (p *Parser) Parse(mnemonic string, args []string) (uint16, error) {
@@ -25,21 +26,21 @@ func (p *Parser) Parse(mnemonic string, args []string) (uint16, error) {
 
 	switch mnemonic {
 	case "CLS":
-		return encoder.OpRaw(encoder.MaskCLS), nil
+		return p.Encoder.Raw(encoder.MaskCLS), nil
 	case "RET":
-		return encoder.OpRaw(encoder.MaskRET), nil
+		return p.Encoder.Raw(encoder.MaskRET), nil
 
 	case "JP":
 		if len(args) == 2 && strings.ToUpper(args[0]) == "V0" {
 			addr, _ := p.resolveValue(args[1])
-			return encoder.OpAddr(encoder.MaskJPV0, addr), nil
+			return p.Encoder.Addr(encoder.MaskJPV0, addr), nil
 		}
 		addr, _ := p.resolveValue(args[0])
-		return encoder.OpAddr(encoder.MaskJP, addr), nil
+		return p.Encoder.Addr(encoder.MaskJP, addr), nil
 
 	case "CALL":
 		addr, _ := p.resolveValue(args[0])
-		return encoder.OpAddr(encoder.MaskCALL, addr), nil
+		return p.Encoder.Addr(encoder.MaskCALL, addr), nil
 
 	case "SE":
 		return p.handleSkip(encoder.MaskSE, encoder.MaskSER, args)
@@ -53,7 +54,7 @@ func (p *Parser) Parse(mnemonic string, args []string) (uint16, error) {
 		}
 		vx, _ := p.parseReg(args[0])
 		val, _ := p.resolveValue(args[1])
-		return encoder.OpRegImm(encoder.MaskADD, vx, uint8(val)), nil
+		return p.Encoder.RegImm(encoder.MaskADD, vx, uint8(val)), nil
 
 	case "OR":
 		return p.handleRegReg(encoder.MaskALU, args, 0x1)
@@ -76,21 +77,21 @@ func (p *Parser) Parse(mnemonic string, args []string) (uint16, error) {
 	case "RND":
 		vx, _ := p.parseReg(args[0])
 		val, _ := p.resolveValue(args[1])
-		return encoder.OpRegImm(encoder.MaskRND, vx, uint8(val)), nil
+		return p.Encoder.RegImm(encoder.MaskRND, vx, uint8(val)), nil
 
 	case "DRW":
 		vx, _ := p.parseReg(args[0])
 		vy, _ := p.parseReg(args[1])
 		n, _ := p.resolveValue(args[2])
-		return encoder.OpRegNibble(encoder.MaskDRW, vx, vy, uint8(n)), nil
+		return p.Encoder.RegNibble(encoder.MaskDRW, vx, vy, uint8(n)), nil
 
 	case "SKP":
 		vx, _ := p.parseReg(args[0])
-		return encoder.OpRegOnly(encoder.MaskKEY, vx, 0x9E), nil
+		return p.Encoder.RegOnly(encoder.MaskKEY, vx, 0x9E), nil
 
 	case "SKNP":
 		vx, _ := p.parseReg(args[0])
-		return encoder.OpRegOnly(encoder.MaskKEY, vx, 0xA1), nil
+		return p.Encoder.RegOnly(encoder.MaskKEY, vx, 0xA1), nil
 
 	// TODO: DON'T USE THIS. Make sure that the assembler is able to read raw bytes
 	case "DW":
@@ -115,22 +116,22 @@ func (p *Parser) handleLoad(args []string) (uint16, error) {
 
 	if dst == "I" {
 		addr, _ := p.resolveValue(src)
-		return encoder.OpAddr(encoder.MaskLDI, addr), nil
+		return p.Encoder.Addr(encoder.MaskLDI, addr), nil
 	}
 
 	if p.isRegister(dst) {
 		vx, _ := p.parseReg(dst)
 		switch {
 		case src == "DT":
-			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x07), nil
+			return p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x07), nil
 		case src == "K":
-			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x0A), nil
+			return p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x0A), nil
 		case p.isRegister(src):
 			vy, _ := p.parseReg(src)
-			return encoder.OpRegReg(encoder.MaskALU, vx, vy, 0x0), nil
+			return p.Encoder.RegReg(encoder.MaskALU, vx, vy, 0x0), nil
 		default:
 			val, _ := p.resolveValue(src)
-			return encoder.OpRegImm(encoder.MaskLD, vx, uint8(val)), nil
+			return p.Encoder.RegImm(encoder.MaskLD, vx, uint8(val)), nil
 		}
 	}
 
@@ -139,22 +140,22 @@ func (p *Parser) handleLoad(args []string) (uint16, error) {
 		vx, _ := p.parseReg(src)
 		switch dst {
 		case "DT":
-			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x15), nil
+			return p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x15), nil
 		case "ST":
-			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x18), nil
+			return p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x18), nil
 		case "F":
-			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x29), nil
+			return p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x29), nil
 		case "B":
-			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x33), nil
+			return p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x33), nil
 		case "[I]":
-			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x55), nil
+			return p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x55), nil
 		}
 	}
 
 	// LD I, Vx (Add to I)
 	if dst == "I" && p.isRegister(src) {
 		vx, _ := p.parseReg(src)
-		return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x1E), nil
+		return p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E), nil
 	}
 
 	return 0, fmt.Errorf("invalid LD arguments")
@@ -164,16 +165,16 @@ func (p *Parser) handleSkip(immBase, regBase uint16, args []string) (uint16, err
 	vx, _ := p.parseReg(args[0])
 	if p.isRegister(args[1]) {
 		vy, _ := p.parseReg(args[1])
-		return encoder.OpRegReg(regBase, vx, vy, 0x0), nil
+		return p.Encoder.RegReg(regBase, vx, vy, 0x0), nil
 	}
 	val, _ := p.resolveValue(args[1])
-	return encoder.OpRegImm(immBase, vx, uint8(val)), nil
+	return p.Encoder.RegImm(immBase, vx, uint8(val)), nil
 }
 
 func (p *Parser) handleRegReg(base uint16, args []string, suffix uint16) (uint16, error) {
 	vx, _ := p.parseReg(args[0])
 	vy, _ := p.parseReg(args[1])
-	return encoder.OpRegReg(base, vx, vy, suffix), nil
+	return p.Encoder.RegReg(base, vx, vy, suffix), nil
 }
 
 // --- Utility Functions ---
