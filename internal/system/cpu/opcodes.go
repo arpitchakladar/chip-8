@@ -11,7 +11,7 @@ import (
 
 // Execute decodes and performs the operation specified by the 16-bit opcode.
 // It returns an error if the opcode is unknown.
-func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp *display.Display, keyb *keyboard.Keyboard) error {
+func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp *display.Display, keyb *keyboard.Keyboard) *CPUError {
 	// 0x F  X  Y  N
 	x := (opcode & 0x0F00) >> 8 // Register index
 	y := (opcode & 0x00F0) >> 4 // Register index
@@ -27,12 +27,17 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 		case 0x00EE: // RET: Return from subroutine
 			c.StackPointer--
 			c.ProgramCounter = c.Stack[c.StackPointer]
+		default:
+			return &CPUError{Opcode: opcode, PC: c.ProgramCounter - 2, Err: fmt.Errorf("unsupported RCA 1802 call")}
 		}
 
 	case 0x1000: // 1NNN: JP addr
 		c.ProgramCounter = nnn
 
 	case 0x2000: // 2NNN: CALL addr
+		if c.StackPointer >= 16 {
+			return &CPUError{Opcode: opcode, PC: c.ProgramCounter - 2, Err: fmt.Errorf("stack overflow")}
+		}
 		c.Stack[c.StackPointer] = c.ProgramCounter
 		c.StackPointer++
 		c.ProgramCounter = nnn
