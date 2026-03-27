@@ -52,25 +52,22 @@ func (d *Display) SetPixel(x, y uint8) bool {
 // InitSDL sets up the window and renderer
 func (d *Display) InitSDL() error {
 	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
-		return err
+		return &SDLError{Subsystem: "Initialization", Err: err}
 	}
 
 	window, err := sdl.CreateWindow(
 		"Chip-8 Emulator",
-		int32(sdl.WINDOWPOS_CENTERED),
-		int32(sdl.WINDOWPOS_CENTERED),
-		int32(Width*Scale),
-		int32(Height*Scale),
+		int32(sdl.WINDOWPOS_CENTERED), int32(sdl.WINDOWPOS_CENTERED),
+		int32(Width*Scale), int32(Height*Scale),
 		uint32(sdl.WINDOW_SHOWN),
 	)
 	if err != nil {
-		return err
+		return &SDLError{Subsystem: "Window Creation", Err: err}
 	}
 
-	// Create a hardware-accelerated renderer
 	dr, err := sdl.CreateRenderer(window, -1, uint32(sdl.RENDERER_ACCELERATED))
 	if err != nil {
-		return err
+		return &SDLError{Subsystem: "Renderer Creation", Err: err}
 	}
 
 	d.window = window
