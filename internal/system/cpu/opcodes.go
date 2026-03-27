@@ -25,8 +25,8 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 			disp.Clear()
 		case 0x00EE: // RET: Return from subroutine
 			if c.StackPointer == 0 {
-				return &StackError {
-					IsOverflow: false,
+				return &StackError{
+					IsOverflow:     false,
 					ProgramCounter: c.ProgramCounter - 2,
 				}
 			}
