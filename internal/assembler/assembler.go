@@ -6,19 +6,21 @@ import (
 )
 
 type Assembler struct {
+	Source         string
 	Labels         map[string]uint16
 	ProgramCounter uint16
 }
 
-func New() *Assembler {
+func WithSource(source string) *Assembler {
 	return &Assembler{
+		Source:         source,
 		Labels:         make(map[string]uint16),
 		ProgramCounter: 0x200, // CHIP-8 programs start at 0x200
 	}
 }
 
-func (a *Assembler) Assemble(input string) ([]byte, error) {
-	lexer := lexer.New(input, a.ProgramCounter)
+func (a *Assembler) Assemble() ([]byte, error) {
+	lexer := lexer.New(a.Source, a.ProgramCounter)
 	labels, lines := lexer.ScanLabels()
 
 	var program []byte
