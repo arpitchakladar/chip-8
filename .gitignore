@@ -1,0 +1,48 @@
+# --- Go Binaries & Artifacts ---
+/bitGo
+/gop8
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# --- Go Dependencies & Testing ---
+vendor/
+*.test
+*.out
+/coverage.txt
+
+# --- Devenv & Nix ---
+.devenv/
+.direnv/
+.pre-commit-config.yaml.tmp
+.pre-commit-config.yaml
+# If you use direnv, it creates a local .envrc shell state
+.envrc
+
+# --- IDEs & Editors ---
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains (GoLand)
+.idea/
+
+# Vim/Emacs
+*~
+*.swp
+*.swo
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- Emulator Specific ---
+# If you download ROMs for testing, you might not want to commit them
+# depending on their copyright status.
+/roms/*.ch8
+/roms/*.bin
