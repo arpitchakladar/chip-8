@@ -1,14 +1,19 @@
 package display
 
+import (
+	"github.com/veandco/go-sdl2/sdl"
+)
+
 const (
 	Width  = 64
 	Height = 32
+	Scale  = 15 // Each Chip-8 pixel will be 15x15 on screen
 )
 
-// Display handles the 64x32 monochrome pixel buffer.
 type Display struct {
-	// Pixels represents the screen state (0 = off, 1 = on).
-	Pixels [Width * Height]byte
+	Pixels   [Width * Height]byte
+	window   *sdl.Window
+	renderer *sdl.Renderer
 }
 
 // New creates a new, cleared display instance.
@@ -42,4 +47,83 @@ func (d *Display) SetPixel(x, y uint8) bool {
 	d.Pixels[index] ^= 1
 
 	return collision
+}
+
+// InitSDL sets up the window and renderer
+func (d *Display) InitSDL() error {
+	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
+		return err
+	}
+
+	window, err := sdl.CreateWindow(
+		"Chip-8 Emulator",
+		int32(sdl.WINDOWPOS_CENTERED),
+		int32(sdl.WINDOWPOS_CENTERED),
+		int32(Width*Scale),
+		int32(Height*Scale),
+		uint32(sdl.WINDOW_SHOWN),
+	)
+	if err != nil {
+		return err
+	}
+
+	// Create a hardware-accelerated renderer
+	dr, err := sdl.CreateRenderer(window, -1, uint32(sdl.RENDERER_ACCELERATED))
+	if err != nil {
+		return err
+	}
+
+	d.window = window
+	d.renderer = dr
+	return nil
+}
+
+// Present draws the current Pixels buffer to the SDL window
+func (d *Display) Present() error {
+	// TODO: Add more consistant error handling
+	err := d.renderer.SetDrawColor(0, 0, 0, 255) // Black background
+	if err != nil {
+		return err
+	}
+	err = d.renderer.Clear()
+	if err != nil {
+		return err
+	}
+
+	err = d.renderer.SetDrawColor(255, 255, 255, 255) // White pixels
+	if err != nil {
+		return err
+	}
+	for i, val := range d.Pixels {
+		if val == 1 {
+			x := int32(i % Width)
+			y := int32(i / Width)
+
+			rect := sdl.Rect{
+				X: x * Scale,
+				Y: y * Scale,
+				W: Scale,
+				H: Scale,
+			}
+			err = d.renderer.FillRect(&rect)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	d.renderer.Present()
+	return nil
+}
+
+func (d *Display) Close() error {
+	err := d.renderer.Destroy()
+	if err != nil {
+		return err
+	}
+	err = d.window.Destroy()
+	if err != nil {
+		return err
+	}
+	sdl.Quit()
+	return nil
 }
