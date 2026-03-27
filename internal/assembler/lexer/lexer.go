@@ -9,13 +9,13 @@ type Line struct {
 }
 
 type Lexer struct {
-	Source		string
+	Source      string
 	CurrentAddr uint16
 }
 
 func New(source string, currentAddr uint16) *Lexer {
 	return &Lexer{
-		Source: source,
+		Source:      source,
 		CurrentAddr: currentAddr,
 	}
 }

@@ -3,8 +3,8 @@ package emulator
 import (
 	"fmt"
 	"os"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 
