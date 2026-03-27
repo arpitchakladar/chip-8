@@ -13,7 +13,7 @@ func main() {
 		return
 	}
 
-	chip8 := system.New()
+	chip8 := system.WithClockSpeed(1000)
 
 	// Everything is now encapsulated!
 	if err := chip8.Run(os.Args[1]); err != nil {
