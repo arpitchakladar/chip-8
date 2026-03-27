@@ -30,3 +30,15 @@ type CentralProcessingUnit struct {
 func New() *CentralProcessingUnit {
 	return new(CentralProcessingUnit)
 }
+
+func (c *CentralProcessingUnit) UpdateTimers() {
+	if c.DelayTimer > 0 {
+		c.DelayTimer--
+	}
+
+	if c.SoundTimer > 0 {
+		// TODO: If SoundTimer > 0, the system should emit a beep sound.
+		// For now, we just decrement it.
+		c.SoundTimer--
+	}
+}
