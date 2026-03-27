@@ -34,7 +34,7 @@ func (a *Assembler) Assemble(input string) ([]byte, error) {
 			return nil, err
 		}
 		// Low byte comes before high byte
-		program = append(program, byte(opcode>>8), byte(opcode&0xFF))
+		program = append(program, opcode...)
 	}
 
 	return program, nil
