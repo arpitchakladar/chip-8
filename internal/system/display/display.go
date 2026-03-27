@@ -81,19 +81,20 @@ func (d *Display) InitSDL() error {
 // Present draws the current Pixels buffer to the SDL window
 func (d *Display) Present() error {
 	// TODO: Add more consistant error handling
-	err := d.renderer.SetDrawColor(0, 0, 0, 255) // Black background
-	if err != nil {
-		return err
-	}
-	err = d.renderer.Clear()
-	if err != nil {
+	// Black background
+	if err := d.renderer.SetDrawColor(0, 0, 0, 255); err != nil {
 		return err
 	}
 
-	err = d.renderer.SetDrawColor(255, 255, 255, 255) // White pixels
-	if err != nil {
+	if err := d.renderer.Clear(); err != nil {
 		return err
 	}
+
+	// White pixels
+	if err := d.renderer.SetDrawColor(255, 255, 255, 255); err != nil {
+		return err
+	}
+
 	for i, val := range d.Pixels {
 		if val == 1 {
 			x := int32(i % Width)
@@ -105,8 +106,8 @@ func (d *Display) Present() error {
 				W: Scale,
 				H: Scale,
 			}
-			err = d.renderer.FillRect(&rect)
-			if err != nil {
+
+			if err := d.renderer.FillRect(&rect); err != nil {
 				return err
 			}
 		}
