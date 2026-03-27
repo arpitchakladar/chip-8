@@ -1,8 +1,8 @@
 package audio
 
 import (
-	"unsafe"
 	"math"
+	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -24,7 +24,7 @@ func (a *Audio) Init() error {
 	spec := &sdl.AudioSpec{
 		Freq:     SampleRate,
 		Format:   sdl.AudioFormat(sdl.AUDIO_S16SYS), // 16-bit signed integers
-		Channels: 1, // Mono
+		Channels: 1,                                 // Mono
 		Samples:  2048,
 	}
 
@@ -42,7 +42,7 @@ func (a *Audio) GenerateBeep() error {
 	data := make([]int16, length)
 
 	for i := 0; i < length; i++ {
-		if math.Sin(2.0 * math.Pi * Frequency * float64(i) / SampleRate) > 0 {
+		if math.Sin(2.0*math.Pi*Frequency*float64(i)/SampleRate) > 0 {
 			data[i] = 3000
 		} else {
 			data[i] = -3000
