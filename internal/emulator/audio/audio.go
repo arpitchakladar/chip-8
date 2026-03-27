@@ -23,25 +23,53 @@ func New() *Audio {
 func (a *Audio) Init() error {
 	spec := &sdl.AudioSpec{
 		Freq:     SampleRate,
-		Format:   sdl.AudioFormat(sdl.AUDIO_S16SYS), // 16-bit signed integers
-		Channels: 1,                                 // Mono
+		Format:   sdl.AUDIO_S16SYS,
+		Channels: 1,
 		Samples:  2048,
 	}
 
-	// This opens the default audio device
 	dev, err := sdl.OpenAudioDevice("", false, spec, nil, 0)
 	if err != nil {
 		return err
 	}
 	a.Device = dev
+
+	// --- PRE-GENERATE A SMALL LOOP ---
+	// 0.1 seconds is enough to loop smoothly
+	loopLength := SampleRate / 10
+	data := make([]int16, loopLength)
+	for i := range loopLength {
+		if math.Sin(2.0*math.Pi*Frequency*float64(i)/SampleRate) > 0 {
+			data[i] = 3000
+		} else {
+			data[i] = -3000
+		}
+	}
+
+	byteLen := len(data) * 2
+	byteData := unsafe.Slice((*byte)(unsafe.Pointer(&data[0])), byteLen)
+
+	// Fill the queue once. SDL will keep playing this data if we don't clear it.
+	// However, QueueAudio isn't great for infinite loops.
+	// A better way is to just queue a LOT of it once.
+	for range 10 { // Queue 1 second total
+		if err := sdl.QueueAudio(a.Device, byteData); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (a *Audio) GenerateBeep() error {
+	if sdl.GetQueuedAudioSize(a.Device) >= 4096 {
+		return nil
+	}
+
 	length := SampleRate
 	data := make([]int16, length)
 
-	for i := 0; i < length; i++ {
+	for i := range length {
 		if math.Sin(2.0*math.Pi*Frequency*float64(i)/SampleRate) > 0 {
 			data[i] = 3000
 		} else {
@@ -61,6 +89,16 @@ func (a *Audio) GenerateBeep() error {
 	}
 
 	return nil
+}
+
+func (a *Audio) Play() {
+	// Re-queue the sound if needed, or just Unpause
+	sdl.PauseAudioDevice(a.Device, false)
+}
+
+func (a *Audio) Pause() {
+	// Re-queue the sound if needed, or just Unpause
+	sdl.PauseAudioDevice(a.Device, true)
 }
 
 func (a *Audio) Close() {

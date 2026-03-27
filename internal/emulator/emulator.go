@@ -71,19 +71,24 @@ func (s *Emulator) Step() error {
 	return s.CPU.Execute(opcode, s.Memory, s.Display, s.Keyboard)
 }
 
-func (s *Emulator) UpdateTimers() {
+func (s *Emulator) UpdateTimers() error {
 	if s.CPU.SoundTimer > 0 {
 		// Unpause the audio device to start the buzz
-		sdl.PauseAudioDevice(s.Audio.Device, false)
+		if err := s.Audio.GenerateBeep(); err != nil {
+			return err
+		}
+		s.Audio.Play()
 		s.CPU.SoundTimer--
 	} else {
 		// Pause the audio device when timer hits 0
-		sdl.PauseAudioDevice(s.Audio.Device, true)
+		s.Audio.Pause()
 	}
 
 	if s.CPU.DelayTimer > 0 {
 		s.CPU.DelayTimer--
 	}
+
+	return nil
 }
 
 func (s *Emulator) Run(romData []byte) error {
@@ -95,8 +100,6 @@ func (s *Emulator) Run(romData []byte) error {
 	if err := s.Audio.Init(); err != nil {
 		// NOTE: Log error but maybe don't crash? Some systems don't have speakers.
 		fmt.Printf("Warning: Audio failed to init: %v\n", err)
-	} else if err := s.Audio.GenerateBeep(); err != nil {
-		return err
 	}
 
 	defer func() {
@@ -113,8 +116,9 @@ func (s *Emulator) Run(romData []byte) error {
 
 	// Channels to communicate between the main routine (display) and
 	// the cpu execution goroutine
-	stop := make(chan bool)
-	errChan := make(chan error)
+	stop := make(chan struct{})
+	defer close(stop)
+	errChan := make(chan error, 1)
 
 	go func() {
 		cpuClock := time.NewTicker(time.Second / time.Duration(s.ClockSpeed))
@@ -148,22 +152,24 @@ func (s *Emulator) Run(romData []byte) error {
 			for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 				switch t := event.(type) {
 				case *sdl.QuitEvent:
-					close(stop)
 					return nil
 				case *sdl.KeyboardEvent:
 					s.Keyboard.HandleKeyboard(t)
 				}
 			}
 
-			// B. Update Timers (60Hz)
 			s.MemoryLock.Lock()
-			s.UpdateTimers()
-			err := s.Display.Present()
+			// B. Update Timers (60Hz)
+			timerErr := s.UpdateTimers()
+			// C. Display buffer (60Hz)
+			displayErr := s.Display.Present()
 			s.MemoryLock.Unlock()
 
-			// C. Render (60Hz)
-			if err != nil {
-				return err
+			if timerErr != nil {
+				return timerErr
+			}
+			if displayErr != nil {
+				return displayErr
 			}
 		}
 	}
