@@ -1,32 +1,50 @@
 package memory
 
+const Size = 4096
+
 // Memory represents the 4096 bytes of RAM in a Chip-8 system.
 type Memory struct {
 	// RAM is the physical storage.
 	// 0x000-0x1FF: Reserved for the font set and system.
 	// 0x200-0xFFF: Program ROM and work RAM.
-	RAM [4096]byte
+	RAM [Size]byte
 }
 
 // New creates a blank 4KB memory bank.
 func New() *Memory {
-	return &Memory{}
+	return new(Memory)
 }
 
 // Reset clears all memory to zero.
 // Note: You will usually call LoadFontSet() immediately after a Reset.
 func (m *Memory) Reset() {
-	m.RAM = [4096]byte{}
+	m.RAM = [Size]byte{}
 }
 
 // Read returns the byte at the given address.
-func (m *Memory) Read(address uint16) byte {
-	return m.RAM[address]
+func (m *Memory) Read(address uint16) (byte, error) {
+	if address >= Size {
+		return 0, &BoundsError{Address: address, Max: 4095}
+	}
+	return m.RAM[address], nil
 }
 
 // Write sets the byte at the given address.
-func (m *Memory) Write(address uint16, value byte) {
+func (m *Memory) Write(address uint16, value byte) error {
+	// 1. Check physical bounds
+	if address >= Size {
+		return &BoundsError{Address: address, Max: 4095}
+	}
+
+	// 2. Check for "Protected" area (Optional but recommended for debugging)
+	// The first 512 bytes are where the Font Set lives.
+	// A standard ROM should never overwrite this.
+	if address < 0x200 {
+		return &WriteProtectedError{Address: address}
+	}
+
 	m.RAM[address] = value
+	return nil
 }
 
 // LoadFontSet populates the first 80 bytes of memory with the standard
