@@ -39,7 +39,7 @@ func WithClockSpeed(clockSpeed uint32) *Emulator {
 }
 
 // LoadROM reads a .ch8 file and writes it into memory starting at 0x200
-func (s *Emulator) LoadROM(romData []byte) error {	// Chip-8 programs start at 0x200
+func (s *Emulator) LoadROM(romData []byte) error { // Chip-8 programs start at 0x200
 	for i, b := range romData {
 		if err := s.Memory.Write(uint16(0x200+i), b); err != nil {
 			return err
@@ -108,41 +108,55 @@ func (s *Emulator) Run(romData []byte) error {
 		return fmt.Errorf("failed to load ROM: %w", err)
 	}
 
-	// 2. Timing logic
-	// We want the CPU to run fast, but Timers/Graphics at 60Hz.
-	cpuInterval := time.Second / time.Duration(s.ClockSpeed)
-	timerInterval := time.Second / 60
+	// Channels to communicate between the main routine (display) and
+	// the cpu execution goroutine
+	stop := make(chan bool)
+	errChan := make(chan error)
 
-	ticker := time.NewTicker(cpuInterval)
-	defer ticker.Stop()
+	go func() {
+		cpuClock := time.NewTicker(time.Second / time.Duration(s.ClockSpeed))
+		defer cpuClock.Stop()
 
-	lastTimerUpdate := time.Now()
-
-	for range ticker.C {
-		// A. Handle SDL Events
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch t := event.(type) {
-			case *sdl.QuitEvent:
-				return nil
-			case *sdl.KeyboardEvent:
-				s.Keyboard.HandleKeyboard(t)
+		for {
+			select {
+			case <-stop:
+				return
+			case <-cpuClock.C:
+				// TODO: Add mutex lock to prevent writing while display is reading
+				if err := s.Step(); err != nil {
+					errChan <- err
+					return
+				}
 			}
 		}
+	}()
 
-		// B. Step the CPU
-		if err := s.Step(); err != nil {
+	uiClock := time.NewTicker(time.Second / 60)
+	defer uiClock.Stop()
+
+	for {
+		select {
+		case err := <-errChan:
 			return err
-		}
+		case <-uiClock.C:
+			// A. Handle Events (Must be main thread)
+			for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+				switch t := event.(type) {
+				case *sdl.QuitEvent:
+					close(stop)
+					return nil
+				case *sdl.KeyboardEvent:
+					s.Keyboard.HandleKeyboard(t)
+				}
+			}
 
-		// C. Sync Timers and Display to 60Hz
-		if time.Since(lastTimerUpdate) >= timerInterval {
+			// B. Update Timers (60Hz)
 			s.UpdateTimers()
+
+			// C. Render (60Hz)
 			if err := s.Display.Present(); err != nil {
 				return err
 			}
-			lastTimerUpdate = time.Now()
 		}
 	}
-
-	return nil
 }
