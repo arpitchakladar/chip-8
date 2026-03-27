@@ -119,7 +119,6 @@ func handleLoad(args []string, labels map[string]uint16) (uint16, error) {
 			return encoder.OpRegReg(encoder.MaskALU, vx, vy, 0x0), nil
 		default:
 			val, _ := resolveValue(src, labels)
-			fmt.Printf("%+v = : %+v\n", src, val)
 			return encoder.OpRegImm(encoder.MaskLD, vx, uint8(val)), nil
 		}
 	}
