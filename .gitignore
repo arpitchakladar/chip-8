@@ -46,3 +46,6 @@ Thumbs.db
 # depending on their copyright status.
 /roms/*.ch8
 /roms/*.bin
+
+# --- Compiled Examples ---
+examples/*.ch8
