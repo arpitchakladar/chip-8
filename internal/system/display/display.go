@@ -1,6 +1,7 @@
 package display
 
 import (
+	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -77,21 +78,25 @@ func (d *Display) InitSDL() error {
 
 // Present draws the current Pixels buffer to the SDL window
 func (d *Display) Present() error {
-	// TODO: Add more consistant error handling
-	// Black background
+	if d.renderer == nil {
+		return &SDLError{Subsystem: "Renderer", Err: fmt.Errorf("renderer not initialized")}
+	}
+
+	// 1. Set Background to Black
 	if err := d.renderer.SetDrawColor(0, 0, 0, 255); err != nil {
-		return err
+		return &SDLError{Subsystem: "SetDrawColor (Background)", Err: err}
 	}
 
 	if err := d.renderer.Clear(); err != nil {
-		return err
+		return &SDLError{Subsystem: "Clear", Err: err}
 	}
 
-	// White pixels
+	// 2. Set Pixel Color to White
 	if err := d.renderer.SetDrawColor(255, 255, 255, 255); err != nil {
-		return err
+		return &SDLError{Subsystem: "SetDrawColor (Pixel)", Err: err}
 	}
 
+	// 3. Draw the active pixels
 	for i, val := range d.Pixels {
 		if val == 1 {
 			x := int32(i % Width)
@@ -105,23 +110,38 @@ func (d *Display) Present() error {
 			}
 
 			if err := d.renderer.FillRect(&rect); err != nil {
-				return err
+				return &SDLError{Subsystem: "FillRect", Err: err}
 			}
 		}
 	}
+
+	// 4. Update screen
 	d.renderer.Present()
+
 	return nil
 }
 
 func (d *Display) Close() error {
-	err := d.renderer.Destroy()
-	if err != nil {
-		return err
+	lastErr := error(nil)
+
+	// 1. Attempt to destroy the renderer
+	if d.renderer != nil {
+		if err := d.renderer.Destroy(); err != nil {
+			lastErr = &SDLError{Subsystem: "Renderer Destruction", Err: err}
+		}
 	}
-	err = d.window.Destroy()
-	if err != nil {
-		return err
+
+	// 2. Attempt to destroy the window (even if renderer failed)
+	if d.window != nil {
+		if err := d.window.Destroy(); err != nil {
+			// We wrap the error, but if there was a previous error,
+			// you might want to log it or concatenate it.
+			lastErr = &SDLError{Subsystem: "Window Destruction", Err: err}
+		}
 	}
+
+	// 3. Global SDL Cleanup
 	sdl.Quit()
-	return nil
+
+	return lastErr
 }
