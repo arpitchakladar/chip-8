@@ -39,14 +39,8 @@ func WithClockSpeed(clockSpeed uint32) *System {
 }
 
 // LoadROM reads a .ch8 file and writes it into memory starting at 0x200
-func (s *System) LoadROM(filename string) error {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	// Chip-8 programs start at 0x200
-	for i, b := range data {
+func (s *System) LoadROM(romData []byte) error {	// Chip-8 programs start at 0x200
+	for i, b := range romData {
 		if err := s.Memory.Write(uint16(0x200+i), b); err != nil {
 			return err
 		}
@@ -89,7 +83,7 @@ func (s *System) UpdateTimers() {
 	}
 }
 
-func (s *System) Run(romPath string) error {
+func (s *System) Run(romData []byte) error {
 	// 1. Setup
 	if err := s.Display.Init(); err != nil {
 		return fmt.Errorf("failed to init display: %w", err)
@@ -110,7 +104,7 @@ func (s *System) Run(romPath string) error {
 		s.Audio.Close()
 	}()
 
-	if err := s.LoadROM(romPath); err != nil {
+	if err := s.LoadROM(romData); err != nil {
 		return fmt.Errorf("failed to load ROM: %w", err)
 	}
 
