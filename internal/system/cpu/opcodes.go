@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/arpitchakladar/chip-8/internal/display"
-	"github.com/arpitchakladar/chip-8/internal/keyboard"
-	"github.com/arpitchakladar/chip-8/internal/memory"
+	"github.com/arpitchakladar/chip-8/internal/system/display"
+	"github.com/arpitchakladar/chip-8/internal/system/keyboard"
+	"github.com/arpitchakladar/chip-8/internal/system/memory"
 )
 
 // Execute decodes and performs the operation specified by the 16-bit opcode.
