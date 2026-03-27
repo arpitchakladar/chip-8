@@ -8,14 +8,12 @@ import (
 
 type Assembler struct {
 	Labels         map[string]uint16
-	Instructions   []string
 	ProgramCounter uint16
 }
 
-func WithInstructions(instructions []string) *Assembler {
+func New() *Assembler {
 	return &Assembler{
 		Labels:         make(map[string]uint16),
-		Instructions:   instructions,
 		ProgramCounter: 0x200, // CHIP-8 programs start at 0x200
 	}
 }
