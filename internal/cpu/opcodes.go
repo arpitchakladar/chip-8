@@ -119,20 +119,45 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 		case 0xA1: // SKNP Vx
 		}
 
-	case 0xF000: // Timers and Memory
+	case 0xF000:
 		switch kk {
-		case 0x07: c.Registers[x] = c.DelayTimer
-		case 0x15: c.DelayTimer = c.Registers[x]
-		case 0x18: c.SoundTimer = c.Registers[x]
-		case 0x1E: c.IndexRegister += uint16(c.Registers[x])
-		case 0x29: // LD F, Vx (Set I to font location)
+		case 0x07: // LD Vx, DT: Set Vx = delay timer value
+			c.Registers[x] = c.DelayTimer
+
+		case 0x0A: // LD Vx, K: Wait for a key press, store the value of the key in Vx
+			// This is a "blocking" opcode. Usually implemented by
+			// decrementing PC by 2 if no key is pressed, effectively
+			// pausing the CPU on this instruction.
+
+		case 0x15: // LD DT, Vx: Set delay timer = Vx
+			c.DelayTimer = c.Registers[x]
+
+		case 0x18: // LD ST, Vx: Set sound timer = Vx
+			c.SoundTimer = c.Registers[x]
+
+		case 0x1E: // ADD I, Vx: Set I = I + Vx
+			c.IndexRegister += uint16(c.Registers[x])
+
+		case 0x29: // LD F, Vx: Set I = location of sprite for digit Vx
+			// Characters 0-F are 5 bytes high.
+			// Since we load the font at 0x000, the address is Vx * 5.
 			c.IndexRegister = uint16(c.Registers[x]) * 5
-		case 0x33: // BCD (Binary Coded Decimal)
-			//TODO: We'll need a Memory.Write helper for these:
-			// val := c.Registers[x]
-			// Mem[I] = val / 100, etc.
-		case 0x55: // LD [I], Vx (Store registers V0..Vx)
-		case 0x65: // LD Vx, [I] (Read registers V0..Vx)
+
+		case 0x33: // BCD: Store BCD representation of Vx in memory locations I, I+1, and I+2
+			val := c.Registers[x]
+			mem.Write(c.IndexRegister, val/100)          // Hundreds
+			mem.Write(c.IndexRegister+1, (val/10)%10)    // Tens
+			mem.Write(c.IndexRegister+2, val%10)         // Ones
+
+		case 0x55: // LD [I], Vx: Store registers V0 through Vx in memory starting at location I
+			for i := range x + 1 {
+				mem.Write(c.IndexRegister+i, c.Registers[i])
+			}
+
+		case 0x65: // LD Vx, [I]: Read registers V0 through Vx from memory starting at location I
+			for i := range x + 1 {
+				c.Registers[i] = mem.Read(c.IndexRegister+i)
+			}
 		}
 
 	default:
