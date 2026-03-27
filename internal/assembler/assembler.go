@@ -25,11 +25,14 @@ func (a *Assembler) Assemble(input string) ([]byte, error) {
 	fmt.Printf("Lines: %+v\n", lines)
 	var program []byte
 
+	parser := parser.WithLabels(labels)
+
 	for _, line := range lines {
-		opcode, err := parser.Parse(line.Mnemonic, line.Args, labels)
+		opcode, err := parser.Parse(line.Mnemonic, line.Args)
 		if err != nil {
 			return nil, err
 		}
+		// Low byte comes before high byte
 		program = append(program, byte(opcode>>8), byte(opcode&0xFF))
 	}
 
