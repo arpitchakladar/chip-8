@@ -1,5 +1,12 @@
 package encoder
 
+const (
+	MaskJP   = 0x1000
+	MaskCALL = 0x2000
+	MaskLDI  = 0xA000
+	MaskDRW  = 0xD000
+)
+
 /**
  * CHIP-8 Instruction Formats:
  * nnn or addr - A 12-bit value, the lowest 12 bits of the instruction
