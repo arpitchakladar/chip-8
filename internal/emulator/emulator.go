@@ -91,7 +91,7 @@ func (e *Emulator) UpdateTimers() error {
 	return nil
 }
 
-func (e *Emulator) Run(romData []byte) error {
+func (e *Emulator) Run() error {
 	// 1. Setup
 	if err := e.Display.Init(); err != nil {
 		return fmt.Errorf("failed to init display: %w", err)
@@ -109,10 +109,6 @@ func (e *Emulator) Run(romData []byte) error {
 
 		e.Audio.Close()
 	}()
-
-	if err := e.LoadROM(romData); err != nil {
-		return fmt.Errorf("failed to load ROM: %w", err)
-	}
 
 	// Channels to communicate between the main routine (display) and
 	// the cpu execution goroutine

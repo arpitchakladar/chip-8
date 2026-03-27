@@ -46,7 +46,11 @@ func runEmulator(path string) {
 		os.Exit(1)
 	}
 
-	if err := vm.Run(content); err != nil {
+	if err := vm.LoadROM(content); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load ROM: %v\n", err)
+	}
+
+	if err := vm.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Runtime Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -61,8 +65,8 @@ func compileAssembly(path string) {
 		os.Exit(1)
 	}
 
-	asm := assembler.New()
-	binary, err := asm.Assemble(string(content))
+	asm := assembler.WithSource(string(content))
+	binary, err := asm.Assemble()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Assembly Error: %v\n", err)
 		os.Exit(1)
