@@ -60,7 +60,7 @@ func (d *Display) SetPixel(x, y uint8) (bool, error) {
 }
 
 // InitSDL sets up the window and renderer
-func (d *Display) InitSDL() error {
+func (d *Display) Init() error {
 	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
 		return &SDLError{Subsystem: "Initialization", Err: err}
 	}
