@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"sync"
 
 	"github.com/veandco/go-sdl2/sdl"
 
@@ -21,6 +22,7 @@ type Emulator struct {
 	Keyboard   *keyboard.Keyboard
 	Audio      *audio.Audio
 	ClockSpeed uint32 // Instructions per second (in Hz)
+	MemoryLock sync.Mutex
 }
 
 func WithClockSpeed(clockSpeed uint32) *Emulator {
@@ -30,6 +32,7 @@ func WithClockSpeed(clockSpeed uint32) *Emulator {
 		Display:    display.New(),
 		Keyboard:   keyboard.New(),
 		Audio:      audio.New(),
+		MemoryLock: sync.Mutex{},
 		ClockSpeed: clockSpeed,
 	}
 
@@ -122,8 +125,10 @@ func (s *Emulator) Run(romData []byte) error {
 			case <-stop:
 				return
 			case <-cpuClock.C:
-				// TODO: Add mutex lock to prevent writing while display is reading
-				if err := s.Step(); err != nil {
+				s.MemoryLock.Lock()
+				err := s.Step()
+				s.MemoryLock.Unlock()
+				if err != nil {
 					errChan <- err
 					return
 				}
@@ -151,10 +156,13 @@ func (s *Emulator) Run(romData []byte) error {
 			}
 
 			// B. Update Timers (60Hz)
+			s.MemoryLock.Lock()
 			s.UpdateTimers()
+			err := s.Display.Present()
+			s.MemoryLock.Unlock()
 
 			// C. Render (60Hz)
-			if err := s.Display.Present(); err != nil {
+			if err != nil {
 				return err
 			}
 		}
