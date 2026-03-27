@@ -161,5 +161,7 @@ func (s *System) Run(romPath string) error {
 		}
 	}
 
+	s.Audio.Close()
+
 	return nil
 }

@@ -62,3 +62,11 @@ func (a *Audio) GenerateBeep() error {
 
 	return nil
 }
+
+func (a *Audio) Close() {
+	if a.Device != 0 {
+		sdl.PauseAudioDevice(a.Device, true) // Silence it first
+		sdl.CloseAudioDevice(a.Device)
+		a.Device = 0 // Reset the ID
+	}
+}
