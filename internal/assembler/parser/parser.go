@@ -46,13 +46,20 @@ func Parse(mnemonic string, args []string, labels map[string]uint16) (uint16, er
 		val, _ := resolveValue(args[1], labels)
 		return encoder.OpRegImm(encoder.MaskADD, vx, uint8(val)), nil
 
-	case "OR":   return handleRegReg(encoder.MaskALU, args, 0x1)
-	case "AND":  return handleRegReg(encoder.MaskALU, args, 0x2)
-	case "XOR":  return handleRegReg(encoder.MaskALU, args, 0x3)
-	case "SUB":  return handleRegReg(encoder.MaskALU, args, 0x5)
-	case "SHR":  return handleRegReg(encoder.MaskALU, args, 0x6)
-	case "SUBN": return handleRegReg(encoder.MaskALU, args, 0x7)
-	case "SHL":  return handleRegReg(encoder.MaskALU, args, 0xE)
+	case "OR":
+		return handleRegReg(encoder.MaskALU, args, 0x1)
+	case "AND":
+		return handleRegReg(encoder.MaskALU, args, 0x2)
+	case "XOR":
+		return handleRegReg(encoder.MaskALU, args, 0x3)
+	case "SUB":
+		return handleRegReg(encoder.MaskALU, args, 0x5)
+	case "SHR":
+		return handleRegReg(encoder.MaskALU, args, 0x6)
+	case "SUBN":
+		return handleRegReg(encoder.MaskALU, args, 0x7)
+	case "SHL":
+		return handleRegReg(encoder.MaskALU, args, 0xE)
 
 	case "LD":
 		return handleLoad(args, labels)
@@ -93,8 +100,10 @@ func handleLoad(args []string, labels map[string]uint16) (uint16, error) {
 	if isRegister(dst) {
 		vx, _ := parseReg(dst)
 		switch {
-		case src == "DT": return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x07), nil
-		case src == "K":  return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x0A), nil
+		case src == "DT":
+			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x07), nil
+		case src == "K":
+			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x0A), nil
 		case isRegister(src):
 			vy, _ := parseReg(src)
 			return encoder.OpRegReg(encoder.MaskALU, vx, vy, 0x0), nil
@@ -108,11 +117,16 @@ func handleLoad(args []string, labels map[string]uint16) (uint16, error) {
 	if isRegister(src) {
 		vx, _ := parseReg(src)
 		switch dst {
-		case "DT":  return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x15), nil
-		case "ST":  return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x18), nil
-		case "F":   return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x29), nil
-		case "B":   return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x33), nil
-		case "[I]": return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x55), nil
+		case "DT":
+			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x15), nil
+		case "ST":
+			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x18), nil
+		case "F":
+			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x29), nil
+		case "B":
+			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x33), nil
+		case "[I]":
+			return encoder.OpRegOnly(encoder.MaskMISC, vx, 0x55), nil
 		}
 	}
 
