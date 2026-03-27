@@ -3,11 +3,14 @@ package cpu
 import (
 	"fmt"
 	"math/rand"
+
+	"github.com/arpitchakladar/chip-8/internal/display"
+	"github.com/arpitchakladar/chip-8/internal/memory"
 )
 
 // Execute decodes and performs the operation specified by the 16-bit opcode.
 // It returns an error if the opcode is unknown.
-func (c *CentralProcessingUnit) Execute(opcode uint16) error {
+func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp *display.Display) error {
 	// 0x F  X  Y  N
 	x := (opcode & 0x0F00) >> 8   // Register index
 	y := (opcode & 0x00F0) >> 4   // Register index
@@ -19,7 +22,7 @@ func (c *CentralProcessingUnit) Execute(opcode uint16) error {
 	case 0x0000:
 		switch opcode {
 		case 0x00E0: // CLS: Clear Display
-			// Handled by System/Display
+			disp.Clear()
 		case 0x00EE: // RET: Return from subroutine
 			c.StackPointer--
 			c.ProgramCounter = c.Stack[c.StackPointer]
@@ -97,6 +100,18 @@ func (c *CentralProcessingUnit) Execute(opcode uint16) error {
 
 	case 0xD000: // DXYN: DRW Vx, Vy, nibble
 		// Draw logic triggers here
+		c.Registers[0xF] = 0 // Reset collision flag
+		for row := range uint16(n) {
+			spriteByte := mem.Read(c.IndexRegister + row)
+			for col := range uint16(8) {
+				// Check if the specific bit in the sprite byte is 1
+				if (spriteByte & (0x80 >> col)) != 0 {
+					if disp.SetPixel(c.Registers[x]+uint8(col), c.Registers[y]+uint8(row)) {
+						c.Registers[0xF] = 1 // Collision!
+					}
+				}
+			}
+		}
 
 	case 0xE000: // Keyboard Inputs
 		switch kk {
