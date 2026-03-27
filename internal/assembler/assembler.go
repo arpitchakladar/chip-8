@@ -1,8 +1,7 @@
 package assembler
 
 import (
-	"strings"
-
+	"github.com/arpitchakladar/chip-8/internal/assembler/lexer"
 	"github.com/arpitchakladar/chip-8/internal/assembler/parser"
 )
 
@@ -19,44 +18,16 @@ func New() *Assembler {
 }
 
 func (a *Assembler) Assemble(input string) ([]byte, error) {
-	lines := strings.Split(input, "\n")
+	labels, lines := lexer.ScanLabels(input, a.ProgramCounter)
+	var program []byte
 
-	// --- Pass 1: Identify Labels ---
-	currAddr := uint16(0x200)
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, ";") {
-			continue
-		}
-
-		if label, found := strings.CutSuffix(line, ":"); found {
-			a.Labels[label] = currAddr
-		} else {
-			currAddr += 2
-		}
-	}
-
-	// --- Pass 2: Parse and Encode ---
-	var binary []byte
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, ";") || strings.HasSuffix(line, ":") {
-			continue
-		}
-
-		// Basic split: "LD V1, 0x55" -> mnemonic="LD", args=["V1", "0x55"]
-		parts := strings.Fields(strings.ReplaceAll(line, ",", " "))
-		mnemonic := parts[0]
-		args := parts[1:]
-
-		opcode, err := parser.Parse(mnemonic, args, a.Labels)
+		opcode, err := parser.Parse(line.Mnemonic, line.Args, labels)
 		if err != nil {
 			return nil, err
 		}
-
-		// CHIP-8 is Big-Endian (High byte first)
-		binary = append(binary, byte(opcode>>8), byte(opcode&0xFF))
+		program = append(program, byte(opcode>>8), byte(opcode&0xFF))
 	}
 
-	return binary, nil
+	return program, nil
 }
