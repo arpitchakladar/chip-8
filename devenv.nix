@@ -1,5 +1,18 @@
 { pkgs, ... }:
 
+let
+  libraries = [
+    pkgs.xorg.libX11
+    pkgs.xorg.libXcursor
+    pkgs.xorg.libXinerama
+    pkgs.xorg.libXrandr
+    pkgs.xorg.libXi
+    pkgs.mesa
+    pkgs.SDL2
+    pkgs.SDL2_ttf
+    pkgs.SDL2_gfx
+  ];
+in
 {
   languages.go = {
     enable = true;
@@ -12,12 +25,12 @@
   packages = with pkgs; [
     git
     pkg-config
-    SDL2
-    SDL2_ttf
-    mesa
-  ];
+  ] ++ libraries;
 
-  env.CGO_ENABLED = "1";
+  env = {
+    CGO_ENABLED = "1";
+    LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libraries}";
+  };
 
   scripts.run-emu.exec = "go run cmd/chip-8/main.go";
   scripts.test-all.exec = "go test ./...";
@@ -29,8 +42,6 @@
   pre-commit.hooks.editorconfig-checker.enable = true;
 
   enterShell = ''
-    echo "--- Chip-8 Go Development Environment ---"
-    go version
-    echo "Ready to emulate. Use 'run-emu' to start."
+    export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath libraries}
   '';
 }
