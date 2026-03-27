@@ -15,20 +15,22 @@ import (
 )
 
 type System struct {
-	CPU      *cpu.CentralProcessingUnit
-	Memory   *memory.Memory
-	Display  *display.Display
-	Keyboard *keyboard.Keyboard
-	Audio    *audio.Audio
+	CPU        *cpu.CentralProcessingUnit
+	Memory     *memory.Memory
+	Display    *display.Display
+	Keyboard   *keyboard.Keyboard
+	Audio      *audio.Audio
+	ClockSpeed uint32 // Instructions per second (in Hz)
 }
 
-func New() *System {
+func WithClockSpeed(clockSpeed uint32) *System {
 	s := &System{
-		CPU:      cpu.New(),
-		Memory:   memory.New(),
-		Display:  display.New(),
-		Keyboard: keyboard.New(),
-		Audio:    audio.New(),
+		CPU:        cpu.New(),
+		Memory:     memory.New(),
+		Display:    display.New(),
+		Keyboard:   keyboard.New(),
+		Audio:      audio.New(),
+		ClockSpeed: clockSpeed,
 	}
 
 	s.Memory.LoadFontSet()       // Load fonts into 0x000-0x050
@@ -114,8 +116,7 @@ func (s *System) Run(romPath string) error {
 
 	// 2. Timing logic
 	// We want the CPU to run fast, but Timers/Graphics at 60Hz.
-	cpuHz := 700
-	cpuInterval := time.Second / time.Duration(cpuHz)
+	cpuInterval := time.Second / time.Duration(s.ClockSpeed)
 	timerInterval := time.Second / 60
 
 	ticker := time.NewTicker(cpuInterval)
