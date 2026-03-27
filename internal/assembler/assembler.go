@@ -19,7 +19,8 @@ func New() *Assembler {
 }
 
 func (a *Assembler) Assemble(input string) ([]byte, error) {
-	labels, lines := lexer.ScanLabels(input, a.ProgramCounter)
+	lexer := lexer.New(input, a.ProgramCounter)
+	labels, lines := lexer.ScanLabels()
 	// TODO: REMOVE WHEN DEBUGGING IS OVER
 	fmt.Printf("Labels: %+v\n", labels)
 	fmt.Printf("Lines: %+v\n", lines)
