@@ -38,9 +38,7 @@ func Parse(mnemonic string, args []string, labels map[string]uint16) (uint16, er
 
 	case "ADD":
 		if isRegister(args[1]) {
-			vx, _ := parseReg(args[0])
-			vy, _ := parseReg(args[1])
-			return encoder.OpRegReg(encoder.MaskALU, vx, vy, 0x4), nil
+			return handleRegReg(encoder.MaskALU, args, 0x4)
 		}
 		vx, _ := parseReg(args[0])
 		val, _ := resolveValue(args[1], labels)
@@ -83,7 +81,8 @@ func Parse(mnemonic string, args []string, labels map[string]uint16) (uint16, er
 		vx, _ := parseReg(args[0])
 		return encoder.OpRegOnly(encoder.MaskKEY, vx, 0xA1), nil
 
-	case "DB":
+	// TODO: DON'T USE THIS. Make sure that the assembler is able to read raw bytes
+	case "DW":
 		// Resolve the value (e.g., 0x82 -> 130)
 		val, err := resolveValue(args[0], labels)
 		if err != nil {
@@ -101,7 +100,7 @@ func Parse(mnemonic string, args []string, labels map[string]uint16) (uint16, er
 
 // --- Helper Handlers ---
 func handleLoad(args []string, labels map[string]uint16) (uint16, error) {
-	dst, src := strings.ToUpper(args[0]), strings.ToUpper(args[1])
+	dst, src := args[0], args[1]
 
 	if dst == "I" {
 		addr, _ := resolveValue(src, labels)
@@ -120,6 +119,7 @@ func handleLoad(args []string, labels map[string]uint16) (uint16, error) {
 			return encoder.OpRegReg(encoder.MaskALU, vx, vy, 0x0), nil
 		default:
 			val, _ := resolveValue(src, labels)
+			fmt.Printf("%+v = : %+v\n", src, val)
 			return encoder.OpRegImm(encoder.MaskLD, vx, uint8(val)), nil
 		}
 	}

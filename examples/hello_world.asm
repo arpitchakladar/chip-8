@@ -1,21 +1,50 @@
-; --- Hello World (Draw a Pixel) ---
-; This program sets Index register I to a sprite
-; and draws it at coordinates (V0, V1)
+; --- CHIP-8 Hello World ---
+; Displays "HELO" on the screen
 
 START:
-    LD V0, 0x10      ; X coordinate = 16
-    LD V1, 0x10      ; Y coordinate = 16
-    LD I, SPRITE     ; Point I to the label 'SPRITE'
-    DRW V0, V1, 5    ; Draw 5 bytes from memory at (V0, V1)
+    LD V0, 0x02      ; X coordinate start
+    LD V1, 0x0A      ; Y coordinate
+
+    ; Draw 'H'
+    LD I, CHAR_H
+    DRW V0, V1, 5
+    ADD V0, 0x05     ; Move X for next character
+
+    ; Draw 'E'
+    LD I, CHAR_E
+    DRW V0, V1, 5
+    ADD V0, 0x05
+
+    ; Draw 'L'
+    LD I, CHAR_L
+    DRW V0, V1, 5
+    ADD V0, 0x05
+
+    ; Draw 'O'
+    LD I, CHAR_O
+    DRW V0, V1, 5
 
 LOOP:
-    JP LOOP          ; Infinite loop to keep the screen visible
+    JP LOOP          ; Halt here
 
-; --- Data Section ---
-; A simple 'H' shape sprite (5 bytes high)
-SPRITE:
-    DB 0x82
-    DB 0x82
-    DB 0xFE
-    DB 0x82
-    DB 0x82
+; --- Character Sprites (5 bytes high) ---
+
+CHAR_H:
+    DW 0x8888 ; 10001000
+    DW 0xF888 ; 10001000
+    DW 0x8800 ; 10001000
+
+CHAR_E:
+    DW 0xF880 ; 11111000
+    DW 0xF080 ; 11110000
+    DW 0xF800 ; 11111000
+
+CHAR_L:
+    DW 0x8080 ; 10000000
+    DW 0x8080 ; 10000000
+    DW 0xF800 ; 11111000
+
+CHAR_O:
+    DW 0x7088 ; 10001000
+    DW 0x8888 ; 10001000
+    DW 0x7000 ; 01110000
