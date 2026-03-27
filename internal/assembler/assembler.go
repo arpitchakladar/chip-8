@@ -1,6 +1,7 @@
 package assembler
 
 import (
+	"fmt"
 	"github.com/arpitchakladar/chip-8/internal/assembler/lexer"
 	"github.com/arpitchakladar/chip-8/internal/assembler/parser"
 )
@@ -19,6 +20,9 @@ func New() *Assembler {
 
 func (a *Assembler) Assemble(input string) ([]byte, error) {
 	labels, lines := lexer.ScanLabels(input, a.ProgramCounter)
+	// TODO: REMOVE WHEN DEBUGGING IS OVER
+	fmt.Printf("Labels: %+v\n", labels)
+	fmt.Printf("Lines: %+v\n", lines)
 	var program []byte
 
 	for _, line := range lines {
