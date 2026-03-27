@@ -117,8 +117,10 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 			for col := range uint16(8) {
 				// Check if the specific bit in the sprite byte is 1
 				if (spriteByte & (0x80 >> col)) != 0 {
-					if disp.SetPixel(c.Registers[x]+uint8(col), c.Registers[y]+uint8(row)) {
-						c.Registers[0xF] = 1 // Collision!
+					posX := (c.Registers[x] + uint8(col)) % 64
+					posY := (c.Registers[y] + uint8(row)) % 32
+					if disp.SetPixel(posX, posY) {
+						c.Registers[0xF] = 1
 					}
 				}
 			}

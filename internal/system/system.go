@@ -7,6 +7,7 @@ import (
 
 	"github.com/veandco/go-sdl2/sdl"
 
+	"github.com/arpitchakladar/chip-8/internal/audio"
 	"github.com/arpitchakladar/chip-8/internal/cpu"
 	"github.com/arpitchakladar/chip-8/internal/display"
 	"github.com/arpitchakladar/chip-8/internal/keyboard"
@@ -18,6 +19,7 @@ type System struct {
 	Memory   *memory.Memory
 	Display  *display.Display
 	Keyboard *keyboard.Keyboard
+	Audio    *audio.Audio
 }
 
 func New() *System {
@@ -26,6 +28,7 @@ func New() *System {
 		Memory:   memory.New(),
 		Display:  display.New(),
 		Keyboard: keyboard.New(),
+		Audio:    audio.New(),
 	}
 
 	s.Memory.LoadFontSet()       // Load fonts into 0x000-0x050
@@ -61,6 +64,21 @@ func (s *System) Step() error {
 	return s.CPU.Execute(opcode, s.Memory, s.Display, s.Keyboard)
 }
 
+func (s *System) UpdateTimers() {
+	if s.CPU.SoundTimer > 0 {
+		// Unpause the audio device to start the buzz
+		sdl.PauseAudioDevice(s.Audio.Device, false)
+		s.CPU.SoundTimer--
+	} else {
+		// Pause the audio device when timer hits 0
+		sdl.PauseAudioDevice(s.Audio.Device, true)
+	}
+
+	if s.CPU.DelayTimer > 0 {
+		s.CPU.DelayTimer--
+	}
+}
+
 func (s *System) HandleKeyboard(event *sdl.KeyboardEvent) {
 	keyCode := event.Keysym.Sym
 	// Type 0x300 is KeyDown, 0x301 is KeyUp in SDL
@@ -85,6 +103,17 @@ func (s *System) Run(romPath string) error {
 	if err := s.Display.InitSDL(); err != nil {
 		return fmt.Errorf("failed to init display: %w", err)
 	}
+
+	if err := s.Audio.Init(); err != nil {
+		// Log error but maybe don't crash? Some systems don't have speakers.
+		fmt.Printf("Warning: Audio failed to init: %v\n", err)
+	} else {
+		// CALL IT HERE: Pre-fill the audio buffer
+		if err := s.Audio.GenerateBeep(); err != nil {
+			return err
+		}
+	}
+
 	defer func() {
 		if err := s.Display.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error closing display: %v\n", err)
@@ -124,13 +153,15 @@ func (s *System) Run(romPath string) error {
 
 		// C. Sync Timers and Display to 60Hz
 		if time.Since(lastTimerUpdate) >= timerInterval {
-			s.CPU.UpdateTimers()
+			s.UpdateTimers()
 			if err := s.Display.Present(); err != nil {
 				return err
 			}
 			lastTimerUpdate = time.Now()
 		}
 	}
+
+	s.Audio.Close()
 
 	return nil
 }
