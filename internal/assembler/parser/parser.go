@@ -94,17 +94,21 @@ func (p *Parser) Parse(mnemonic string, args []string) ([]byte, error) {
 		vx, _ := p.parseReg(args[0])
 		return p.toBinary(p.Encoder.RegOnly(encoder.MaskKEY, vx, 0xA1)), nil
 
-	// TODO: DON'T USE THIS. Make sure that the assembler is able to read raw bytes
 	case "DW":
 		// Resolve the value (e.g., 0x82 -> 130)
 		val, err := p.resolveValue(args[0])
 		if err != nil {
 			return []byte{}, err
 		}
-		// Return it as a raw 16-bit value.
-		// If you only want 8 bits, you'll eventually need to
-		// refactor your assembler to handle byte-streams.
 		return p.toBinary(val), nil
+
+	case "DB":
+		// Resolve the value (e.g., 0x82 -> 130)
+		val, err := p.resolveValue(args[0])
+		if err != nil {
+			return []byte{}, err
+		}
+		return []byte{byte(val)}, nil
 
 	default:
 		return []byte{}, fmt.Errorf("unknown mnemonic: %s", mnemonic)

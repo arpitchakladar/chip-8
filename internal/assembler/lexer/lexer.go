@@ -38,12 +38,17 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line) {
 
 			// Safety check: ensure the line isn't empty before accessing parts[0]
 			if len(parts) > 0 {
+				mnemonic := strings.ToUpper(parts[0])
 				program = append(program, Line{
-					Mnemonic: strings.ToUpper(parts[0]),
+					Mnemonic: mnemonic,
 					Args:     parts[1:],
 					Address:  l.CurrentAddr,
 				})
-				l.CurrentAddr += 2
+				if mnemonic != "DB" {
+					l.CurrentAddr += 2
+				} else {
+					l.CurrentAddr++
+				}
 			}
 		}
 	}
