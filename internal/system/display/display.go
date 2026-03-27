@@ -34,7 +34,15 @@ func (d *Display) Clear() {
 
 // SetPixel toggles a pixel at (x, y) and returns true if a collision occurred.
 // Chip-8 uses XOR drawing: if a pixel is already on and we draw it again, it turns off.
-func (d *Display) SetPixel(x, y uint8) bool {
+func (d *Display) SetPixel(x, y uint8) (bool, error) {
+	var err *CoordinateError
+
+	// Check if the original coordinates were out of bounds
+	// even though we will wrap them below.
+	if x >= Width || y >= Height {
+		err = &CoordinateError{X: x, Y: y}
+	}
+
 	// Wrap coordinates (standard Chip-8 behavior)
 	x %= Width
 	y %= Height
@@ -47,7 +55,8 @@ func (d *Display) SetPixel(x, y uint8) bool {
 	// XOR the pixel
 	d.Pixels[index] ^= 1
 
-	return collision
+	// Returns collision status AND the error (which is nil if in-bounds)
+	return collision, err
 }
 
 // InitSDL sets up the window and renderer
