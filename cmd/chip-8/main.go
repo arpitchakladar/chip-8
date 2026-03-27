@@ -9,7 +9,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: run-emu <path-to-rom>")
+		fmt.Println("Usage: <path-to-rom>")
 		return
 	}
 
