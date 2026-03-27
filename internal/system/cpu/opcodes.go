@@ -187,7 +187,11 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 		}
 
 	default:
-		return fmt.Errorf("unknown opcode: %04X", opcode)
+		return &CPUError{
+			Opcode: opcode,
+			PC:     c.ProgramCounter - 2, // Assuming Step() already moved forward
+			Err:    fmt.Errorf("unknown instruction"),
+		}
 	}
 
 	return nil
