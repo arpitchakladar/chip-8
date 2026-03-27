@@ -5,18 +5,19 @@ import (
 	"math/rand"
 
 	"github.com/arpitchakladar/chip-8/internal/display"
+	"github.com/arpitchakladar/chip-8/internal/keyboard"
 	"github.com/arpitchakladar/chip-8/internal/memory"
 )
 
 // Execute decodes and performs the operation specified by the 16-bit opcode.
 // It returns an error if the opcode is unknown.
-func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp *display.Display) error {
+func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp *display.Display, keyb *keyboard.Keyboard) error {
 	// 0x F  X  Y  N
-	x := (opcode & 0x0F00) >> 8   // Register index
-	y := (opcode & 0x00F0) >> 4   // Register index
-	nnn := opcode & 0x0FFF        // 12-bit address
-	kk := byte(opcode & 0x00FF)   // 8-bit constant
-	n := byte(opcode & 0x000F)    // 4-bit constant
+	x := (opcode & 0x0F00) >> 8 // Register index
+	y := (opcode & 0x00F0) >> 4 // Register index
+	nnn := opcode & 0x0FFF      // 12-bit address
+	kk := byte(opcode & 0x00FF) // 8-bit constant
+	n := byte(opcode & 0x000F)  // 4-bit constant
 
 	switch opcode & 0xF000 {
 	case 0x0000:
@@ -59,25 +60,35 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 
 	case 0x8000: // Arithmetic Group
 		switch n {
-		case 0x0: c.Registers[x] = c.Registers[y]
-		case 0x1: c.Registers[x] |= c.Registers[y]
-		case 0x2: c.Registers[x] &= c.Registers[y]
-		case 0x3: c.Registers[x] ^= c.Registers[y]
+		case 0x0:
+			c.Registers[x] = c.Registers[y]
+		case 0x1:
+			c.Registers[x] |= c.Registers[y]
+		case 0x2:
+			c.Registers[x] &= c.Registers[y]
+		case 0x3:
+			c.Registers[x] ^= c.Registers[y]
 		case 0x4: // ADD Vx, Vy (With Carry)
 			sum := uint16(c.Registers[x]) + uint16(c.Registers[y])
 			c.Registers[0xF] = 0
-			if sum > 255 { c.Registers[0xF] = 1 }
+			if sum > 255 {
+				c.Registers[0xF] = 1
+			}
 			c.Registers[x] = byte(sum & 0xFF)
 		case 0x5: // SUB Vx, Vy
 			c.Registers[0xF] = 1
-			if c.Registers[x] < c.Registers[y] { c.Registers[0xF] = 0 }
+			if c.Registers[x] < c.Registers[y] {
+				c.Registers[0xF] = 0
+			}
 			c.Registers[x] -= c.Registers[y]
 		case 0x6: // SHR Vx (Shift Right)
 			c.Registers[0xF] = c.Registers[x] & 0x1
 			c.Registers[x] >>= 1
 		case 0x7: // SUBN Vx, Vy
 			c.Registers[0xF] = 1
-			if c.Registers[y] < c.Registers[x] { c.Registers[0xF] = 0 }
+			if c.Registers[y] < c.Registers[x] {
+				c.Registers[0xF] = 0
+			}
 			c.Registers[x] = c.Registers[y] - c.Registers[x]
 		case 0xE: // SHL Vx (Shift Left)
 			c.Registers[0xF] = (c.Registers[x] & 0x80) >> 7
@@ -115,8 +126,14 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 
 	case 0xE000: // Keyboard Inputs
 		switch kk {
-		case 0x9E: // SKP Vx
-		case 0xA1: // SKNP Vx
+		case 0x9E: // SKP Vx: Skip next instruction if key with the value of Vx is pressed
+			if keyb.IsKeyPressed(c.Registers[x]) {
+				c.ProgramCounter += 2
+			}
+		case 0xA1: // SKNP Vx: Skip next instruction if key with the value of Vx is NOT pressed
+			if !keyb.IsKeyPressed(c.Registers[x]) {
+				c.ProgramCounter += 2
+			}
 		}
 
 	case 0xF000:
@@ -125,9 +142,16 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 			c.Registers[x] = c.DelayTimer
 
 		case 0x0A: // LD Vx, K: Wait for a key press, store the value of the key in Vx
-			// This is a "blocking" opcode. Usually implemented by
+			// Thisis a "blocking" opcode. Usually implemented by
 			// decrementing PC by 2 if no key is pressed, effectively
 			// pausing the CPU on this instruction.
+			if key, pressed := keyb.AnyKeyPressed(); pressed {
+				c.Registers[x] = key
+			} else {
+				// No key pressed? Repeat this instruction on the next cycle.
+				// We subtract 2 because the Step() function already incremented it.
+				c.ProgramCounter -= 2
+			}
 
 		case 0x15: // LD DT, Vx: Set delay timer = Vx
 			c.DelayTimer = c.Registers[x]
@@ -145,9 +169,9 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 
 		case 0x33: // BCD: Store BCD representation of Vx in memory locations I, I+1, and I+2
 			val := c.Registers[x]
-			mem.Write(c.IndexRegister, val/100)          // Hundreds
-			mem.Write(c.IndexRegister+1, (val/10)%10)    // Tens
-			mem.Write(c.IndexRegister+2, val%10)         // Ones
+			mem.Write(c.IndexRegister, val/100)       // Hundreds
+			mem.Write(c.IndexRegister+1, (val/10)%10) // Tens
+			mem.Write(c.IndexRegister+2, val%10)      // Ones
 
 		case 0x55: // LD [I], Vx: Store registers V0 through Vx in memory starting at location I
 			for i := range x + 1 {
@@ -156,7 +180,7 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 
 		case 0x65: // LD Vx, [I]: Read registers V0 through Vx from memory starting at location I
 			for i := range x + 1 {
-				c.Registers[i] = mem.Read(c.IndexRegister+i)
+				c.Registers[i] = mem.Read(c.IndexRegister + i)
 			}
 		}
 

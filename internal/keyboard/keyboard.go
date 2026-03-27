@@ -18,3 +18,12 @@ func (i *Keyboard) IsKeyPressed(key byte) bool {
 	}
 	return i.Keys[key]
 }
+
+func (in *Keyboard) AnyKeyPressed() (byte, bool) {
+	for i, isPressed := range in.Keys {
+		if isPressed {
+			return byte(i), true
+		}
+	}
+	return 0, false
+}
