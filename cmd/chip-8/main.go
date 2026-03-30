@@ -37,7 +37,7 @@ func printUsage() {
 }
 
 func runEmulator(path string) {
-	vm := emulator.WithClockSpeed(1000)
+	vm := emulator.WithClockSpeed(100000)
 	fmt.Printf("Starting emulator with: %s\n", path)
 
 	content, err := os.ReadFile(path)
