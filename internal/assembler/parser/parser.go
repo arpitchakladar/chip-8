@@ -184,8 +184,14 @@ func (p *Parser) handleSkip(immBase, regBase uint16, args []string) ([]byte, err
 }
 
 func (p *Parser) handleRegReg(base uint16, args []string, suffix uint16) ([]byte, error) {
-	vx, _ := p.parseReg(args[0])
-	vy, _ := p.parseReg(args[1])
+	vx, err := p.parseReg(args[0])
+	if err != nil {
+		return nil, err
+	}
+	vy, err := p.parseReg(args[1])
+	if err != nil {
+		return nil, err
+	}
 	return p.toBinary(p.Encoder.RegReg(base, vx, vy, suffix)), nil
 }
 
@@ -198,8 +204,19 @@ func (p *Parser) isRegister(s string) bool {
 
 // Returns the registor number from its name
 func (p *Parser) parseReg(s string) (uint8, error) {
+	// Check if string is long enough and starts with 'v' or 'V'
+	if !p.isRegister(s) {
+		return 0, fmt.Errorf("invalid register format: %s (expected vX or VX)", s)
+	}
+
+	// Parse the remainder of the string as hex (base 16)
+	// s[1:] skips the prefix character
 	val, err := strconv.ParseUint(s[1:], 16, 8)
-	return uint8(val), err
+	if err != nil {
+		return 0, fmt.Errorf("invalid register value: %w", err)
+	}
+
+	return uint8(val), nil
 }
 
 // Evaluate the value of a value type token (labels, constants)
