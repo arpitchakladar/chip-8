@@ -110,7 +110,7 @@ This will output `examples/hello_world.ch8`.
 | Fx0A | `LD Vx, K` | Wait for key press, store in Vx |
 | Fx15 | `LD DT, Vx` | Set delay timer = Vx |
 | Fx18 | `LD ST, Vx` | Set sound timer = Vx |
-| Fx1E | `ADD I, Vx` | Set I = I + Vx |
+| Fx1E | `LD I, Vx` | Set I = I + Vx |
 | Fx29 | `LD F, Vx` | Set I = location of sprite for digit Vx |
 | Fx33 | `LD B, Vx` | Store BCD of Vx at I, I+1, I+2 |
 | Fx55 | `LD [I], Vx` | Store V0-Vx in memory starting at I |

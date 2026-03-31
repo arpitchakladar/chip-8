@@ -16,19 +16,21 @@ INITIALIZE:
 	LD I, SNAKE_BODY_DATA
 	LD V0, 32         ; Initial X axis of snake head
 	LD V1, 16         ; Initial Y axis of snake head
-	LD V2, 0          ; Loop counter
+	LD V3, 0          ; Loop counter
+	LD V4, 2
 	INITIALIZE_SNAKE_BODY_LOOP:
 		LD [I], V1
 		SUB V0, 1 ; Decrement the X position by 1 (for the next body part)
-		ADD V2, 1
-		SE V2, 1 ; Add 3 body to the snake (except head)
+		ADD V3, 1
+		SE V3, 2 ; Add as many bodies as length of snake
+		LD I, V4
 		JP INITIALIZE_SNAKE_BODY_LOOP
 	RET
 
 DRAW_SNAKE:
 	; 1. Load Head position from RAM back into registers
 	LD I, SNAKE_BODY_DATA
-	LD V2, [I]        ; Fills V0 through V4 with the saved data
+	LD V1, [I]        ; Fills V0 through V4 with the saved data
 
 	; 2. Draw the head using V0 (X) and V1 (Y)
 	LD I, SPRITE_DOT
