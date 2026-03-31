@@ -36,7 +36,7 @@ INITIALIZE:
 		SUB V0, V5 ; Decrement the X position by 1 (for the next body part)
 		LD [I], V1
 		ADD V3, 1
-		LD I, V4
+		ADD I, V4
 		SE V3, V2 ; Add as many bodies as length of snake
 		JP INITIALIZE_SNAKE_BODY_LOOP
 	RET
@@ -156,7 +156,7 @@ MOVE_SNAKE:
 
 			; Draw over the last tail to remove it
 			LD I, SNAKE_BODY_DATA
-			LD I, V3
+			ADD I, V3
 			LD V1, [I]
 			LD I, SPRITE_DOT
 			DRW V0, V1, 1 ; Reset the tail of the sna
@@ -175,14 +175,14 @@ MOVE_SNAKE:
 
 			; Loading the position of the current snake body
 			LD I, SNAKE_BODY_DATA
-			LD I, V3
+			ADD I, V3
 			LD V1, [I]
 
 			; Getting the position of the current snake body piece
 			; Add 2 for reseting the changes used to get previous body
 			ADD V3, V4
 			LD I, SNAKE_BODY_DATA
-			LD I, V3
+			ADD I, V3
 			LD [I], V1
 
 			; Finally decrementing the counter
@@ -220,8 +220,8 @@ DRAW_SNAKE:
 	LD V4, 2
 	DRAW_SNAKE_BODY_LOOP:
 		LD I, SNAKE_BODY_DATA
-		LD I, V3
-		LD I, V3          ; Add V3 twice because the equation is ith body = I + V3 * 2
+		ADD I, V3
+		ADD I, V3         ; Add V3 twice because the equation is ith body = I + V3 * 2
 		LD V1, [I]        ; Fills V0 through V4 with the saved data
 
 		; 2. Draw the head using V0 (X) and V1 (Y)

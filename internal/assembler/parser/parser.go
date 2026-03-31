@@ -50,6 +50,10 @@ func (p *Parser) Parse(mnemonic string, args []string) ([]byte, error) {
 		return p.handleSkip(encoder.MaskSNE, encoder.MaskSNER, args)
 
 	case "ADD":
+		if args[0] == "I" {
+			vx, _ := p.parseReg(args[1])
+			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E)), nil
+		}
 		if p.isRegister(args[1]) {
 			return p.handleRegReg(encoder.MaskALU, args, 0x4)
 		}
@@ -125,16 +129,13 @@ func (p *Parser) toBinary(opcode uint16) []byte {
 func (p *Parser) handleLoad(args []string) ([]byte, error) {
 	dst, src := args[0], args[1]
 
+	// LD I, addr
 	if dst == "I" {
-		// LD I, Vx (Add to I)
-		if p.isRegister(src) {
-			vx, _ := p.parseReg(src)
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E)), nil
-		}
 		addr, _ := p.resolveValue(src)
 		return p.toBinary(p.Encoder.Addr(encoder.MaskLDI, addr)), nil
 	}
 
+	// LD Vx, [Source]
 	if p.isRegister(dst) {
 		vx, _ := p.parseReg(dst)
 		switch {
