@@ -58,22 +58,22 @@ GENERATE_AND_DRAW_FOOD:
 	RET
 
 CHECK_INPUT:
-	; --- Check Key 2 (UP) ---
+	; --- Check Key 2 (UP, key 2) ---
 	LD V0, 0x02
 	SKNP V0            ; If Key 2 is pressed, don't skip
 	CALL SET_UP
 
-	; --- Check Key 8 (DOWN) ---
+	; --- Check Key 8 (DOWN, key s) ---
 	LD V0, 0x08
 	SKNP V0
 	CALL SET_DOWN
 
-	; --- Check Key 4 (LEFT) ---
+	; --- Check Key 4 (LEFT, key q) ---
 	LD V0, 0x04
 	SKNP V0
 	CALL SET_LEFT
 
-	; --- Check Key 6 (RIGHT) ---
+	; --- Check Key 6 (RIGHT, key e) ---
 	LD V0, 0x06
 	SKNP V0
 	CALL SET_RIGHT
@@ -134,6 +134,7 @@ MOVE_SNAKE:
 
 			LD V1, [I]
 
+			; Check if the corrdinates are same
 			SE V0, V5
 			JP CHECK_COLLISION_WITH_BODY_LOOP_continue
 			SE V1, V6
@@ -267,13 +268,132 @@ DRAW_SNAKE:
 	RET
 
 STOP_GAME:
-	JP STOP_GAME
+	CLS                  ; Clear the screen
+
+	; ── Row 1: "GAME" at y=8 ──────────────────────────────────
+	LD  V1, 8
+
+	LD  V0, 20
+	LD  I, SPR_GO_G
+	DRW V0, V1, 8
+
+	LD  V0, 26
+	LD  I, SPR_GO_A
+	DRW V0, V1, 8
+
+	LD  V0, 32
+	LD  I, SPR_GO_M
+	DRW V0, V1, 8
+
+	LD  V0, 38
+	LD  I, SPR_GO_E
+	DRW V0, V1, 8
+
+	; ── Row 2: "OVER" at y=20 ─────────────────────────────────
+	LD  V1, 20
+
+	LD  V0, 20
+	LD  I, SPR_GO_O
+	DRW V0, V1, 8
+
+	LD  V0, 26
+	LD  I, SPR_GO_V
+	DRW V0, V1, 8
+
+	LD  V0, 32
+	LD  I, SPR_GO_E
+	DRW V0, V1, 8
+
+	LD  V0, 38
+	LD  I, SPR_GO_R
+	DRW V0, V1, 8
+
+	STOP_GAME_HALT:
+		JP  STOP_GAME_HALT       ; Freeze here forever
+
 	RET
 
 ; --- Data Section ---
 ; Aligning labels so they don't overlap
 SPRITE_DOT:
 	DB 0x80
+
+; G
+SPR_GO_G:
+	DB 0x70
+	DB 0x80
+	DB 0x80
+	DB 0xB8
+	DB 0x88
+	DB 0x78
+	DB 0x00
+	DB 0x00
+
+; A
+SPR_GO_A:
+	DB 0x70
+	DB 0x88
+	DB 0x88
+	DB 0xF8
+	DB 0x88
+	DB 0x88
+	DB 0x00
+	DB 0x00
+
+; M
+SPR_GO_M:
+	DB 0x88
+	DB 0xD8
+	DB 0xA8
+	DB 0x88
+	DB 0x88
+	DB 0x88
+	DB 0x00
+	DB 0x00
+
+; E
+SPR_GO_E:
+	DB 0xF8
+	DB 0x80
+	DB 0x80
+	DB 0xF0
+	DB 0x80
+	DB 0xF8
+	DB 0x00
+	DB 0x00
+
+; O
+SPR_GO_O:
+	DB 0x70
+	DB 0x88
+	DB 0x88
+	DB 0x88
+	DB 0x88
+	DB 0x70
+	DB 0x00
+	DB 0x00
+
+; V
+SPR_GO_V:
+	DB 0x88
+	DB 0x88
+	DB 0x88
+	DB 0x50
+	DB 0x50
+	DB 0x20
+	DB 0x00
+	DB 0x00
+
+; R
+SPR_GO_R:
+	DB 0xF0
+	DB 0x88
+	DB 0x88
+	DB 0xF0
+	DB 0xA0
+	DB 0x90
+	DB 0x00
+	DB 0x00
 
 ; We use enough space to store the snake's state
 ; LD [I], V4 needs 5 bytes of space (V0, V1, V2, V3, V4)
