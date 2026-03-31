@@ -18,12 +18,13 @@ INITIALIZE:
 	LD V1, 16         ; Initial Y axis of snake head
 	LD V3, 0          ; Loop counter
 	LD V4, 2
+	LD V5, 1
 	INITIALIZE_SNAKE_BODY_LOOP:
+		SUB V0, V5 ; Decrement the X position by 1 (for the next body part)
 		LD [I], V1
-		SUB V0, 1 ; Decrement the X position by 1 (for the next body part)
 		ADD V3, 1
-		SE V3, 2 ; Add as many bodies as length of snake
 		LD I, V4
+		SE V3, V2 ; Add as many bodies as length of snake
 		JP INITIALIZE_SNAKE_BODY_LOOP
 	RET
 
