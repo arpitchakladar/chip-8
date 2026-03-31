@@ -168,14 +168,24 @@ MOVE_SNAKE:
 
 	START_MAKE_SNAKE_LOOP:
 		MOVE_SNAKE_LOOP:
+			; Decrement the index counter for snake body to get the
+			; body just ahead of this one
+			; V3 gets subtracted by 2 (each snake body is 2 bytes)
 			SUB V3, V4
+
+			; Loading the position of the current snake body
 			LD I, SNAKE_BODY_DATA
 			LD I, V3
 			LD V1, [I]
+
+			; Getting the position of the current snake body piece
+			; Add 2 for reseting the changes used to get previous body
 			ADD V3, V4
 			LD I, SNAKE_BODY_DATA
 			LD I, V3
 			LD [I], V1
+
+			; Finally decrementing the counter
 			SUB V3, V4
 
 			SE V3, 0
