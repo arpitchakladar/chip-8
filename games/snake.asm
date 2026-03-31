@@ -2,9 +2,19 @@ START:
 	CALL INITIALIZE
 	CALL GENERATE_AND_DRAW_FOOD
 	CALL DRAW_SNAKE
-	CALL MOVE_SNAKE
-LOOP:
-	JP LOOP
+	LOOP:
+		LD V0, 10        ; Delay for ~166ms (10/60 seconds)
+		LD DT, V0
+
+	WAIT_LOOP:
+		LD V0, DT
+		SNE V0, 0        ; Wait for timer to hit zero
+		JP TRIGGER_MOVE
+		JP WAIT_LOOP
+
+	TRIGGER_MOVE:
+		CALL MOVE_SNAKE
+		JP LOOP
 
 INITIALIZE:
 	LD V0, 1          ; Vel X
@@ -54,8 +64,6 @@ MOVE_SNAKE:
 
 	ADD V3, V4
 
-	RET
-
 	MOVE_SNAKE_LOOP:
 		SUB V3, V4
 		LD I, SNAKE_BODY_DATA
@@ -69,6 +77,19 @@ MOVE_SNAKE:
 
 		SE V3, 0
 		JP MOVE_SNAKE_LOOP
+
+	LD I, SNAKE_VEL_X
+	LD V1, [I]
+	LD V2, V0
+	LD v3, V1
+	LD I, SNAKE_BODY_DATA
+	LD V1, [I]
+	ADD V0, V2
+	ADD V1, V3
+	LD [I], V1
+	LD I, SPRITE_DOT
+	DRW V0, V1, 1 ; Create the new head
+	RET
 
 DRAW_SNAKE:
 	; 1. Load snake information from RAM back into registers
