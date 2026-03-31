@@ -167,6 +167,15 @@ The `examples/` directory contains sample assembly programs:
 [1dcell.ch8](https://johnearnest.github.io/chip8Archive/play.html?p=1dcell)
 ![1dcell](https://github.com/user-attachments/assets/bdb9391f-c3c9-4ce8-a1af-769320c1b85a)
 
+[octoachip8story.ch8](https://johnearnest.github.io/chip8Archive/play.html?p=octoachip8story)
+![octoachip8story](https://github.com/user-attachments/assets/4bff8aa9-e621-4f93-86fb-ca9a79913b55)
+
+[pumpkindressup.ch8](https://johnearnest.github.io/chip8Archive/play.html?p=pumpkindressup)
+![pumpkindressup](https://github.com/user-attachments/assets/ec7dfe4f-c5f6-4e92-adad-4d11def91889)
+
+[RPS.ch8](https://johnearnest.github.io/chip8Archive/play.html?p=RPS)
+![RPS](https://github.com/user-attachments/assets/5236e161-7796-46b3-8380-737c8c9c6d91)
+
 To test out some other ROMs you may download them from [here](https://johnearnest.github.io/chip8Archive/).
 
 ## License
