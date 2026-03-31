@@ -236,3 +236,13 @@ func (p *Parser) resolveValue(s string) (uint16, error) {
 	v, err := strconv.ParseUint(clean, base, 16)
 	return uint16(v), err
 }
+
+// Error handler
+// func (p *Parser) parseErr(mnemonic string, args []string, line uint16, child error) error {
+// 	return &ParseError{
+// 		Mnemonic:   mnemonic,
+// 		Args:       args,
+// 		LineNumber: line,
+// 		Child:      child,
+// 	}
+// }
