@@ -14,12 +14,12 @@ func New() *Keyboard {
 }
 
 // IsKeyPressed is a helper for the CPU opcodes (EX9E and EXA1).
-func (i *Keyboard) IsKeyPressed(key byte) bool {
-	return key <= 15 && i.Keys[key]
+func (kb *Keyboard) IsKeyPressed(key byte) bool {
+	return key <= 15 && kb.Keys[key]
 }
 
-func (in *Keyboard) AnyKeyPressed() (byte, bool) {
-	for i, isPressed := range in.Keys {
+func (kb *Keyboard) AnyKeyPressed() (byte, bool) {
+	for i, isPressed := range kb.Keys {
 		if isPressed {
 			return byte(i), true
 		}
