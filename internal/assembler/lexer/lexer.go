@@ -3,9 +3,10 @@ package lexer
 import "strings"
 
 type Line struct {
-	Mnemonic string
-	Args     []string
-	Address  uint16
+	Mnemonic   string
+	Args       []string
+	Address    uint16
+	LineNumber uint16
 }
 
 type Lexer struct {
@@ -24,7 +25,9 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line) {
 	labels := make(map[string]uint16)
 	var program []Line
 
+	i := uint16(0)
 	for raw := range strings.SplitSeq(l.Source, "\n") {
+		i++
 		content := strings.Split(raw, ";")[0] // Strip comments
 		content = strings.TrimSpace(content)
 		if content == "" {
@@ -40,10 +43,13 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line) {
 			if len(parts) > 0 {
 				mnemonic := strings.ToUpper(parts[0])
 				program = append(program, Line{
-					Mnemonic: mnemonic,
-					Args:     parts[1:],
-					Address:  l.CurrentAddr,
+					Mnemonic:   mnemonic,
+					Args:       parts[1:],
+					Address:    l.CurrentAddr,
+					LineNumber: i,
 				})
+				// Only DB can create a value of a single binary
+				// every other mnemonic is 2 bytes
 				if mnemonic != "DB" {
 					l.CurrentAddr += 2
 				} else {
