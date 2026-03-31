@@ -2,6 +2,7 @@ START:
 	CALL INITIALIZE
 	CALL GENERATE_AND_DRAW_FOOD
 	CALL DRAW_SNAKE
+	CALL MOVE_SNAKE
 LOOP:
 	JP LOOP
 
@@ -30,16 +31,47 @@ INITIALIZE:
 	RET
 
 GENERATE_AND_DRAW_FOOD:
-	RND V0, 0xFF
-	RND V1, 0xFF
+	RND V0, 0xFF  ; Generate random X coordinate
+	RND V1, 0xFF  ; Generate random Y coordinate
 	LD I, FOOD_X
-	LD [I], V1
+	LD [I], V1    ; Save coordinates to memory
 	LD I, SPRITE_DOT
-	DRW V0, V1, 1
+	DRW V0, V1, 1 ; Draw food
 	RET
 
+MOVE_SNAKE:
+	LD I, SNAKE_LEN
+	LD V0, [I]
+	LD V3, V0 ; Get snake length
+	ADD V3, V0 ; Get snake length (*2 for the fact each body is 2 bytes)
+	LD V4, 2 ; for decrementing counter
+	SUB V3, V4 ; Get the index of last body part
+	LD I, SNAKE_BODY_DATA
+	LD I, V3
+	LD V1, [I]
+	LD I, SPRITE_DOT
+	DRW V0, V1, 1 ; Reset the tail of the snake (to make it move forward)
+
+	ADD V3, V4
+
+	RET
+
+	MOVE_SNAKE_LOOP:
+		SUB V3, V4
+		LD I, SNAKE_BODY_DATA
+		LD I, V3
+		LD V1, [I]
+		ADD V3, V4
+		LD I, SNAKE_BODY_DATA
+		LD I, V3
+		LD [I], V1
+		SUB V3, V4
+
+		SE V3, 0
+		JP MOVE_SNAKE_LOOP
+
 DRAW_SNAKE:
-	; 1. Load Head position from RAM back into registers
+	; 1. Load snake information from RAM back into registers
 	LD I, SNAKE_LEN
 	LD V0, [I]
 	LD V2, V0
