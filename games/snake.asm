@@ -116,42 +116,55 @@ MOVE_SNAKE:
 	ADD V3, V0 ; Get snake length (*2 for the fact each body is 2 bytes)
 	LD V4, 2 ; for decrementing counter
 
-	LD I, FOOD_X
-	LD V1, [I]
-
-	LD V5, V0
-	LD V6, V1
-
-	LD I, SNAKE_BODY_DATA
-	LD V1, [I]
-
-	SE V5, V0
-	JP REMOVE_TAIL
-	SNE V6, V1 ; Collision of head with food
-	JP PRESERVE_TAIL
-	JP REMOVE_TAIL
-
-	PRESERVE_TAIL: ; Make the snake grow
-		ADD V3, V4
-		LD I, SNAKE_LEN
-		LD V0, [I]
-		ADD V0, 1
-		LD [I], V0
-		LD V0, 20
-		LD ST, V0
-		CALL REMOVE_OLD_FOOD
-		CALL GENERATE_AND_DRAW_FOOD
-		JP START_MAKE_SNAKE_LOOP
-
-	REMOVE_TAIL:
-		SUB V3, V4 ; Get the index of last body part
-		LD I, SNAKE_BODY_DATA
-		LD I, V3
+	CHECK_COLLISION_WITH_FOOD:
+		LD I, FOOD_X
 		LD V1, [I]
-		LD I, SPRITE_DOT
-		DRW V0, V1, 1 ; Reset the tail of the sna
-		ADD V3, V4
-		JP START_MAKE_SNAKE_LOOP ; make (to make it move forward)
+
+		LD V5, V0
+		LD V6, V1
+
+		LD I, SNAKE_BODY_DATA
+		LD V1, [I]
+
+		SE V5, V0
+		JP REMOVE_TAIL
+		SNE V6, V1 ; Collision of head with food
+		JP PRESERVE_TAIL
+		JP REMOVE_TAIL
+
+		PRESERVE_TAIL: ; Make the snake grow
+			; Prevent the tail from getting deleted
+			ADD V3, V4
+
+			; Increase length of snake
+			LD I, SNAKE_LEN
+			LD V0, [I]
+			ADD V0, 1
+			LD [I], V0
+
+			; Play sound
+			LD V0, 20
+			LD ST, V0
+
+			; Draw new food
+			CALL REMOVE_OLD_FOOD
+			CALL GENERATE_AND_DRAW_FOOD
+			JP START_MAKE_SNAKE_LOOP
+
+		REMOVE_TAIL:
+			SUB V3, V4 ; Get the index of last body part
+
+			; Draw over the last tail to remove it
+			LD I, SNAKE_BODY_DATA
+			LD I, V3
+			LD V1, [I]
+			LD I, SPRITE_DOT
+			DRW V0, V1, 1 ; Reset the tail of the sna
+
+			; Reset the registors
+			ADD V3, V4
+			JP START_MAKE_SNAKE_LOOP ; make (to make it move forward)
+
 
 	START_MAKE_SNAKE_LOOP:
 		MOVE_SNAKE_LOOP:
@@ -171,7 +184,7 @@ MOVE_SNAKE:
 	LD I, SNAKE_VEL_X
 	LD V1, [I]
 	LD V2, V0
-	LD v3, V1
+	LD V3, V1
 	LD I, SNAKE_BODY_DATA
 	LD V1, [I]
 	ADD V0, V2
@@ -212,6 +225,10 @@ DRAW_SNAKE:
 	; 3. Draw the body (The Loop)
 	RET
 
+STOP_GAME:
+	JP STOP_GAME
+	RET
+
 ; --- Data Section ---
 ; Aligning labels so they don't overlap
 SPRITE_DOT:
@@ -223,7 +240,7 @@ SNAKE_VEL_X:	 ; Stores Vel X (V2)
 	DB 0x00
 SNAKE_VEL_Y:	 ; Stores Vel Y (V3)
 	DB 0x00
-SNAKE_LEN:	   ; Stores Length (V4)
+SNAKE_LEN:	     ; Stores Length (V4)
 	DB 0x00
 
 FOOD_X:
@@ -231,6 +248,11 @@ FOOD_X:
 FOOD_Y:
 	DB 0x00
 
+SCORE_STORAGE:
+	DB 0x00
+	DB 0x00
+	DB 0x00
+
 SNAKE_BODY_DATA:
-; Each snake body has four bytes for X and Y coordinates
+; Each snake body has 2 bytes for X and Y coordinates
 ; This doesn't include the snake head
