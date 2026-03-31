@@ -116,13 +116,44 @@ MOVE_SNAKE:
 	ADD V3, V0 ; Get snake length (*2 for the fact each body is 2 bytes)
 	LD V4, 2 ; for decrementing counter
 
+	CHECK_COLLISION_WITH_BODY:
+		; Load position of the snake head
+		LD I, SNAKE_BODY_DATA
+		LD V1, [I]
+
+		LD V5, V0
+		LD V6, V1
+
+		LD V7, V3
+		CHECK_COLLISION_WITH_BODY_LOOP:
+			SUB V7, V4
+
+			; Load coordinates of snake body piece
+			LD I, SNAKE_BODY_DATA
+			ADD I, V7
+
+			LD V1, [I]
+
+			SE V0, V5
+			JP CHECK_COLLISION_WITH_BODY_LOOP_continue
+			SE V1, V6
+			JP CHECK_COLLISION_WITH_BODY_LOOP_continue
+
+			JP STOP_GAME
+
+			CHECK_COLLISION_WITH_BODY_LOOP_continue:
+			SE V7, 2
+			JP CHECK_COLLISION_WITH_BODY_LOOP
+
 	CHECK_COLLISION_WITH_FOOD:
+		; Load position of food
 		LD I, FOOD_X
 		LD V1, [I]
 
 		LD V5, V0
 		LD V6, V1
 
+		; Load position of snake head
 		LD I, SNAKE_BODY_DATA
 		LD V1, [I]
 
