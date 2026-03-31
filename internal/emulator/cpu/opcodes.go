@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/arpitchakladar/chip-8/internal/emulator/display"
@@ -18,7 +17,6 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 	nnn := opcode & 0x0FFF      // 12-bit address
 	kk := byte(opcode & 0x00FF) // 8-bit constant
 	n := byte(opcode & 0x000F)  // 4-bit constant
-	fmt.Printf("%#x\n", opcode)
 
 	switch opcode & 0xF000 {
 	case 0x0000:
@@ -180,7 +178,6 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 			c.SoundTimer = c.Registers[x]
 
 		case 0x1E: // ADD I, Vx: Set I = I + Vx
-			fmt.Printf("Adding to %+v value %+v\n", c.IndexRegister, c.Registers[x])
 			c.IndexRegister += uint16(c.Registers[x])
 
 		case 0x29: // LD F, Vx: Set I = location of sprite for digit Vx
@@ -202,7 +199,6 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 
 		case 0x55: // LD [I], Vx: Store registers V0 through Vx in memory starting at location I
 			for i := range x + 1 {
-				fmt.Printf("Writing to %+v value = %+v\n", c.IndexRegister + i, c.Registers[i])
 				if err := mem.Write(c.IndexRegister+uint16(i), c.Registers[i]); err != nil {
 					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
 				}
@@ -211,7 +207,6 @@ func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp 
 		case 0x65: // LD Vx, [I]: Read registers V0 through Vx from memory starting at location I
 			for i := range x + 1 {
 				val, err := mem.Read(c.IndexRegister + uint16(i))
-				fmt.Printf("Reading from %+v value = %+v\n", c.IndexRegister + i, val)
 				if err != nil {
 					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
 				}
