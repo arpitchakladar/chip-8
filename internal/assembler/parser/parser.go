@@ -50,6 +50,10 @@ func (p *Parser) Parse(mnemonic string, args []string) ([]byte, error) {
 		return p.handleSkip(encoder.MaskSNE, encoder.MaskSNER, args)
 
 	case "ADD":
+		if args[0] == "I" {
+			vx, _ := p.parseReg(args[1])
+			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E)), nil
+		}
 		if p.isRegister(args[1]) {
 			return p.handleRegReg(encoder.MaskALU, args, 0x4)
 		}
@@ -125,11 +129,13 @@ func (p *Parser) toBinary(opcode uint16) []byte {
 func (p *Parser) handleLoad(args []string) ([]byte, error) {
 	dst, src := args[0], args[1]
 
+	// LD I, addr
 	if dst == "I" {
 		addr, _ := p.resolveValue(src)
 		return p.toBinary(p.Encoder.Addr(encoder.MaskLDI, addr)), nil
 	}
 
+	// LD Vx, [Source]
 	if p.isRegister(dst) {
 		vx, _ := p.parseReg(dst)
 		switch {
@@ -140,6 +146,8 @@ func (p *Parser) handleLoad(args []string) ([]byte, error) {
 		case p.isRegister(src):
 			vy, _ := p.parseReg(src)
 			return p.toBinary(p.Encoder.RegReg(encoder.MaskALU, vx, vy, 0x0)), nil
+		case src == "[I]":
+			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x65)), nil
 		default:
 			val, _ := p.resolveValue(src)
 			return p.toBinary(p.Encoder.RegImm(encoder.MaskLD, vx, uint8(val))), nil
@@ -163,12 +171,6 @@ func (p *Parser) handleLoad(args []string) ([]byte, error) {
 		}
 	}
 
-	// LD I, Vx (Add to I)
-	if dst == "I" && p.isRegister(src) {
-		vx, _ := p.parseReg(src)
-		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E)), nil
-	}
-
 	return []byte{}, fmt.Errorf("invalid LD arguments")
 }
 
@@ -183,8 +185,14 @@ func (p *Parser) handleSkip(immBase, regBase uint16, args []string) ([]byte, err
 }
 
 func (p *Parser) handleRegReg(base uint16, args []string, suffix uint16) ([]byte, error) {
-	vx, _ := p.parseReg(args[0])
-	vy, _ := p.parseReg(args[1])
+	vx, err := p.parseReg(args[0])
+	if err != nil {
+		return nil, err
+	}
+	vy, err := p.parseReg(args[1])
+	if err != nil {
+		return nil, err
+	}
 	return p.toBinary(p.Encoder.RegReg(base, vx, vy, suffix)), nil
 }
 
@@ -197,8 +205,19 @@ func (p *Parser) isRegister(s string) bool {
 
 // Returns the registor number from its name
 func (p *Parser) parseReg(s string) (uint8, error) {
+	// Check if string is long enough and starts with 'v' or 'V'
+	if !p.isRegister(s) {
+		return 0, fmt.Errorf("invalid register format: %s (expected vX or VX)", s)
+	}
+
+	// Parse the remainder of the string as hex (base 16)
+	// s[1:] skips the prefix character
 	val, err := strconv.ParseUint(s[1:], 16, 8)
-	return uint8(val), err
+	if err != nil {
+		return 0, fmt.Errorf("invalid register value: %w", err)
+	}
+
+	return uint8(val), nil
 }
 
 // Evaluate the value of a value type token (labels, constants)
