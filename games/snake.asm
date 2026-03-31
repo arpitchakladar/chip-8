@@ -191,8 +191,7 @@ MOVE_SNAKE:
 			LD [I], V0
 
 			; Play sound
-			LD V0, 20
-			LD ST, V0
+			CALL PLAY_BEEP
 
 			; Draw new food
 			CALL REMOVE_OLD_FOOD
@@ -283,8 +282,14 @@ DRAW_SNAKE:
 	; 3. Draw the body (The Loop)
 	RET
 
+PLAY_BEEP:
+	LD V0, 20
+	LD ST, V0
+	RET
+
 STOP_GAME:
 	CLS                  ; Clear the screen
+	CALL PLAY_BEEP
 
 	; ── Row 1: "GAME" at y=8 ──────────────────────────────────
 	LD  V1, 8
