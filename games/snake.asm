@@ -30,15 +30,26 @@ INITIALIZE:
 
 DRAW_SNAKE:
 	; 1. Load Head position from RAM back into registers
-	LD I, SNAKE_BODY_DATA
-	LD V1, [I]        ; Fills V0 through V4 with the saved data
+	LD I, SNAKE_LEN
+	LD V0, [I]
+	LD V2, V0
+	LD V3, 0
+	LD V4, 2
+	DRAW_SNAKE_BODY_LOOP:
+		LD I, SNAKE_BODY_DATA
+		LD I, V3
+		LD I, V3          ; Add V3 twice because the equation is ith body = I + V3 * 2
+		LD V1, [I]        ; Fills V0 through V4 with the saved data
 
-	; 2. Draw the head using V0 (X) and V1 (Y)
-	LD I, SPRITE_DOT
-	DRW V0, V1, 1
+		; 2. Draw the head using V0 (X) and V1 (Y)
+		LD I, SPRITE_DOT
+		DRW V0, V1, 1
+
+		ADD V3, 1
+		SE V3, V2
+		JP DRAW_SNAKE_BODY_LOOP
 
 	; 3. Draw the body (The Loop)
-	; You would point I to SNAKE_BODY_DATA and loop V4 times
 	RET
 
 ; --- Data Section ---
@@ -56,15 +67,5 @@ SNAKE_LEN:	   ; Stores Length (V4)
 	DB 0x00
 
 SNAKE_BODY_DATA:
-	DB 0x32
-	DB 0x32
-	DB 0x32
-	DB 0x32
-	DB 0x32
-	DB 0x32
-	DB 0x32
-	DB 0x32
-	DB 0x32
-	DB 0x32
 ; Each snake body has four bytes for X and Y coordinates
 ; This doesn't include the snake head
