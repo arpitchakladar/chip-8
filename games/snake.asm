@@ -7,6 +7,7 @@ START:
 		LD DT, V0
 
 	WAIT_LOOP:
+		CALL CHECK_INPUT
 		LD V0, DT
 		SNE V0, 0        ; Wait for timer to hit zero
 		JP TRIGGER_MOVE
@@ -47,6 +48,58 @@ GENERATE_AND_DRAW_FOOD:
 	LD [I], V1    ; Save coordinates to memory
 	LD I, SPRITE_DOT
 	DRW V0, V1, 1 ; Draw food
+	RET
+
+CHECK_INPUT:
+	; --- Check Key 2 (UP) ---
+	LD V0, 0x02
+	SKNP V0            ; If Key 2 is pressed, don't skip
+	CALL SET_UP
+
+	; --- Check Key 8 (DOWN) ---
+	LD V0, 0x08
+	SKNP V0
+	CALL SET_DOWN
+
+	; --- Check Key 4 (LEFT) ---
+	LD V0, 0x04
+	SKNP V0
+	CALL SET_LEFT
+
+	; --- Check Key 6 (RIGHT) ---
+	LD V0, 0x06
+	SKNP V0
+	CALL SET_RIGHT
+	RET
+
+; --- Direction Setters ---
+; We update the VelX (V0) and VelY (V1) and save them to RAM
+SET_UP:
+	LD V0, 0          ; VelX = 0
+	LD V1, 0xFF       ; VelY = -1 (255 in 8-bit unsigned)
+	LD I, SNAKE_VEL_X
+	LD [I], V1        ; Save V0 and V1
+	RET
+
+SET_DOWN:
+	LD V0, 0          ; VelX = 0
+	LD V1, 1          ; VelY = 1
+	LD I, SNAKE_VEL_X
+	LD [I], V1
+	RET
+
+SET_LEFT:
+	LD V0, 0xFF       ; VelX = -1
+	LD V1, 0          ; VelY = 0
+	LD I, SNAKE_VEL_X
+	LD [I], V1
+	RET
+
+SET_RIGHT:
+	LD V0, 1          ; VelX = 1
+	LD V1, 0          ; VelY = 0
+	LD I, SNAKE_VEL_X
+	LD [I], V1
 	RET
 
 MOVE_SNAKE:
