@@ -140,6 +140,8 @@ func (p *Parser) handleLoad(args []string) ([]byte, error) {
 		case p.isRegister(src):
 			vy, _ := p.parseReg(src)
 			return p.toBinary(p.Encoder.RegReg(encoder.MaskALU, vx, vy, 0x0)), nil
+		case src == "[I]":
+			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x65)), nil
 		default:
 			val, _ := p.resolveValue(src)
 			return p.toBinary(p.Encoder.RegImm(encoder.MaskLD, vx, uint8(val))), nil
