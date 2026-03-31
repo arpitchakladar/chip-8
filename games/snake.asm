@@ -176,6 +176,13 @@ MOVE_SNAKE:
 	LD V1, [I]
 	ADD V0, V2
 	ADD V1, V3
+
+	LD V4, 0x3F   ; Mask for 63 (Width - 1)
+	AND V0, V4    ; If V0 was 64, it now becomes 0
+
+	LD V4, 0x1F   ; Mask for 31 (Height - 1)
+	AND V1, V4    ; If V1 was 32, it now becomes 0
+
 	LD [I], V1
 	LD I, SPRITE_DOT
 	DRW V0, V1, 1 ; Create the new head
