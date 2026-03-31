@@ -164,6 +164,8 @@ The `examples/` directory contains sample assembly programs:
 - `audio_input.asm` - Press any key to hear a beep
 
 ## ROMs
+[1dcell.ch8](https://johnearnest.github.io/chip8Archive/play.html?p=1dcell)
+![1dcell](https://github.com/user-attachments/assets/bdb9391f-c3c9-4ce8-a1af-769320c1b85a)
 
 To test out some other ROMs you may download them from [here](https://johnearnest.github.io/chip8Archive/).
 
