@@ -5,7 +5,7 @@ import "strings"
 type Line struct {
 	Mnemonic   string
 	Args       []string
-	Address	   uint16
+	Address    uint16
 	LineNumber uint16
 }
 

@@ -28,7 +28,7 @@ func (a *Assembler) Assemble() ([]byte, error) {
 	parser := parser.WithLabels(labels)
 
 	for _, line := range lines {
-		opcode, err := parser.Parse(line.Mnemonic, line.Args)
+		opcode, err := parser.Parse(line.Mnemonic, line.Args, line.LineNumber)
 		if err != nil {
 			return nil, err
 		}
