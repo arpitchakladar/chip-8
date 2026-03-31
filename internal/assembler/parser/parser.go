@@ -126,6 +126,11 @@ func (p *Parser) handleLoad(args []string) ([]byte, error) {
 	dst, src := args[0], args[1]
 
 	if dst == "I" {
+		// LD I, Vx (Add to I)
+		if p.isRegister(src) {
+			vx, _ := p.parseReg(src)
+			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E)), nil
+		}
 		addr, _ := p.resolveValue(src)
 		return p.toBinary(p.Encoder.Addr(encoder.MaskLDI, addr)), nil
 	}
@@ -163,12 +168,6 @@ func (p *Parser) handleLoad(args []string) ([]byte, error) {
 		case "[I]":
 			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x55)), nil
 		}
-	}
-
-	// LD I, Vx (Add to I)
-	if dst == "I" && p.isRegister(src) {
-		vx, _ := p.parseReg(src)
-		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E)), nil
 	}
 
 	return []byte{}, fmt.Errorf("invalid LD arguments")
