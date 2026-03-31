@@ -82,31 +82,47 @@ CHECK_INPUT:
 ; --- Direction Setters ---
 ; We update the VelX (V0) and VelY (V1) and save them to RAM
 SET_UP:
-	LD V0, 0          ; VelX = 0
-	LD V1, 0xFF       ; VelY = -1 (255 in 8-bit unsigned)
-	LD I, SNAKE_VEL_X
-	LD [I], V1        ; Save V0 and V1
+	LD  I, SNAKE_VEL_X
+	LD  V1, [I]           ; Load current VelY into V2
+	SNE  V1, 1             ; If VelY == 1 (moving DOWN), skip the RET
+	RET                   ; Already moving down — ignore
+	LD  V0, 0
+	LD  V1, 0xFF
+	LD  I, SNAKE_VEL_X
+	LD  [I], V1
 	RET
 
 SET_DOWN:
-	LD V0, 0          ; VelX = 0
-	LD V1, 1          ; VelY = 1
-	LD I, SNAKE_VEL_X
-	LD [I], V1
+	LD  I, SNAKE_VEL_X
+	LD  V1, [I]
+	SNE  V1, 0xFF          ; If VelY == 0xFF (moving UP), skip the RET
+	RET                   ; Already moving up — ignore
+	LD  V0, 0
+	LD  V1, 1
+	LD  I, SNAKE_VEL_X
+	LD  [I], V1
 	RET
 
 SET_LEFT:
-	LD V0, 0xFF       ; VelX = -1
-	LD V1, 0          ; VelY = 0
-	LD I, SNAKE_VEL_X
-	LD [I], V1
+	LD  I, SNAKE_VEL_X
+	LD  V1, [I]
+	SNE  V0, 1             ; If VelX == 1 (moving RIGHT), skip the RET
+	RET                   ; Already moving right — ignore
+	LD  V0, 0xFF
+	LD  V1, 0
+	LD  I, SNAKE_VEL_X
+	LD  [I], V1
 	RET
 
 SET_RIGHT:
-	LD V0, 1          ; VelX = 1
-	LD V1, 0          ; VelY = 0
-	LD I, SNAKE_VEL_X
-	LD [I], V1
+	LD  I, SNAKE_VEL_X
+	LD  V1, [I]
+	SNE  V0, 0xFF          ; If VelX == 0xFF (moving LEFT), skip the RET
+	RET                   ; Already moving left — ignore
+	LD  V0, 1
+	LD  V1, 0
+	LD  I, SNAKE_VEL_X
+	LD  [I], V1
 	RET
 
 MOVE_SNAKE:
