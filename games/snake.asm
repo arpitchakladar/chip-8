@@ -41,9 +41,16 @@ INITIALIZE:
 		JP INITIALIZE_SNAKE_BODY_LOOP
 	RET
 
+REMOVE_OLD_FOOD:
+	LD I, FOOD_X
+	LD V1, [I]    ; Read coordinates from memory
+	LD I, SPRITE_DOT
+	DRW V0, V1, 1 ; Remove food
+	RET
+
 GENERATE_AND_DRAW_FOOD:
-	RND V0, 0xFF  ; Generate random X coordinate
-	RND V1, 0xFF  ; Generate random Y coordinate
+	RND V0, 0x3F  ; Generate random X coordinate
+	RND V1, 0x1F  ; Generate random Y coordinate
 	LD I, FOOD_X
 	LD [I], V1    ; Save coordinates to memory
 	LD I, SPRITE_DOT
@@ -108,28 +115,58 @@ MOVE_SNAKE:
 	LD V3, V0 ; Get snake length
 	ADD V3, V0 ; Get snake length (*2 for the fact each body is 2 bytes)
 	LD V4, 2 ; for decrementing counter
-	SUB V3, V4 ; Get the index of last body part
-	LD I, SNAKE_BODY_DATA
-	LD I, V3
+
+	LD I, FOOD_X
 	LD V1, [I]
-	LD I, SPRITE_DOT
-	DRW V0, V1, 1 ; Reset the tail of the snake (to make it move forward)
 
-	ADD V3, V4
+	LD V5, V0
+	LD V6, V1
 
-	MOVE_SNAKE_LOOP:
-		SUB V3, V4
+	LD I, SNAKE_BODY_DATA
+	LD V1, [I]
+
+	SE V5, V0
+	JP REMOVE_TAIL
+	SNE V6, V1 ; Collision of head with food
+	JP PRESERVE_TAIL
+	JP REMOVE_TAIL
+
+	PRESERVE_TAIL: ; Make the snake grow
+		ADD V3, V4
+		LD I, SNAKE_LEN
+		LD V0, [I]
+		ADD V0, 1
+		LD [I], V0
+		LD V0, 20
+		LD ST, V0
+		CALL REMOVE_OLD_FOOD
+		CALL GENERATE_AND_DRAW_FOOD
+		JP START_MAKE_SNAKE_LOOP
+
+	REMOVE_TAIL:
+		SUB V3, V4 ; Get the index of last body part
 		LD I, SNAKE_BODY_DATA
 		LD I, V3
 		LD V1, [I]
+		LD I, SPRITE_DOT
+		DRW V0, V1, 1 ; Reset the tail of the sna
 		ADD V3, V4
-		LD I, SNAKE_BODY_DATA
-		LD I, V3
-		LD [I], V1
-		SUB V3, V4
+		JP START_MAKE_SNAKE_LOOP ; make (to make it move forward)
 
-		SE V3, 0
-		JP MOVE_SNAKE_LOOP
+	START_MAKE_SNAKE_LOOP:
+		MOVE_SNAKE_LOOP:
+			SUB V3, V4
+			LD I, SNAKE_BODY_DATA
+			LD I, V3
+			LD V1, [I]
+			ADD V3, V4
+			LD I, SNAKE_BODY_DATA
+			LD I, V3
+			LD [I], V1
+			SUB V3, V4
+
+			SE V3, 0
+			JP MOVE_SNAKE_LOOP
 
 	LD I, SNAKE_VEL_X
 	LD V1, [I]
