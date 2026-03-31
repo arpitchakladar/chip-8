@@ -189,16 +189,19 @@ func (p *Parser) handleRegReg(base uint16, args []string, suffix uint16) ([]byte
 }
 
 // --- Utility Functions ---
+// Returns true if the given token resembles the syntax for a registor
 func (p *Parser) isRegister(s string) bool {
 	s = strings.ToUpper(s)
 	return len(s) >= 2 && s[0] == 'V'
 }
 
+// Returns the registor number from its name
 func (p *Parser) parseReg(s string) (uint8, error) {
 	val, err := strconv.ParseUint(s[1:], 16, 8)
 	return uint8(val), err
 }
 
+// Evaluate the value of a value type token (labels, constants)
 func (p *Parser) resolveValue(s string) (uint16, error) {
 	if val, ok := p.Labels[s]; ok {
 		return val, nil
