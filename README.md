@@ -3,7 +3,7 @@
 A Chip-8 virtual machine and assembler written in Go with SDL2 for graphics and audio.
 
 ## Demo
-![Demo](https://github.com/user-attachments/assets/1da510d9-7fd1-4418-9fa0-f38a9944b03c)
+![Demo](https://github.com/user-attachments/assets/0a2a3108-db82-40c1-adcc-9b12fa7a9575)
 
 ## Prerequisites
 
