@@ -14,6 +14,16 @@ INITIALIZE:
 	; Save these initial values to our RAM labels
 	LD I, SNAKE_HEAD_X
 	LD [I], V4        ; Stores V0, V1, V2, V3, and V4 into RAM
+
+	LD I, SNAKE_BODY_DATA
+	LD V2, 0
+	INITIALIZE_SNAKE_BODY_LOOP:
+		SUB V0, 1 ; Decrement the X position by 1 (for the next body part)
+		LD [I], V1
+		ADD I, 2
+		ADD V2, 1
+		SE V2, 3 ; Add 3 body to the snake (except head)
+		JP INITIALIZE_SNAKE_BODY_LOOP
 	RET
 
 DRAW_SNAKE:
@@ -48,4 +58,5 @@ SNAKE_LEN:	   ; Stores Length (V4)
 	DB 0x00
 
 SNAKE_BODY_DATA:
-; Each snake body has two bytes for X and Y coordinates
+; Each snake body has four bytes for X and Y coordinates
+; This doesn't include the snake head
