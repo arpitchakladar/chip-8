@@ -15,7 +15,11 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "cp -r node_modules/reveal.js/dist build",
+    "serve": "tsx scripts/serve.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
   },
   "dependencies": {
     "reveal.js": "^6.0.0"

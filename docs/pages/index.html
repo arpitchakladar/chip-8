@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+
+		<title>CHIP-8 Emulator</title>
+
+		<link rel="stylesheet" href="/reveal.js/reset.css" />
+		<link rel="stylesheet" href="/reveal.js/reveal.css" />
+		<link rel="stylesheet" href="/reveal.js/theme/black.css" />
+
+		<link rel="stylesheet" href="/reveal.js/plugin/highlight/monokai.css" />
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h1>CHIP-8 Emulator</h1>
+					<p>A modern interpreter for the classic virtual machine</p>
+				</section>
+
+				<section>
+					<h2>What is CHIP-8?</h2>
+					<ul>
+						<li>Created by Joseph Weisbecker in 1978</li>
+						<li>Virtual machine for games on 8-bit computers</li>
+						<li>Simple stack-based architecture</li>
+						<li>64x32 monochrome display</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Architecture</h2>
+					<ul>
+						<li><strong>Memory:</strong> 4KB RAM (0x000 - 0xFFF)</li>
+						<li><strong>Registers:</strong> 16 8-bit V0-VF</li>
+						<li><strong>Stack:</strong> 16-level call stack</li>
+						<li><strong>Display:</strong> 64x32 pixels</li>
+						<li><strong>Input:</strong> 16-key hexadecimal keyboard</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Instruction Set</h2>
+					<pre><code class="hljs">// Example: Draw sprite at (x, y) with n bytes
+DXYN - Draw sprite at VX, VY with height N
+
+// Example: Jump to address
+JP nnn - Set PC to address nnn
+
+// Example: Call subroutine
+CALL nnn - Push PC to stack, jump to nnn</code></pre>
+				</section>
+
+				<section>
+					<h2>Features</h2>
+					<ul>
+						<li>Custom assembly syntax</li>
+						<li>Audio input support</li>
+						<li>Debugging tools</li>
+						<li>Cross-platform (Go + WebAssembly)</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Demo</h2>
+					<p>Run a ROM and see the emulator in action!</p>
+				</section>
+
+				<section>
+					<h2>Thanks!</h2>
+					<p>Questions?</p>
+				</section>
+			</div>
+		</div>
+
+		<script src="/reveal.js/reveal.js"></script>
+		<script src="/reveal.js/plugin/markdown.js"></script>
+		<script src="/reveal.js/plugin/highlight.js"></script>
+		<script>
+			Reveal.initialize({
+				hash: true,
+				plugins: [RevealMarkdown, RevealHighlight],
+			});
+		</script>
+	</body>
+</html>
