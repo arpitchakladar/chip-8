@@ -22,6 +22,15 @@ in
     };
   };
 
+  languages.javascript = {
+    enable = true;
+    npm.enable = true;
+    lsp = {
+      enable = true;
+      package = pkgs.typescript-language-server;
+    };
+  };
+
   packages = with pkgs; [
     git
     pkg-config
