@@ -50,3 +50,6 @@ Thumbs.db
 # --- Compiled Examples ---
 examples/*.ch8
 games/*.ch8
+
+# --- Documentation ---
+docs/node_modules
