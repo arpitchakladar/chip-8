@@ -19,7 +19,8 @@
     "serve": "tsx scripts/serve.ts"
   },
   "devDependencies": {
-    "tsx": "^4.0.0"
+    "tsx": "^4.0.0",
+    "prettier": "^3.8.1"
   },
   "dependencies": {
     "express": "^5.2.1",
