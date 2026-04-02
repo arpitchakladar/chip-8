@@ -12,9 +12,3 @@
 :root {
 	--r-background-color: #000000;
 }
-
-.reveal pre,
-.reveal code {
-	background: #000000 !important;
-	box-shadow: none !important; /* Removes the default shadow */
-}
