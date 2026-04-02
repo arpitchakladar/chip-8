@@ -2,18 +2,11 @@
 	<h2>Execution Loop</h2>
 
 	<pre>
-		<code class="language-go" data-line-numbers="1-2|4|6|8|10">
-for {
-	opcode := fetch()
-
-	decodeAndExecute(opcode)
-
-	updateTimers()
-
-	render()
-
-	handleInput()
-}
+		<code
+			class="language-go"
+			data-line-numbers="1-2|4|6|8|10"
+			data-load-code="internal/emulator/cpu/opcode.go"
+		>
 		</code>
 	</pre>
 

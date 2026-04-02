@@ -13,7 +13,7 @@
 		<link rel="stylesheet" href="/reveal.js/reveal.css" />
 		<link rel="stylesheet" href="/reveal.js/theme/black.css" />
 
-		<link rel="stylesheet" href="/reveal.js/plugin/highlight/zenburn.css" />
+		<link rel="stylesheet" href="/reveal.js/plugin/highlight/monokai.css" />
 
 		<link rel="stylesheet" href="/styles/background-image-overlay.css" />
 		<link rel="stylesheet" href="/styles/colors.css" />
@@ -30,6 +30,7 @@
 		<script src="/reveal.js/reveal.js"></script>
 		<script src="/reveal.js/plugin/markdown.js"></script>
 		<script src="/reveal.js/plugin/highlight.js"></script>
+		<script src="/scripts/code-loader.js"></script>
 		<script src="/scripts/cyclic-background.js"></script>
 		<script>
 			const slideFiles = [
@@ -58,6 +59,8 @@
 					const html = await promise;
 					container.insertAdjacentHTML("beforeend", html);
 				}
+
+				await Promise.all([loadCode()]);
 
 				// IMPORTANT: Initialize Reveal ONLY after slides are loaded
 				Reveal.initialize({
