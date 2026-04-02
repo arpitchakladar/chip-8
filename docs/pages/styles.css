@@ -1,3 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap");
+
+h1, h2, h3, h4, h5, h6 {;
+	font-family: "VT323", monospace !important;
+	font-weight: 400 !important;
+	font-style: normal !important;
+}
+
+span[data-id="chip-8-title"] {
+	font-family: "Press Start 2P", system-ui !important;
+	font-weight: 400 !important;
+	font-style: normal !important
+}
+
 .reveal .slide-background-content::after {
 	content: "";
 	position: absolute;
