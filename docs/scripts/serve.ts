@@ -31,7 +31,7 @@ app.get("/code", async (req, res) => {
 			"https://raw.githubusercontent.com/arpitchakladar/chip-8/refs/heads/master/";
 
 		const url = GITHUB_RAW_BASE + file;
-		console.log(url)
+		console.log(url);
 
 		const response = await fetch(url);
 		if (!response.ok) {
