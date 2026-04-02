@@ -5,17 +5,13 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Define directory paths
-const ASSETS_DIR = path.join(__dirname, "../assets");
-const STATIC_DIR = path.join(__dirname, "../pages");
+const STATIC_DIR = path.join(__dirname, "../static");
 const REVEAL_DIR = path.join(__dirname, "../node_modules/reveal.js/dist");
 
 // Serve reveal.js files under the /reveal.js prefix
 app.use("/reveal.js", express.static(REVEAL_DIR));
 
-// Serve assets under the /assets prefix
-app.use("/assets", express.static(ASSETS_DIR));
-
-// Serve your main pages (index.html, etc.) from the root
+// Serve your main pages (index.html, etc.) from the static dir
 app.use(express.static(STATIC_DIR));
 
 // Custom 404 Handler
