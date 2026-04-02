@@ -10,14 +10,14 @@
 	flex: 1;
 	padding: 15px;
 	border-radius: 8px;
-	border: 3px solid #aaa;
+	border: 1px solid var(--secondary);
 }
 
 /* Group Headers */
 .instruction-column h4 {
 	font-size: 0.43em;
-	color: #fff;
-	border-bottom: 3px solid #aaa;
+	color: var(--primary);
+	border-bottom: 1px solid var(--secondary);
 	padding-bottom: 5px;
 	margin-bottom: 10px;
 	text-align: center;
@@ -30,10 +30,6 @@
 	border-collapse: collapse;
 }
 
-.instruction-table tr {
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 .instruction-table tr:last-child {
 	border-bottom: none;
 }
@@ -41,13 +37,14 @@
 .instruction-table td {
 	padding: 4px 2px;
 	vertical-align: middle;
+	border: none;
 }
 
 /* Specific column widths for alignment */
 .instruction-table td:first-child {
 	width: 30px;
 	font-family: monospace;
-	color: #aaa;
+	color: var(--secondary);
 } /* Opcode */
 .instruction-table td:nth-child(2) {
 	width: 80px;
@@ -55,5 +52,5 @@
 } /* Mnemonic */
 .instruction-table td:last-child {
 	width: auto;
-	color: #aaa;
+	color: var(--secondary);
 } /* Description */
