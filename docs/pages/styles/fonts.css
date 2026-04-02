@@ -6,7 +6,12 @@
 	font-style: normal;
 }
 
-.reveal h1, .reveal  h2, .reveal  h3, .reveal  h4, .reveal  h5, .reveal  h6 {;
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
 	font-family: "Press Start 2P", system-ui;
 	font-weight: 400;
 	font-style: normal;

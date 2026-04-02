@@ -17,28 +17,41 @@
 
 		<link rel="stylesheet" href="/styles/background-image-overlay.css" />
 		<link rel="stylesheet" href="/styles/fonts.css" />
+		<link rel="stylesheet" href="/styles/instruction-set.css" />
 		<link rel="stylesheet" href="/styles/lists.css" />
 		<link rel="stylesheet" href="/styles/progress-bar.css" />
 	</head>
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section data-auto-animate data-cycling-bg="RPS.gif,pumpkindressup.gif,octoachip8story.gif,1dcell.gif">
+				<section
+					data-auto-animate
+					data-cycling-bg="RPS.gif,pumpkindressup.gif,octoachip8story.gif,1dcell.gif"
+				>
 					<h1><span data-id="chip-8-title">CHIP-8</span></h1>
 					<p>A modern interpreter for the classic virtual machine</p>
 				</section>
 
-				<section data-auto-animate data-background-image="/assets/game-console.png">
-					<h3>What is <u><span data-id="chip-8-title">CHIP-8</span></u>?</h3>
+				<section
+					data-auto-animate
+					data-background-image="/assets/game-console.png"
+				>
+					<h3>
+						What is <u><span data-id="chip-8-title">CHIP-8</span></u
+						>?
+					</h3>
 					<ul>
 						<li class="fragment" data-fragment-index="1">
-							<u>The Virtual Machine:</u> Created by Joseph Weisbecker in 1978 to make game development portable across 8-bit systems.
+							<u>The Virtual Machine:</u> Created by Joseph Weisbecker in 1978
+							to make game development portable across 8-bit systems.
 						</li>
 						<li class="fragment" data-fragment-index="2">
-							<u>Minimalist by Design:</u> Operating with only 35 opcodes, thus quite easy to implement.
+							<u>Minimalist by Design:</u> Operating with only 35 opcodes, thus
+							quite easy to implement.
 						</li>
 						<li class="fragment" data-fragment-index="4">
-							<u>Iconic Constraints:</u> Powers legendary titles like Pong, Breakout, and Space Invaders on a tiny 64x32 monochrome canvas.
+							<u>Iconic Constraints:</u> Powers legendary titles like Pong,
+							Breakout, and Space Invaders on a tiny 64x32 monochrome canvas.
 						</li>
 					</ul>
 				</section>
@@ -46,24 +59,196 @@
 				<section data-background-image="/assets/architecture.png">
 					<h2>Architecture</h2>
 					<ul>
-						<li class="fragment"><strong>Memory:</strong> 4KB RAM (0x000 - 0xFFF)</li>
+						<li class="fragment">
+							<strong>Memory:</strong> 4KB RAM (0x000 - 0xFFF)
+						</li>
 						<li class="fragment"><strong>Registers:</strong> 16 8-bit V0-VF</li>
-						<li class="fragment"><strong>Stack:</strong> 16-level call stack</li>
+						<li class="fragment">
+							<strong>Stack:</strong> 16-level call stack
+						</li>
 						<li class="fragment"><strong>Display:</strong> 64x32 pixels</li>
-						<li class="fragment"><strong>Input:</strong> 16-key hexadecimal keyboard</li>
+						<li class="fragment">
+							<strong>Input:</strong> 16-key hexadecimal keyboard
+						</li>
 					</ul>
 				</section>
-
 				<section>
 					<h2>Instruction Set</h2>
-					<pre><code class="hljs">// Example: Draw sprite at (x, y) with n bytes
-DXYN - Draw sprite at VX, VY with height N
 
-// Example: Jump to address
-JP nnn - Set PC to address nnn
+					<div class="instruction-grid">
+						<div class="instruction-column">
+							<h4>Control & Jumps</h4>
+							<table class="instruction-table">
+								<tr>
+									<td>00E0</td>
+									<td>CLS</td>
+									<td>Clear screen</td>
+								</tr>
+								<tr>
+									<td>00EE</td>
+									<td>RET</td>
+									<td>Return from sub</td>
+								</tr>
+								<tr>
+									<td>1nnn</td>
+									<td>JP</td>
+									<td>Jump to nnn</td>
+								</tr>
+								<tr>
+									<td>2nnn</td>
+									<td>CALL</td>
+									<td>Call sub at nnn</td>
+								</tr>
+								<tr>
+									<td>3xkk</td>
+									<td>SE Vx</td>
+									<td>Skip if Vx == kk</td>
+								</tr>
+								<tr>
+									<td>4xkk</td>
+									<td>SNE Vx</td>
+									<td>Skip if Vx != kk</td>
+								</tr>
+								<tr>
+									<td>5xy0</td>
+									<td>SE Vx, Vy</td>
+									<td>Skip if Vx == Vy</td>
+								</tr>
+								<tr>
+									<td>9xy0</td>
+									<td>SNE Vx, Vy</td>
+									<td>Skip if Vx != Vy</td>
+								</tr>
+								<tr>
+									<td>Bnnn</td>
+									<td>JP V0</td>
+									<td>Jump nnn + V0</td>
+								</tr>
+							</table>
+						</div>
 
-// Example: Call subroutine
-CALL nnn - Push PC to stack, jump to nnn</code></pre>
+						<div class="instruction-column">
+							<h4>Math & Logic</h4>
+							<table class="instruction-table">
+								<tr>
+									<td>6xkk</td>
+									<td>LD Vx</td>
+									<td>Set Vx = kk</td>
+								</tr>
+								<tr>
+									<td>7xkk</td>
+									<td>ADD Vx</td>
+									<td>Vx = Vx + kk</td>
+								</tr>
+								<tr>
+									<td>8xy0</td>
+									<td>LD Vx, Vy</td>
+									<td>Vx = Vy</td>
+								</tr>
+								<tr>
+									<td>8xy1</td>
+									<td>OR</td>
+									<td>Vx |= Vy</td>
+								</tr>
+								<tr>
+									<td>8xy2</td>
+									<td>AND</td>
+									<td>Vx &= Vy</td>
+								</tr>
+								<tr>
+									<td>8xy3</td>
+									<td>XOR</td>
+									<td>Vx ^= Vy</td>
+								</tr>
+								<tr>
+									<td>8xy4</td>
+									<td>ADD</td>
+									<td>Vx += Vy (VF=C)</td>
+								</tr>
+								<tr>
+									<td>8xy5</td>
+									<td>SUB</td>
+									<td>Vx -= Vy (VF=B)</td>
+								</tr>
+								<tr>
+									<td>8xy6</td>
+									<td>SHR</td>
+									<td>Vx >> 1</td>
+								</tr>
+								<tr>
+									<td>8xyE</td>
+									<td>SHL</td>
+									<td>Vx << 1</td>
+								</tr>
+								<tr>
+									<td>Cxkk</td>
+									<td>RND</td>
+									<td>Vx = Rand & kk</td>
+								</tr>
+							</table>
+						</div>
+
+						<div class="instruction-column">
+							<h4>I/O & Memory</h4>
+							<table class="instruction-table">
+								<tr>
+									<td>Annn</td>
+									<td>LD I</td>
+									<td>Set I = nnn</td>
+								</tr>
+								<tr>
+									<td>Dxyn</td>
+									<td>DRW</td>
+									<td>Draw Sprite</td>
+								</tr>
+								<tr>
+									<td>Ex9E</td>
+									<td>SKP</td>
+									<td>Skip if Key Down</td>
+								</tr>
+								<tr>
+									<td>ExA1</td>
+									<td>SKNP</td>
+									<td>Skip if Key Up</td>
+								</tr>
+								<tr>
+									<td>Fx07</td>
+									<td>LD Vx,DT</td>
+									<td>Vx = Delay Timer</td>
+								</tr>
+								<tr>
+									<td>Fx0A</td>
+									<td>LD Vx,K</td>
+									<td>Wait for key</td>
+								</tr>
+								<tr>
+									<td>Fx1E</td>
+									<td>ADD I,Vx</td>
+									<td>I += Vx</td>
+								</tr>
+								<tr>
+									<td>Fx29</td>
+									<td>LD F,Vx</td>
+									<td>Set I to Font</td>
+								</tr>
+								<tr>
+									<td>Fx33</td>
+									<td>LD B,Vx</td>
+									<td>Store BCD at I</td>
+								</tr>
+								<tr>
+									<td>Fx55</td>
+									<td>LD [I]</td>
+									<td>Reg Dump to RAM</td>
+								</tr>
+								<tr>
+									<td>Fx65</td>
+									<td>LD Vx,[I]</td>
+									<td>Load Reg from RAM</td>
+								</tr>
+							</table>
+						</div>
+					</div>
 				</section>
 
 				<section>
