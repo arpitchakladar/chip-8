@@ -1,6 +1,5 @@
 async function loadCode() {
 	const blocks = document.querySelectorAll("[data-load-code]");
-	console.log(blocks);
 
 	await Promise.all(
 		Array.from(blocks).map(async (block) => {
