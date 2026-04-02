@@ -1,0 +1,57 @@
+/* Container for the three columns */
+.instruction-grid {
+	display: flex;
+	gap: 15px;
+	align-items: stretch;
+}
+
+/* Individual column styling */
+.instruction-column {
+	flex: 1;
+	background: rgba(255, 255, 255, 0.05);
+	padding: 15px;
+	border-radius: 8px;
+}
+
+/* Group Headers */
+.instruction-column h4 {
+	font-size: 0.5em;
+	color: rgba(255, 255, 255, 0.6);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+	margin-bottom: 10px;
+	text-align: center;
+}
+
+/* Table layout for Code | Instruction | Description */
+.instruction-table {
+	width: 100%;
+	font-size: 0.4em;
+	border-collapse: collapse;
+}
+
+.instruction-table tr {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.instruction-table tr:last-child {
+	border-bottom: none;
+}
+
+.instruction-table td {
+	padding: 4px 2px;
+	vertical-align: middle;
+}
+
+/* Specific column widths for alignment */
+.instruction-table td:first-child {
+	width: 25%;
+	font-family: monospace;
+} /* Opcode */
+.instruction-table td:nth-child(2) {
+	width: 30%;
+	font-weight: bold;
+} /* Mnemonic */
+.instruction-table td:last-child {
+	width: 45%;
+	color: #ccc;
+} /* Description */
