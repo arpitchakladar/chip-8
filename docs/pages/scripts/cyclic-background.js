@@ -1,28 +1,29 @@
-// List of GIFs you want to cycle through
-const backgrounds = [
-	"/assets/RPS.gif",
-	"/assets/pumpkindressup.gif"
-];
+// Function to change the background of any slide
+const cycleBackground = () => {
+	// 1. Find the section elements
+	const titleSlides = document.querySelectorAll("section[data-cycling-bg]");
 
-let currentIndex = 0;
+	titleSlides.forEach((titleSlide) => {
+		// 2. Retrieve the data for that particular section
+		const backgroundImages = titleSlide.getAttribute("data-cycling-bg").split(",")
+			.map((assetName) => `/assets/${assetName}`);
+		let currentIndex = parseInt(titleSlide.getAttribute("data-cycling-bg-index") || 0);
+		currentIndex = (currentIndex + 1) % backgroundImages.length;
+		titleSlide.setAttribute("data-cycling-bg-index", currentIndex)
 
-// Function to change the background of the first slide
-function cycleBackground() {
-	currentIndex = (currentIndex + 1) % backgrounds.length;
+		// 2. Update the background image attribute
+		titleSlide.setAttribute("data-background-image", backgroundImages[currentIndex]);
 
-	// 1. Find the section element
-	const titleSlide = document.querySelector("section[data-id-bg=\"cycling-bg\"]");
-
-	// 2. Update the attribute
-	titleSlide.setAttribute("data-background-image", backgrounds[currentIndex]);
-
-	// 3. Tell Reveal.js to refresh the background layer
-	Reveal.getRevealElement().querySelector(".backgrounds")
-		.querySelectorAll(".slide-background")[0] // Targets first slide
-		.querySelector(".slide-background-content")
-		.style.backgroundImage = `url("${backgrounds[currentIndex]}")`;
+		// 3. Tell Reveal.js to refresh the background layer
+		Reveal.getRevealElement().querySelector(".backgrounds")
+			.querySelectorAll(".slide-background")[0] // Targets first slide
+			.querySelector(".slide-background-content")
+			.style.backgroundImage = `url("${backgroundImages[currentIndex]}")`;
+	});
 }
 
-// Change every 5 seconds (5000ms)
-cycleBackground()
-setInterval(cycleBackground, 3000);
+// Change every 3 seconds (3000ms)
+document.addEventListener("DOMContentLoaded", () => {
+	cycleBackground()
+	setInterval(cycleBackground, 2000);
+});
