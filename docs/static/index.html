@@ -38,12 +38,19 @@
 				"slides/04-instruction-set.html",
 			];
 
-			(async function () {
-				const container = document.querySelector(".slides");
+			const container = document.querySelector(".slides");
 
-				for (const file of slideFiles) {
-					const response = await fetch(file);
-					const html = await response.text();
+			// 1. Start loading all the slide pages
+			// we may start loading them before anything has even rendered
+			const slidePromises = slideFiles.map(async (file) => {
+				const response = await fetch(file);
+				return response.text();
+			});
+
+			(async function () {
+				// 2. Process the promises in order
+				for (const promise of slidePromises) {
+					const html = await promise;
 					container.insertAdjacentHTML("beforeend", html);
 				}
 
