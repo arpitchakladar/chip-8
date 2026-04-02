@@ -1,3 +1,9 @@
+.reveal pre,
+.reveal code {
+	background: #000000 !important;
+	box-shadow: none !important; /* Removes the default shadow */
+}
+
 /* 1. Remove scrollbars for Chrome, Safari, and Opera */
 .reveal pre code::-webkit-scrollbar {
 	display: none;
