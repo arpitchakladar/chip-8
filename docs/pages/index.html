@@ -91,12 +91,12 @@
 								</tr>
 								<tr>
 									<td>1nnn</td>
-									<td>JP</td>
+									<td>JP nnn</td>
 									<td>Jump to nnn</td>
 								</tr>
 								<tr>
 									<td>2nnn</td>
-									<td>CALL</td>
+									<td>CALL nnn</td>
 									<td>Call sub at nnn</td>
 								</tr>
 								<tr>
@@ -137,7 +137,7 @@
 								</tr>
 								<tr>
 									<td>7xkk</td>
-									<td>ADD Vx</td>
+									<td>ADD Vx, kk</td>
 									<td>Vx = Vx + kk</td>
 								</tr>
 								<tr>
@@ -147,42 +147,42 @@
 								</tr>
 								<tr>
 									<td>8xy1</td>
-									<td>OR</td>
+									<td>OR Vx, Vy</td>
 									<td>Vx |= Vy</td>
 								</tr>
 								<tr>
 									<td>8xy2</td>
-									<td>AND</td>
+									<td>AND Vx, Vy</td>
 									<td>Vx &= Vy</td>
 								</tr>
 								<tr>
 									<td>8xy3</td>
-									<td>XOR</td>
+									<td>XOR Vx, Vy</td>
 									<td>Vx ^= Vy</td>
 								</tr>
 								<tr>
 									<td>8xy4</td>
-									<td>ADD</td>
+									<td>ADD Vx, Vy</td>
 									<td>Vx += Vy (VF=C)</td>
 								</tr>
 								<tr>
 									<td>8xy5</td>
-									<td>SUB</td>
+									<td>SUB Vx, Vy</td>
 									<td>Vx -= Vy (VF=B)</td>
 								</tr>
 								<tr>
 									<td>8xy6</td>
-									<td>SHR</td>
+									<td>SHR Vx</td>
 									<td>Vx >> 1</td>
 								</tr>
 								<tr>
 									<td>8xyE</td>
-									<td>SHL</td>
+									<td>SHL Vx</td>
 									<td>Vx << 1</td>
 								</tr>
 								<tr>
 									<td>Cxkk</td>
-									<td>RND</td>
+									<td>RND Vx, kk</td>
 									<td>Vx = Rand & kk</td>
 								</tr>
 							</table>
