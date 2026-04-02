@@ -1,0 +1,23 @@
+{
+  "name": "chip-8-docs",
+  "version": "1.0.0",
+  "description": "Documentation/presentation for my chip-8 emulator",
+  "homepage": "https://github.com/arpitchakladar/chip-8#readme",
+  "bugs": {
+    "url": "https://github.com/arpitchakladar/chip-8/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arpitchakladar/chip-8.git"
+  },
+  "license": "MIT",
+  "author": "Arpit Chakladar",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "reveal.js": "^6.0.0"
+  }
+}
