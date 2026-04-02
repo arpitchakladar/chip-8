@@ -1,64 +1,28 @@
-import * as http from 'http';
-import * as fs from 'fs';
-import * as path from 'path';
+import express from "express";
+import path from "path";
 
-const PORT = 8080;
-const STATIC_DIR = path.join(__dirname, '../pages');
-const REVEAL_DIR = path.join(__dirname, '../node_modules/reveal.js/dist');
+const app = express();
+const PORT = process.env.PORT || 8080;
 
-const mimeTypes: Record<string, string> = {
-	'.html': 'text/html',
-	'.js': 'text/javascript',
-	'.css': 'text/css',
-	'.json': 'application/json',
-	'.png': 'image/png',
-	'.jpg': 'image/jpg',
-	'.gif': 'image/gif',
-	'.svg': 'image/svg+xml',
-	'.woff': 'font/woff',
-	'.woff2': 'font/woff2',
-};
+// Define directory paths
+const ASSETS_DIR = path.join(__dirname, "../assets");
+const STATIC_DIR = path.join(__dirname, "../pages");
+const REVEAL_DIR = path.join(__dirname, "../node_modules/reveal.js/dist");
 
-const server = http.createServer((req, res) => {
-	if (req.url?.startsWith('/reveal.js/')) {
-		let filePath = path.join(REVEAL_DIR, req.url.replace('/reveal.js/', ''));
-		const ext = path.extname(filePath);
-		const contentType = mimeTypes[ext] || 'application/octet-stream';
-		fs.readFile(filePath, (err, content) => {
-			if (err) {
-				res.writeHead(404);
-				res.end(`Not Found: ${req.url}`);
-			} else {
-				res.writeHead(200, { 'Content-Type': contentType });
-				res.end(content, 'utf-8');
-			}
-		});
-		return;
-	}
+// Serve reveal.js files under the /reveal.js prefix
+app.use("/reveal.js", express.static(REVEAL_DIR));
 
-	let filePath = path.join(STATIC_DIR, req.url === '/' ? 'index.html' : req.url);
+// Serve assets under the /assets prefix
+app.use("/assets", express.static(ASSETS_DIR));
 
-	const ext = path.extname(filePath);
-	const contentType = mimeTypes[ext] || 'application/octet-stream';
+// Serve your main pages (index.html, etc.) from the root
+app.use(express.static(STATIC_DIR));
 
-	fs.readFile(filePath, (err, content) => {
-		if (err) {
-			if (err.code === 'ENOENT') {
-				fs.readFile(path.join(STATIC_DIR, '404.html'), (err, content) => {
-					res.writeHead(404, { 'Content-Type': 'text/html' });
-					res.end(content, 'utf-8');
-				});
-			} else {
-				res.writeHead(500);
-				res.end(`Server Error: ${err.code}`);
-			}
-		} else {
-			res.writeHead(200, { 'Content-Type': contentType });
-			res.end(content, 'utf-8');
-		}
-	});
+// Custom 404 Handler
+app.use((req, res) => {
+	res.status(404).sendFile(path.join(STATIC_DIR, "404.html"));
 });
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
 	console.log(`Server running at http://localhost:${PORT}/`);
 });
