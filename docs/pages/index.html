@@ -19,7 +19,7 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section data-auto-animate data-background-image="/assets/RPS.gif">
+				<section data-auto-animate data-id-bg="cycling-bg">
 					<h1><span data-id="chip-8-title">CHIP-8</span></h1>
 					<p>A modern interpreter for the classic virtual machine</p>
 				</section>
@@ -83,6 +83,7 @@ CALL nnn - Push PC to stack, jump to nnn</code></pre>
 		<script src="/reveal.js/reveal.js"></script>
 		<script src="/reveal.js/plugin/markdown.js"></script>
 		<script src="/reveal.js/plugin/highlight.js"></script>
+		<script src="/scripts/cyclic-background.js"></script>
 		<script>
 			Reveal.initialize({
 				hash: true,
