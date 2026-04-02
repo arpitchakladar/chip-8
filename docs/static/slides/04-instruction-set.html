@@ -1,0 +1,178 @@
+<section>
+	<h2>Instruction Set</h2>
+
+	<div class="instruction-grid fragment">
+		<div class="instruction-column">
+			<h4>Control & Jumps</h4>
+			<table class="instruction-table">
+				<tr>
+					<td>00E0</td>
+					<td>CLS</td>
+					<td>Clear screen</td>
+				</tr>
+				<tr>
+					<td>00EE</td>
+					<td>RET</td>
+					<td>Return from sub</td>
+				</tr>
+				<tr>
+					<td>1nnn</td>
+					<td>JP nnn</td>
+					<td>Jump to nnn</td>
+				</tr>
+				<tr>
+					<td>2nnn</td>
+					<td>CALL nnn</td>
+					<td>Call sub at nnn</td>
+				</tr>
+				<tr>
+					<td>3xkk</td>
+					<td>SE Vx, kk</td>
+					<td>Skip if Vx == kk</td>
+				</tr>
+				<tr>
+					<td>4xkk</td>
+					<td>SNE Vx, kk</td>
+					<td>Skip if Vx != kk</td>
+				</tr>
+				<tr>
+					<td>5xy0</td>
+					<td>SE Vx, Vy</td>
+					<td>Skip if Vx == Vy</td>
+				</tr>
+				<tr>
+					<td>9xy0</td>
+					<td>SNE Vx, Vy</td>
+					<td>Skip if Vx != Vy</td>
+				</tr>
+				<tr>
+					<td>Bnnn</td>
+					<td>JP V0, nnn</td>
+					<td>Jump nnn + V0</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="instruction-column fragment">
+			<h4>Math & Logic</h4>
+			<table class="instruction-table">
+				<tr>
+					<td>6xkk</td>
+					<td>LD Vx, kk</td>
+					<td>Set Vx = kk</td>
+				</tr>
+				<tr>
+					<td>7xkk</td>
+					<td>ADD Vx, kk</td>
+					<td>Vx = Vx + kk</td>
+				</tr>
+				<tr>
+					<td>8xy0</td>
+					<td>LD Vx, Vy</td>
+					<td>Vx = Vy</td>
+				</tr>
+				<tr>
+					<td>8xy1</td>
+					<td>OR Vx, Vy</td>
+					<td>Vx |= Vy</td>
+				</tr>
+				<tr>
+					<td>8xy2</td>
+					<td>AND Vx, Vy</td>
+					<td>Vx &= Vy</td>
+				</tr>
+				<tr>
+					<td>8xy3</td>
+					<td>XOR Vx, Vy</td>
+					<td>Vx ^= Vy</td>
+				</tr>
+				<tr>
+					<td>8xy4</td>
+					<td>ADD Vx, Vy</td>
+					<td>Vx += Vy (VF=C)</td>
+				</tr>
+				<tr>
+					<td>8xy5</td>
+					<td>SUB Vx, Vy</td>
+					<td>Vx -= Vy (VF=B)</td>
+				</tr>
+				<tr>
+					<td>8xy6</td>
+					<td>SHR Vx</td>
+					<td>Vx >> 1</td>
+				</tr>
+				<tr>
+					<td>8xyE</td>
+					<td>SHL Vx</td>
+					<td>Vx << 1</td>
+				</tr>
+				<tr>
+					<td>Cxkk</td>
+					<td>RND Vx, kk</td>
+					<td>Vx = Rand & kk</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="instruction-column fragment">
+			<h4>I/O & Memory</h4>
+			<table class="instruction-table">
+				<tr>
+					<td>Annn</td>
+					<td>LD I, nnn</td>
+					<td>Set I = nnn</td>
+				</tr>
+				<tr>
+					<td>Dxyn</td>
+					<td>DRW Vx,Vy,n</td>
+					<td>Draw Sprite</td>
+				</tr>
+				<tr>
+					<td>Ex9E</td>
+					<td>SKP Vx</td>
+					<td>Skip if Key Down</td>
+				</tr>
+				<tr>
+					<td>ExA1</td>
+					<td>SKNP Vx</td>
+					<td>Skip if Key Up</td>
+				</tr>
+				<tr>
+					<td>Fx07</td>
+					<td>LD Vx, DT</td>
+					<td>Vx = Delay Timer</td>
+				</tr>
+				<tr>
+					<td>Fx0A</td>
+					<td>LD Vx, K</td>
+					<td>Wait for key</td>
+				</tr>
+				<tr>
+					<td>Fx1E</td>
+					<td>ADD I, Vx</td>
+					<td>I += Vx</td>
+				</tr>
+				<tr>
+					<td>Fx29</td>
+					<td>LD F, Vx</td>
+					<td>Set I to Font</td>
+				</tr>
+				<tr>
+					<td>Fx33</td>
+					<td>LD B, Vx</td>
+					<td>Store BCD at I</td>
+				</tr>
+				<tr>
+					<td>Fx55</td>
+					<td>LD [I], Vx</td>
+					<td>Reg Dump to RAM</td>
+				</tr>
+				<tr>
+					<td>Fx65</td>
+					<td>LD Vx, [I]</td>
+					<td>Load Reg from RAM</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</section>

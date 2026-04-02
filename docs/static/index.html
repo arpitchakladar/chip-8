@@ -23,255 +23,7 @@
 	</head>
 	<body>
 		<div class="reveal">
-			<div class="slides">
-				<section
-					data-auto-animate
-					data-cycling-bg="RPS.gif,pumpkindressup.gif,octoachip8story.gif,1dcell.gif"
-				>
-					<h1><span data-id="chip-8-title">CHIP-8</span></h1>
-					<p>A modern interpreter for the classic virtual machine</p>
-				</section>
-
-				<section
-					data-auto-animate
-					data-background-image="/assets/game-console.png"
-				>
-					<h3>
-						What is <u><span data-id="chip-8-title">CHIP-8</span></u
-						>?
-					</h3>
-					<ul>
-						<li class="fragment" data-fragment-index="1">
-							<u>The Virtual Machine:</u> Created by Joseph Weisbecker in 1978
-							to make game development portable across 8-bit systems.
-						</li>
-						<li class="fragment" data-fragment-index="2">
-							<u>Minimalist by Design:</u> Operating with only 35 opcodes, thus
-							quite easy to implement.
-						</li>
-						<li class="fragment" data-fragment-index="4">
-							<u>Iconic Constraints:</u> Powers legendary titles like Pong,
-							Breakout, and Space Invaders on a tiny 64x32 monochrome canvas.
-						</li>
-					</ul>
-				</section>
-
-				<section data-background-image="/assets/architecture.png">
-					<h2>Architecture</h2>
-					<ul>
-						<li class="fragment">
-							<strong>Memory:</strong> 4KB RAM (0x000 - 0xFFF)
-						</li>
-						<li class="fragment"><strong>Registers:</strong> 16 8-bit V0-VF</li>
-						<li class="fragment">
-							<strong>Stack:</strong> 16-level call stack
-						</li>
-						<li class="fragment"><strong>Display:</strong> 64x32 pixels</li>
-						<li class="fragment">
-							<strong>Input:</strong> 16-key hexadecimal keyboard
-						</li>
-					</ul>
-				</section>
-
-				<section>
-					<h2>Instruction Set</h2>
-
-					<div class="instruction-grid fragment">
-						<div class="instruction-column">
-							<h4>Control & Jumps</h4>
-							<table class="instruction-table">
-								<tr>
-									<td>00E0</td>
-									<td>CLS</td>
-									<td>Clear screen</td>
-								</tr>
-								<tr>
-									<td>00EE</td>
-									<td>RET</td>
-									<td>Return from sub</td>
-								</tr>
-								<tr>
-									<td>1nnn</td>
-									<td>JP nnn</td>
-									<td>Jump to nnn</td>
-								</tr>
-								<tr>
-									<td>2nnn</td>
-									<td>CALL nnn</td>
-									<td>Call sub at nnn</td>
-								</tr>
-								<tr>
-									<td>3xkk</td>
-									<td>SE Vx, kk</td>
-									<td>Skip if Vx == kk</td>
-								</tr>
-								<tr>
-									<td>4xkk</td>
-									<td>SNE Vx, kk</td>
-									<td>Skip if Vx != kk</td>
-								</tr>
-								<tr>
-									<td>5xy0</td>
-									<td>SE Vx, Vy</td>
-									<td>Skip if Vx == Vy</td>
-								</tr>
-								<tr>
-									<td>9xy0</td>
-									<td>SNE Vx, Vy</td>
-									<td>Skip if Vx != Vy</td>
-								</tr>
-								<tr>
-									<td>Bnnn</td>
-									<td>JP V0, nnn</td>
-									<td>Jump nnn + V0</td>
-								</tr>
-							</table>
-						</div>
-
-						<div class="instruction-column fragment">
-							<h4>Math & Logic</h4>
-							<table class="instruction-table">
-								<tr>
-									<td>6xkk</td>
-									<td>LD Vx, kk</td>
-									<td>Set Vx = kk</td>
-								</tr>
-								<tr>
-									<td>7xkk</td>
-									<td>ADD Vx, kk</td>
-									<td>Vx = Vx + kk</td>
-								</tr>
-								<tr>
-									<td>8xy0</td>
-									<td>LD Vx, Vy</td>
-									<td>Vx = Vy</td>
-								</tr>
-								<tr>
-									<td>8xy1</td>
-									<td>OR Vx, Vy</td>
-									<td>Vx |= Vy</td>
-								</tr>
-								<tr>
-									<td>8xy2</td>
-									<td>AND Vx, Vy</td>
-									<td>Vx &= Vy</td>
-								</tr>
-								<tr>
-									<td>8xy3</td>
-									<td>XOR Vx, Vy</td>
-									<td>Vx ^= Vy</td>
-								</tr>
-								<tr>
-									<td>8xy4</td>
-									<td>ADD Vx, Vy</td>
-									<td>Vx += Vy (VF=C)</td>
-								</tr>
-								<tr>
-									<td>8xy5</td>
-									<td>SUB Vx, Vy</td>
-									<td>Vx -= Vy (VF=B)</td>
-								</tr>
-								<tr>
-									<td>8xy6</td>
-									<td>SHR Vx</td>
-									<td>Vx >> 1</td>
-								</tr>
-								<tr>
-									<td>8xyE</td>
-									<td>SHL Vx</td>
-									<td>Vx << 1</td>
-								</tr>
-								<tr>
-									<td>Cxkk</td>
-									<td>RND Vx, kk</td>
-									<td>Vx = Rand & kk</td>
-								</tr>
-							</table>
-						</div>
-
-						<div class="instruction-column fragment">
-							<h4>I/O & Memory</h4>
-							<table class="instruction-table">
-								<tr>
-									<td>Annn</td>
-									<td>LD I, nnn</td>
-									<td>Set I = nnn</td>
-								</tr>
-								<tr>
-									<td>Dxyn</td>
-									<td>DRW Vx,Vy,n</td>
-									<td>Draw Sprite</td>
-								</tr>
-								<tr>
-									<td>Ex9E</td>
-									<td>SKP Vx</td>
-									<td>Skip if Key Down</td>
-								</tr>
-								<tr>
-									<td>ExA1</td>
-									<td>SKNP Vx</td>
-									<td>Skip if Key Up</td>
-								</tr>
-								<tr>
-									<td>Fx07</td>
-									<td>LD Vx, DT</td>
-									<td>Vx = Delay Timer</td>
-								</tr>
-								<tr>
-									<td>Fx0A</td>
-									<td>LD Vx, K</td>
-									<td>Wait for key</td>
-								</tr>
-								<tr>
-									<td>Fx1E</td>
-									<td>ADD I, Vx</td>
-									<td>I += Vx</td>
-								</tr>
-								<tr>
-									<td>Fx29</td>
-									<td>LD F, Vx</td>
-									<td>Set I to Font</td>
-								</tr>
-								<tr>
-									<td>Fx33</td>
-									<td>LD B, Vx</td>
-									<td>Store BCD at I</td>
-								</tr>
-								<tr>
-									<td>Fx55</td>
-									<td>LD [I], Vx</td>
-									<td>Reg Dump to RAM</td>
-								</tr>
-								<tr>
-									<td>Fx65</td>
-									<td>LD Vx, [I]</td>
-									<td>Load Reg from RAM</td>
-								</tr>
-							</table>
-						</div>
-					</div>
-				</section>
-
-				<section>
-					<h2>Features</h2>
-					<ul>
-						<li>Custom assembly syntax</li>
-						<li>Audio input support</li>
-						<li>Debugging tools</li>
-						<li>Cross-platform (Go + WebAssembly)</li>
-					</ul>
-				</section>
-
-				<section>
-					<h2>Demo</h2>
-					<p>Run a ROM and see the emulator in action!</p>
-				</section>
-
-				<section>
-					<h2>Thanks!</h2>
-					<p>Questions?</p>
-				</section>
-			</div>
+			<div class="slides"></div>
 		</div>
 
 		<script src="/reveal.js/reveal.js"></script>
@@ -279,12 +31,30 @@
 		<script src="/reveal.js/plugin/highlight.js"></script>
 		<script src="/scripts/cyclic-background.js"></script>
 		<script>
-			Reveal.initialize({
-				hash: true,
-				keyboard: true,
-				controls: false,
-				plugins: [RevealMarkdown, RevealHighlight],
-			});
+			const slideFiles = [
+				"slides/01-title.html",
+				"slides/02-what-is-chip-8.html",
+				"slides/03-architecture.html",
+				"slides/04-instruction-set.html",
+			];
+
+			(async function () {
+				const container = document.querySelector(".slides");
+
+				for (const file of slideFiles) {
+					const response = await fetch(file);
+					const html = await response.text();
+					container.insertAdjacentHTML("beforeend", html);
+				}
+
+				// IMPORTANT: Initialize Reveal ONLY after slides are loaded
+				Reveal.initialize({
+					hash: true,
+					keyboard: true,
+					controls: false,
+					plugins: [RevealMarkdown, RevealHighlight],
+				});
+			})();
 		</script>
 	</body>
 </html>
