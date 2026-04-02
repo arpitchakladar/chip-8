@@ -8,17 +8,17 @@
 /* Individual column styling */
 .instruction-column {
 	flex: 1;
-	background: rgba(255, 255, 255, 0.05);
 	padding: 15px;
 	border-radius: 8px;
-	border: 1px solid rgba(255, 255, 255, 0.6);
+	border: 3px solid #aaa;
 }
 
 /* Group Headers */
 .instruction-column h4 {
-	font-size: 0.5em;
-	color: rgba(255, 255, 255, 0.6);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+	font-size: 0.43em;
+	color: #fff;
+	border-bottom: 3px solid #aaa;
+	padding-bottom: 5px;
 	margin-bottom: 10px;
 	text-align: center;
 }
@@ -45,14 +45,15 @@
 
 /* Specific column widths for alignment */
 .instruction-table td:first-child {
-	width: 25%;
+	width: 30px;
 	font-family: monospace;
+	color: #aaa;
 } /* Opcode */
 .instruction-table td:nth-child(2) {
-	width: 30%;
+	width: 80px;
 	font-weight: bold;
 } /* Mnemonic */
 .instruction-table td:last-child {
-	width: 45%;
-	color: #ccc;
+	width: auto;
+	color: #aaa;
 } /* Description */

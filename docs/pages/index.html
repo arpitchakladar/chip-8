@@ -72,6 +72,7 @@
 						</li>
 					</ul>
 				</section>
+
 				<section>
 					<h2>Instruction Set</h2>
 
@@ -101,12 +102,12 @@
 								</tr>
 								<tr>
 									<td>3xkk</td>
-									<td>SE Vx</td>
+									<td>SE Vx, kk</td>
 									<td>Skip if Vx == kk</td>
 								</tr>
 								<tr>
 									<td>4xkk</td>
-									<td>SNE Vx</td>
+									<td>SNE Vx, kk</td>
 									<td>Skip if Vx != kk</td>
 								</tr>
 								<tr>
@@ -121,7 +122,7 @@
 								</tr>
 								<tr>
 									<td>Bnnn</td>
-									<td>JP V0</td>
+									<td>JP V0, nnn</td>
 									<td>Jump nnn + V0</td>
 								</tr>
 							</table>
@@ -132,7 +133,7 @@
 							<table class="instruction-table">
 								<tr>
 									<td>6xkk</td>
-									<td>LD Vx</td>
+									<td>LD Vx, kk</td>
 									<td>Set Vx = kk</td>
 								</tr>
 								<tr>
@@ -193,57 +194,57 @@
 							<table class="instruction-table">
 								<tr>
 									<td>Annn</td>
-									<td>LD I</td>
+									<td>LD I, nnn</td>
 									<td>Set I = nnn</td>
 								</tr>
 								<tr>
 									<td>Dxyn</td>
-									<td>DRW</td>
+									<td>DRW Vx,Vy,n</td>
 									<td>Draw Sprite</td>
 								</tr>
 								<tr>
 									<td>Ex9E</td>
-									<td>SKP</td>
+									<td>SKP Vx</td>
 									<td>Skip if Key Down</td>
 								</tr>
 								<tr>
 									<td>ExA1</td>
-									<td>SKNP</td>
+									<td>SKNP Vx</td>
 									<td>Skip if Key Up</td>
 								</tr>
 								<tr>
 									<td>Fx07</td>
-									<td>LD Vx,DT</td>
+									<td>LD Vx, DT</td>
 									<td>Vx = Delay Timer</td>
 								</tr>
 								<tr>
 									<td>Fx0A</td>
-									<td>LD Vx,K</td>
+									<td>LD Vx, K</td>
 									<td>Wait for key</td>
 								</tr>
 								<tr>
 									<td>Fx1E</td>
-									<td>ADD I,Vx</td>
+									<td>ADD I, Vx</td>
 									<td>I += Vx</td>
 								</tr>
 								<tr>
 									<td>Fx29</td>
-									<td>LD F,Vx</td>
+									<td>LD F, Vx</td>
 									<td>Set I to Font</td>
 								</tr>
 								<tr>
 									<td>Fx33</td>
-									<td>LD B,Vx</td>
+									<td>LD B, Vx</td>
 									<td>Store BCD at I</td>
 								</tr>
 								<tr>
 									<td>Fx55</td>
-									<td>LD [I]</td>
+									<td>LD [I], Vx</td>
 									<td>Reg Dump to RAM</td>
 								</tr>
 								<tr>
 									<td>Fx65</td>
-									<td>LD Vx,[I]</td>
+									<td>LD Vx, [I]</td>
 									<td>Load Reg from RAM</td>
 								</tr>
 							</table>
