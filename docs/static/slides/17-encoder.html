@@ -1,0 +1,64 @@
+<section>
+	<h2>The Encoder</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|15-33|35-39|41-45|48-51|53-57|59-63|65-69"
+				data-load-code="internal/assembler/encoder/encoder.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="Opcode masks"
+			data-code-fragment-text="The encoder defines <u>constant masks</u> for each instruction type. These are the fixed bits that identify the opcode."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="12-bit address"
+			data-code-fragment-text="Used by JP, CALL, LD I, JP V0 - the address is masked to <u>12 bits (0x0FFF)</u> and OR'd with the prefix."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Register + 8-bit immediate"
+			data-code-fragment-text="Used by SE, SNE, LD, ADD - the <u>register goes in bits 8-11</u>, the immediate value in bits 0-7."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Two registers"
+			data-code-fragment-text="Used by ALU ops and register-register comparisons - <u>Vx in bits 8-11</u>, <u>Vy in bits 4-7</u>, suffix in bits 0-3."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="Display operation"
+			data-code-fragment-text="DRW uses Vx, Vy, and a 4-bit <u>nibble (n)</u> for sprite height."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="6"
+			data-code-fragment-title="Single register with suffix"
+			data-code-fragment-text="Used by SKP, SKNP, and various LD variants - register in bits 8-11, <u>suffix/constant in lower byte</u>."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="7"
+			data-code-fragment-title="No-operand opcodes"
+			data-code-fragment-text="CLS and RET have no variables - the mask <u>is the entire opcode</u>."
+		></div>
+	</div>
+</section>
