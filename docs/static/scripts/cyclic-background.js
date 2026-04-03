@@ -1,5 +1,5 @@
 // Function to change the background of any slide
-const cycleBackground = () => {
+function cycleBackground() {
 	// 1. Find the section elements
 	const titleSlides = document.querySelectorAll("section[data-cycling-bg]");
 
@@ -22,16 +22,17 @@ const cycleBackground = () => {
 		);
 
 		// 3. Tell Reveal.js to refresh the background layer
-		Reveal.getRevealElement()
-			.querySelector(".backgrounds")
-			.querySelectorAll(".slide-background")[0] // Targets first slide
-			.querySelector(".slide-background-content").style.backgroundImage =
-			`url("${backgroundImages[currentIndex]}")`;
+		if (window.Reveal && Reveal.getRevealElement) {
+			Reveal.getRevealElement()
+				.querySelector(".backgrounds")
+				.querySelectorAll(".slide-background")[0] // Targets first slide
+				.querySelector(".slide-background-content").style.backgroundImage =
+				`url("${backgroundImages[currentIndex]}")`;
+		}
 	});
-};
+}
 
 // Change every 3 seconds (3000ms)
 document.addEventListener("DOMContentLoaded", () => {
-	cycleBackground();
 	setInterval(cycleBackground, 2000);
 });
