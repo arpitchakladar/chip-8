@@ -55,14 +55,14 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
 			if !seenStart {
 				return nil, nil, &LexerError{
 					LineNumber: i,
-					Message: "__START label must be defined before any instructions",
+					Message:    "__START label must be defined before any instructions",
 				}
 			}
 			// __END should be after everything else
 			if seenEnd {
 				return nil, nil, &LexerError{
 					LineNumber: i,
-					Message: "No instructions allowed after __END label",
+					Message:    "No instructions allowed after __END label",
 				}
 			}
 
