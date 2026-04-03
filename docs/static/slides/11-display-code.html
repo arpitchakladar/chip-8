@@ -29,5 +29,32 @@
 			data-code-fragment-color="var(--red)"
 			data-code-fragment-position="top: 20%; right: 5%;"
 		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Writing a pixel"
+			data-code-fragment-text="We have a wrapper function that writes to the pixels buffer of the display. It gives a bool which is true if there was <u>pixel collision</u> during writing to buffer. <u>NOTE:</u> This doesn't draw to the display."
+			data-code-fragment-color="var(--red)"
+			data-code-fragment-position="top: 0%; right: 5%;"
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Wrapping of pixels"
+			data-code-fragment-text="CHIP-8 doesn't raise exceptions when the pixels are out of bounds. It tries to wrap them, withing the bounds."
+			data-code-fragment-color="var(--red)"
+			data-code-fragment-position="top: 20%; right: 5%;"
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="A quirk of CHIP-8"
+			data-code-fragment-text="CHIP-8 doesn't have separate instructions to turn a pixel on/off. It just has <u>DRW Vx, Vy, n</u> which basically <u>toggles</u> the pixel value between on/off."
+			data-code-fragment-color="var(--blue)"
+			data-code-fragment-position="top: 20%; right: 5%;"
+		></div>
 	</div>
 </section>
