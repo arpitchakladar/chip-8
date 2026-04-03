@@ -1,6 +1,8 @@
 package lexer
 
-import "strings"
+import (
+	"strings"
+)
 
 type Line struct {
 	Mnemonic   string
@@ -21,25 +23,51 @@ func New(source string, currentAddr uint16) *Lexer {
 	}
 }
 
-func (l *Lexer) ScanLabels() (map[string]uint16, []Line) {
+func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
 	labels := make(map[string]uint16)
 	var program []Line
 
 	i := uint16(0)
+	seenStart := false
+	seenEnd := false
+
 	for raw := range strings.SplitSeq(l.Source, "\n") {
 		i++
-		content := strings.Split(raw, ";")[0] // Strip comments
+		content := strings.Split(raw, ";")[0]
 		content = strings.TrimSpace(content)
 		if content == "" {
 			continue
 		}
 
 		if label, found := strings.CutSuffix(content, ":"); found {
-			labels[label] = l.CurrentAddr
+			switch label {
+			case "__START":
+				seenStart = true
+				labels[label] = l.CurrentAddr
+			case "__END":
+				seenEnd = true
+				labels[label] = l.CurrentAddr
+			default:
+				labels[label] = l.CurrentAddr
+			}
 		} else {
+			// __START should be before anything else
+			if !seenStart {
+				return nil, nil, &LexerError{
+					LineNumber: i,
+					Message: "__START label must be defined before any instructions",
+				}
+			}
+			// __END should be after everything else
+			if seenEnd {
+				return nil, nil, &LexerError{
+					LineNumber: i,
+					Message: "No instructions allowed after __END label",
+				}
+			}
+
 			parts := strings.Fields(strings.ReplaceAll(content, ",", " "))
 
-			// Safety check: ensure the line isn't empty before accessing parts[0]
 			if len(parts) > 0 {
 				mnemonic := strings.ToUpper(parts[0])
 				program = append(program, Line{
@@ -48,8 +76,6 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line) {
 					Address:    l.CurrentAddr,
 					LineNumber: i,
 				})
-				// Only DB can create a value of a single binary
-				// every other mnemonic is 2 bytes
 				if mnemonic != "DB" {
 					l.CurrentAddr += 2
 				} else {
@@ -58,5 +84,5 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line) {
 			}
 		}
 	}
-	return labels, program
+	return labels, program, nil
 }

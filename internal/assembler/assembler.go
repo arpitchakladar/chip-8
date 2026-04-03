@@ -21,7 +21,10 @@ func WithSource(source string) *Assembler {
 
 func (a *Assembler) Assemble() ([]byte, error) {
 	lexer := lexer.New(a.Source, a.ProgramCounter)
-	labels, lines := lexer.ScanLabels()
+	labels, lines, err := lexer.ScanLabels()
+	if err != nil {
+		return nil, err
+	}
 
 	var program []byte
 
@@ -32,7 +35,6 @@ func (a *Assembler) Assemble() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		// Low byte comes before high byte
 		program = append(program, opcode...)
 	}
 

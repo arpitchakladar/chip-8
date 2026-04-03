@@ -1,4 +1,4 @@
-START:
+__START:
 	CALL INITIALIZE
 	CALL GENERATE_AND_DRAW_FOOD
 	CALL DRAW_SNAKE
@@ -438,3 +438,4 @@ SCORE_STORAGE:
 SNAKE_BODY_DATA:
 ; Each snake body has 2 bytes for X and Y coordinates
 ; This doesn't include the snake head
+__END:
