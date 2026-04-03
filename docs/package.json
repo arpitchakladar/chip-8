@@ -16,7 +16,7 @@
   "main": "index.js",
   "scripts": {
     "build": "cp -r node_modules/reveal.js/dist build",
-    "serve": "tsx scripts/serve.ts"
+    "start": "tsx scripts/serve.ts"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

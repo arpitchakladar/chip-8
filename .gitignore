@@ -54,3 +54,4 @@ games/*.ch8
 
 # --- Documentation ---
 docs/node_modules
+docs/build
