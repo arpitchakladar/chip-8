@@ -6,7 +6,7 @@ async function prepareCodeFragments() {
 		// Select only direct children with the data attribute
 		const templates = container.querySelectorAll("[data-code-fragment]");
 
-		templates.forEach((el) => {
+		templates.forEach((el, sequence) => {
 			// 1. Extract attributes
 			const indexes =
 				el.getAttribute("data-code-fragment-indexes") || "0";
@@ -14,30 +14,19 @@ async function prepareCodeFragments() {
 				el.getAttribute("data-code-fragment-title") || "No title";
 			const text =
 				el.getAttribute("data-code-fragment-text") || "No text";
-			const color =
-				el.getAttribute("data-code-fragment-color") || "white";
-			const pos =
-				el.getAttribute("data-code-fragment-position") ||
-				"top: 10%; right: 5%;";
+			const color = sequence % 2 === 0 ? "var(--blue)" : "var(--red)";
+			const pos = "";
 
-			indexes.split(",").forEach((index) => {
+			indexes.split(",").forEach((fragmentIndex) => {
 				// 2. Create the fragment popup
 				const popup = document.createElement("div");
 				popup.className = "fragment fade-in-then-out";
-				popup.setAttribute("data-fragment-index", index.trim());
+				popup.setAttribute("data-fragment-index", fragmentIndex.trim());
+				popup.setAttribute("data-code-fragment-element", "");
 
 				// 3. Apply Styling
 				popup.style.cssText = `
-					position: absolute;
-					${pos};
-					width: 300px;
-					background: rgba(34, 34, 34, 0.9);
-					border: 2px solid ${color};
-					padding: 15px;
-					box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
-					z-index: 10;
-					text-align: left;
-					border-radius: 8px;
+					--code-fragment-element-color: ${color}
 				`;
 
 				popup.innerHTML = `
