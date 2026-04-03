@@ -1,6 +1,6 @@
 .reveal pre,
 .reveal code {
-	background: #000000 !important;
+	background: var(--background) !important;
 	box-shadow: none !important; /* Removes the default shadow */
 }
 
