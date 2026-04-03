@@ -49,7 +49,7 @@ func (a *Audio) GenerateBeep() error {
 	for i := range length {
 		// Generating a square wave
 		// If we are in the first half of the wave period, stay high
-		if i % period < (period / 2) {
+		if i%period < (period / 2) {
 			data[i] = 3000
 		} else {
 			data[i] = -3000
