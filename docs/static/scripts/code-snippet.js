@@ -5,11 +5,15 @@ async function prepareCodeFragments() {
 	containers.forEach((container) => {
 		// Get all the code snippet viewers
 		const codeSnippetElement = container.querySelector("[data-load-code]");
-		const codePath = codeSnippetElement.getAttribute("data-load-code") || "No file";
+		const codePath =
+			codeSnippetElement.getAttribute("data-load-code") || "No file";
 		const codeFilePath = document.createElement("a");
 		codeFilePath.innerHTML = codePath;
 		codeFilePath.className = "secondary code-path";
-		codeFilePath.setAttribute("href", `https://github.com/arpitchakladar/chip-8/blob/master/${codePath}`);
+		codeFilePath.setAttribute(
+			"href",
+			`https://github.com/arpitchakladar/chip-8/blob/master/${codePath}`,
+		);
 		container.prepend(codeFilePath);
 
 		// Select only direct children with the data attribute
