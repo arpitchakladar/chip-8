@@ -29,7 +29,7 @@ app.get("/code", async (req, res) => {
 
 		// TODO: Use the master branch after merging
 		const GITHUB_RAW_BASE =
-			"https://raw.githubusercontent.com/arpitchakladar/chip-8/refs/heads/dev/more-docs-presentation/";
+			"https://raw.githubusercontent.com/arpitchakladar/chip-8/refs/heads/master/";
 
 		const url = GITHUB_RAW_BASE + file;
 		console.log(url);
