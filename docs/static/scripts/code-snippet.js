@@ -8,19 +8,26 @@ async function prepareCodeFragments() {
 
 		templates.forEach((el) => {
 			// 1. Extract attributes
-			const index = el.getAttribute("data-code-fragment-index");
-			const title = el.getAttribute("data-code-fragment-title");
-			const text = el.getAttribute("data-code-fragment-text");
-			const color = el.getAttribute("data-code-fragment-color");
-			const pos = el.getAttribute("data-code-fragment-position");
+			const indexes =
+				el.getAttribute("data-code-fragment-indexes") || "0";
+			const title =
+				el.getAttribute("data-code-fragment-title") || "No title";
+			const text =
+				el.getAttribute("data-code-fragment-text") || "No text";
+			const color =
+				el.getAttribute("data-code-fragment-color") || "white";
+			const pos =
+				el.getAttribute("data-code-fragment-position") ||
+				"top: 10%; right: 5%;";
 
-			// 2. Create the fragment popup
-			const popup = document.createElement("div");
-			popup.className = "fragment fade-in-then-out";
-			popup.setAttribute("data-fragment-index", index);
+			indexes.split(",").forEach((index) => {
+				// 2. Create the fragment popup
+				const popup = document.createElement("div");
+				popup.className = "fragment fade-in-then-out";
+				popup.setAttribute("data-fragment-index", index.trim());
 
-			// 3. Apply Styling
-			popup.style.cssText = `
+				// 3. Apply Styling
+				popup.style.cssText = `
 				position: absolute;
 				${pos};
 				width: 300px;
@@ -33,13 +40,14 @@ async function prepareCodeFragments() {
 				border-radius: 8px;
 			`;
 
-			popup.innerHTML = `
+				popup.innerHTML = `
 				<h4 style="margin: 0 0 10px 0; color: ${color}; font-size: 0.8em;">${title}</h4>
 				<p style="font-size: 0.5em; margin: 0; line-height: 1.4;">${text}</p>
 			`;
 
-			// 4. Move to container and cleanup
-			container.appendChild(popup);
+				// 4. Move to container and cleanup
+				container.appendChild(popup);
+			});
 			el.remove();
 		});
 	});
