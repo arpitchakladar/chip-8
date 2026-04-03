@@ -79,6 +79,13 @@ func compileAssembly(filePaths []string) {
 		hasStart := strings.Contains(string(content), "__START")
 		hasEnd := strings.Contains(string(content), "__END")
 
+		if hasStart && hasEnd {
+			startFiles = append(startFiles, path)
+			hasStartMarker = true
+			hasEndMarker = true
+			continue
+		}
+
 		if hasStart {
 			startFiles = append(startFiles, path)
 			hasStartMarker = true
