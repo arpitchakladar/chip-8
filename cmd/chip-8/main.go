@@ -17,21 +17,31 @@ func main() {
 	}
 
 	command := strings.ToLower(os.Args[1])
-	filePaths := os.Args[2:]
+	args := os.Args[2:]
+
+	outputPath := ""
+
+	for i := 0; i < len(args); i++ {
+		if args[i] == "-o" && i+1 < len(args) {
+			outputPath = args[i+1]
+			args = append(args[:i], args[i+2:]...)
+			i--
+		}
+	}
 
 	switch command {
 	case "run":
-		if len(filePaths) != 1 {
+		if len(args) != 1 {
 			printUsage()
 			return
 		}
-		runEmulator(filePaths[0])
+		runEmulator(args[0])
 	case "compile":
-		if len(filePaths) < 1 {
+		if len(args) < 1 {
 			printUsage()
 			return
 		}
-		compileAssembly(filePaths)
+		compileAssembly(args, outputPath)
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		printUsage()
@@ -40,8 +50,8 @@ func main() {
 
 func printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("run <path-to-rom>           - Runs a .ch8 file")
-	fmt.Println("compile <path-to-asm> ...   - Compiles one or more .asm files to .ch8")
+	fmt.Println("run <path-to-rom>             - Runs a .ch8 file")
+	fmt.Println("compile [-o <output>] <path-to-asm> ... - Compiles one or more .asm files to .ch8")
 }
 
 func runEmulator(path string) {
@@ -64,7 +74,7 @@ func runEmulator(path string) {
 	}
 }
 
-func compileAssembly(filePaths []string) {
+func compileAssembly(filePaths []string, outputPath string) {
 	var startFiles, endFiles, regularFiles []string
 
 	hasStartMarker := false
@@ -124,9 +134,11 @@ func compileAssembly(filePaths []string) {
 		allContent.WriteString("\n")
 	}
 
-	outputPath := strings.TrimSuffix(filePaths[0], filepath.Ext(filePaths[0])) + ".ch8"
-	if len(filePaths) > 1 {
-		outputPath = "combined.ch8"
+	if outputPath == "" {
+		outputPath = strings.TrimSuffix(filePaths[0], filepath.Ext(filePaths[0])) + ".ch8"
+		if len(filePaths) > 1 {
+			outputPath = "combined.ch8"
+		}
 	}
 
 	fmt.Printf("Assembling...\n")
