@@ -13,11 +13,6 @@
 		<link rel="stylesheet" href="/reveal.js/reveal.css" />
 		<link rel="stylesheet" href="/reveal.js/theme/black.css" />
 
-		<link
-			rel="stylesheet"
-			href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/black-metal-kjetw.min.css"
-		/>
-
 		<link rel="stylesheet" href="/styles/background-image-overlay.css" />
 		<link rel="stylesheet" href="/styles/code.css" />
 		<link rel="stylesheet" href="/styles/colors.css" />
@@ -45,7 +40,7 @@
 				"slides/05-execution-cycle.html",
 				"slides/06-my-design.html",
 				"slides/07-the-emulator.html",
-				"slides/08-the-code.html",
+				"slides/08-the-main-loop.html",
 			];
 
 			const container = document.querySelector(".slides");
@@ -64,7 +59,13 @@
 					container.insertAdjacentHTML("beforeend", html);
 				}
 
-				await Promise.all([loadCode()]);
+				await Promise.all([
+					loadCode(),
+					new Promise((then, except) => {
+						cycleBackground();
+						return then();
+					}),
+				]);
 
 				// IMPORTANT: Initialize Reveal ONLY after slides are loaded
 				Reveal.initialize({
