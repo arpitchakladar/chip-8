@@ -3,6 +3,8 @@
 	--secondary: #aaa;
 	--background: #000;
 	--background-secondary: #444;
+	--blue: #42affa;
+	--red: #ff2c2d;
 }
 
 .reveal .secondary {
