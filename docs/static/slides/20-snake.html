@@ -1,0 +1,39 @@
+<section data-auto-animate>
+	<h2 data-id="snake-title">The Snake Game</h2>
+	<ul>
+		<li class="fragment">
+			<span class="secondary">Control scheme:</span> <u>Q</u> <span class="secondary">(left),</span>
+			<u>E</u> <span class="secondary">(right),</span> <u>2</u> <span class="secondary">(up),</span> <u>8</u> <span class="secondary">(down)</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Movement update every</span> <u>~166ms</u>
+			<span class="secondary">using delay timer</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Snake stored in RAM at</span>
+			<u>SNAKE_BODY_DATA</u>
+			<span class="secondary">as X,Y coordinate pairs</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Collision detection with</span> <u>body</u>
+			<span class="secondary">and</span> <u>food</u>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Food generates at random</span> <u>64×32</u>
+			<span class="secondary">position</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Screen wrapping on</span> <u>edges</u>
+			<span class="secondary">(mask with 0x3F and 0x1F)</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Beep plays on</span> <u>eating food</u>
+			<span class="secondary">and</span> <u>game over</u>
+		</li>
+		<li class="fragment">
+			<span class="secondary">"GAME OVER" drawn using</span>
+			<u>8×8 sprite data</u>
+			<span class="secondary">at end</span>
+		</li>
+	</ul>
+</section>

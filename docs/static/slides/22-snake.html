@@ -1,0 +1,58 @@
+<section data-auto-animate>
+	<h2 data-id="snake-title">The Snake Game</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+				<!-- TODO: Change this to assembly -->
+		<pre>
+			<code
+				class="language-x86asm"
+				data-fragment-index="1"
+				data-line-numbers="|5-14|20-42|60-80|128-164|183-199|290-292"
+				data-load-code="games/snake.asm"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="Game loop"
+			data-code-fragment-text="Uses <u>delay timer</u> to create ~166ms tick. Waits for DT to reach zero before each move."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="Initialization"
+			data-code-fragment-text="Sets initial velocity (1, 0), length (4), and builds initial body by placing segments at decreasing X positions."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Input handling"
+			data-code-fragment-text="Checks keys 2, 8, 4, 6. <u>SKNP</u> (skip if not pressed) is used - calls direction setter only if key is pressed."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Movement logic"
+			data-code-fragment-text="The core: checks <u>collision</u> with body and food, handles wrapping, then shifts all body segments forward."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="Eating food"
+			data-code-fragment-text="When head matches food position: don't remove tail (snake grows), play beep, generate new food."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="6"
+			data-code-fragment-title="Game over"
+			data-code-fragment-text="Clears screen, draws 'GAME OVER' text using 8×8 sprite data, then <u>infinite loop</u> to freeze."
+		></div>
+	</div>
+</section>
