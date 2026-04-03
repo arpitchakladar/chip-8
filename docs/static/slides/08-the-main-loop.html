@@ -1,12 +1,35 @@
-<section>
+<section id="emulator-slide">
 	<h2>The Main Loops</h2>
-	<p>The CPU Loop</p>
-	<pre>
-		<code
-			class="language-go"
-			data-line-numbers="|119-137|55-72"
-			data-load-code="internal/emulator/emulator.go"
-		>
-		</code>
-	</pre>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|119-137|55-72|141-171"
+				data-load-code="internal/emulator/emulator.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-index="1"
+			data-code-fragment-title="CPU Loop"
+			data-code-fragment-text="Fetch-decode-execute cycle logic."
+			data-code-fragment-color="#42affa"
+			data-code-fragment-position="top: 10%; right: 5%;"
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-index="3"
+			data-code-fragment-title="Interrupts"
+			data-code-fragment-text="Handling stack pointer transitions."
+			data-code-fragment-color="#ff2c2d"
+			data-code-fragment-position="top: 20%; right: 5%;"
+		></div>
+	</div>
+
+	<script></script>
 </section>
