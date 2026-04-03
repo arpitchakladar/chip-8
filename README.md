@@ -66,9 +66,9 @@ Example:
 
 ## Using the Assembler
 
-To assemble a .asm file into a .ch8 file:
+To assemble one or more .asm file into a .ch8 file:
 ```bash
-./chip-8 compile <path-to-asm>
+./chip-8 compile <path-to-asm1> <path-to-asm2> ...
 ```
 
 Example:
@@ -131,6 +131,13 @@ This will output `examples/hello_world.ch8`.
 - `DB byte` - Define byte (data)
 - `DW word` - Define word (16-bit data)
 - `LABEL:` - Define a label
+
+### Special Labels
+
+- `__START` - Must be defined before any instructions (required)
+- `__END` - Must be the last label, no instructions allowed after it (required)
+
+When compiling multiple assembly files, files containing `__START` are placed first, and files containing `__END` are placed last in the concatenation order.
 
 ### Constants
 
