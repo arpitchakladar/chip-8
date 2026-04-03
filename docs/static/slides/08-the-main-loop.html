@@ -16,7 +16,7 @@
 			data-code-fragment
 			data-code-fragment-indexes="1"
 			data-code-fragment-title="CPU Goroutine"
-			data-code-fragment-text="Running the cpu in a goroutine for parallelism."
+			data-code-fragment-text="Running the cpu in a <u>goroutine</u> for parallelism."
 			data-code-fragment-color="var(--blue)"
 			data-code-fragment-position="top: 10%; right: 5%;"
 		></div>
@@ -25,7 +25,7 @@
 			data-code-fragment
 			data-code-fragment-indexes="2"
 			data-code-fragment-title="CPU Loop"
-			data-code-fragment-text="Fetch-decode-execute cycle logic."
+			data-code-fragment-text="<u>Fetch-decode-execute</u> cycle logic."
 			data-code-fragment-color="var(--blue)"
 			data-code-fragment-position="top: 20%; right: 5%;"
 		></div>
@@ -34,7 +34,7 @@
 			data-code-fragment
 			data-code-fragment-indexes="3"
 			data-code-fragment-title="The display/timer loop"
-			data-code-fragment-text="Rendering and timer countdowns happen at 60Hz ONLY, so there is a benefit of running them in parallel."
+			data-code-fragment-text="Rendering and timer countdowns happen at <u>60Hz only</u>, so there is a benefit of running them in parallel, as the 60Hz constraint won't throttle the CPU."
 			data-code-fragment-color="var(--red)"
 			data-code-fragment-position="top: 10%; right: 5%;"
 		></div>
@@ -45,7 +45,7 @@
 			data-code-fragment-title="The display/timer loop"
 			data-code-fragment-text="This introduces a problem of data races. The cpu execution loop being so much faster may override memory while display loop is reading from it."
 			data-code-fragment-color="var(--red)"
-			data-code-fragment-position="top: 20%; right: 5%;"
+			data-code-fragment-position="top: 10%; right: 5%;"
 		></div>
 
 		<div
