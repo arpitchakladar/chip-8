@@ -3,7 +3,7 @@ async function loadCode() {
 
 	await Promise.all(
 		Array.from(blocks).map(async (block) => {
-			const url = `/code?file=${block.getAttribute("data-load-code")}`;
+			const url = `https://raw.githubusercontent.com/arpitchakladar/chip-8/refs/heads/master/${block.getAttribute("data-load-code")}`;
 
 			try {
 				block.textContent = "// Loading...";
