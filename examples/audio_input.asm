@@ -1,7 +1,7 @@
 ; --- CHIP-8 Audio & Input Test ---
 ; Press any key to hear a 0.5-second beep
 
-START:
+__START:
 	; 1. Wait for a key press (Opcode FX0A)
 	; This halts the CPU until a key is pressed, then stores key in V0
 	LD V0, K
@@ -37,3 +37,5 @@ BLOCK:
 	DB 0xFF ; ########
 	DB 0xFF ; ########
 	DB 0xFF ; ########
+
+__END:

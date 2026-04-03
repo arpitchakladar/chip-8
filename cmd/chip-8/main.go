@@ -65,6 +65,45 @@ func runEmulator(path string) {
 }
 
 func compileAssembly(filePaths []string) {
+	var startFiles, endFiles, regularFiles []string
+
+	hasStartMarker := false
+	hasEndMarker := false
+
+	for _, path := range filePaths {
+		content, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "File Error: %v\n", err)
+			os.Exit(1)
+		}
+		hasStart := strings.Contains(string(content), "__START")
+		hasEnd := strings.Contains(string(content), "__END")
+
+		if hasStart {
+			startFiles = append(startFiles, path)
+			hasStartMarker = true
+		}
+		if hasEnd {
+			endFiles = append(endFiles, path)
+			hasEndMarker = true
+		}
+		if !hasStart && !hasEnd {
+			regularFiles = append(regularFiles, path)
+		}
+	}
+
+	if !hasStartMarker {
+		fmt.Fprintf(os.Stderr, "Error: No file contains __START marker\n")
+		os.Exit(1)
+	}
+
+	if !hasEndMarker {
+		fmt.Fprintf(os.Stderr, "Error: No file contains __END marker\n")
+		os.Exit(1)
+	}
+
+	filePaths = append(startFiles, append(regularFiles, endFiles...)...)
+
 	var allContent strings.Builder
 
 	for _, path := range filePaths {
