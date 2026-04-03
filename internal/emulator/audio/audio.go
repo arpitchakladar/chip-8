@@ -28,35 +28,12 @@ func (a *Audio) Init() error {
 		Samples:  2048,
 	}
 
+	// Get audio device
 	dev, err := sdl.OpenAudioDevice("", false, spec, nil, 0)
 	if err != nil {
 		return err
 	}
 	a.Device = dev
-
-	// --- PRE-GENERATE A SMALL LOOP ---
-	// 0.1 seconds is enough to loop smoothly
-	loopLength := SampleRate / 10
-	data := make([]int16, loopLength)
-	for i := range loopLength {
-		if math.Sin(2.0*math.Pi*Frequency*float64(i)/SampleRate) > 0 {
-			data[i] = 3000
-		} else {
-			data[i] = -3000
-		}
-	}
-
-	byteLen := len(data) * 2
-	byteData := unsafe.Slice((*byte)(unsafe.Pointer(&data[0])), byteLen)
-
-	// Fill the queue once. SDL will keep playing this data if we don't clear it.
-	// However, QueueAudio isn't great for infinite loops.
-	// A better way is to just queue a LOT of it once.
-	for range 10 { // Queue 1 second total
-		if err := sdl.QueueAudio(a.Device, byteData); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
