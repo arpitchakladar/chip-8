@@ -76,7 +76,12 @@ Example:
 ./chip-8 compile examples/hello_world.asm
 ```
 
-This will output `examples/hello_world.ch8`.
+To specify a custom output path:
+```bash
+./chip-8 compile -o output.ch8 examples/hello_world.asm
+```
+
+This will output `examples/hello_world.ch8` by default, or `output.ch8` if `-o` is specified.
 
 ## Assembly Language Syntax
 
