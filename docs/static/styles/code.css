@@ -1,0 +1,20 @@
+.reveal pre,
+.reveal code {
+	background: #000000 !important;
+	box-shadow: none !important; /* Removes the default shadow */
+}
+
+/* 1. Remove scrollbars for Chrome, Safari, and Opera */
+.reveal pre code::-webkit-scrollbar {
+	display: none;
+}
+
+/* 2. Remove scrollbars for IE, Edge, and Firefox */
+.reveal pre code {
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+	overflow-y: auto;
+	max-height: 500px; /* Adjust this height to fit your slide */
+	border: 1px solid var(--primary);
+	border-radius: 8px;
+}

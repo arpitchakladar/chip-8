@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+
+		<title>CHIP-8 Emulator</title>
+
+		<link rel="stylesheet" href="/reveal.js/reset.css" />
+		<link rel="stylesheet" href="/reveal.js/reveal.css" />
+		<link rel="stylesheet" href="/reveal.js/theme/black.css" />
+
+		<link rel="stylesheet" href="/styles/background-image-overlay.css" />
+		<link rel="stylesheet" href="/styles/code.css" />
+		<link rel="stylesheet" href="/styles/colors.css" />
+		<link rel="stylesheet" href="/styles/fonts.css" />
+		<link rel="stylesheet" href="/styles/instruction-set.css" />
+		<link rel="stylesheet" href="/styles/lists.css" />
+		<link rel="stylesheet" href="/styles/progress-bar.css" />
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides"></div>
+		</div>
+
+		<script src="/reveal.js/reveal.js"></script>
+		<script src="/reveal.js/plugin/markdown.js"></script>
+		<script src="/reveal.js/plugin/highlight.js"></script>
+		<script src="/scripts/code-loader.js"></script>
+		<script src="/scripts/code-snippet.js"></script>
+		<script src="/scripts/cyclic-background.js"></script>
+		<script>
+			const slideFiles = [
+				"slides/01-title.html",
+				"slides/02-what-is-chip-8.html",
+				"slides/03-architecture.html",
+				"slides/04-instruction-set.html",
+				"slides/05-execution-cycle.html",
+				"slides/06-my-design.html",
+				"slides/07-the-emulator.html",
+				"slides/08-the-main-loop.html",
+				"slides/09-the-audio.html",
+			];
+
+			const container = document.querySelector(".slides");
+
+			// 1. Start loading all the slide pages
+			// we may start loading them before anything has even rendered
+			const slidePromises = slideFiles.map(async (file) => {
+				const response = await fetch(file);
+				return response.text();
+			});
+
+			(async function () {
+				// 2. Process the promises in order
+				for (const promise of slidePromises) {
+					const html = await promise;
+					container.insertAdjacentHTML("beforeend", html);
+				}
+
+				await Promise.all([
+					loadCode(),
+					cycleBackground(),
+					prepareCodeFragments(),
+				]);
+
+				// IMPORTANT: Initialize Reveal ONLY after slides are loaded
+				Reveal.initialize({
+					hash: true,
+					keyboard: true,
+					controls: false,
+					plugins: [RevealMarkdown, RevealHighlight],
+				});
+			})();
+		</script>
+	</body>
+</html>

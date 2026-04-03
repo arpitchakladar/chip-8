@@ -1,0 +1,29 @@
+{
+  "name": "chip-8-docs",
+  "version": "1.0.0",
+  "description": "Documentation/presentation for my chip-8 emulator",
+  "homepage": "https://github.com/arpitchakladar/chip-8#readme",
+  "bugs": {
+    "url": "https://github.com/arpitchakladar/chip-8/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arpitchakladar/chip-8.git"
+  },
+  "license": "MIT",
+  "author": "Arpit Chakladar",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "cp -r node_modules/reveal.js/dist build",
+    "serve": "tsx scripts/serve.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "prettier": "^3.8.1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "reveal.js": "^6.0.0"
+  }
+}

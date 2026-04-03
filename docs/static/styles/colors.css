@@ -1,0 +1,14 @@
+.reveal {
+	--primary: #fff;
+	--secondary: #aaa;
+	--background: #000;
+	--background-secondary: #444;
+}
+
+.reveal .secondary {
+	color: var(--secondary);
+}
+
+:root {
+	--r-background-color: #000000;
+}

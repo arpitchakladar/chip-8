@@ -1,0 +1,27 @@
+<section>
+	<h2>The Emulator Design</h2>
+	<ul>
+		<li class="fragment">
+			<span class="secondary">CPU/Rendering loop written in</span> <u>Go</u>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Opcode decoding using</span> <u>bit masking</u>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Display buffer (64×32 framebuffer) with</span>
+			<u>SDL2</u>
+			<span class="secondary">to create the output display window</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Keyboard</span> <u>input mapping</u>
+			<span class="secondary">(with SDL2)</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Timers (ST and DT) running at</span> <u>60Hz</u>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Beep sounds playing as long a</span>
+			<u>ST is not 0</u>
+		</li>
+	</ul>
+</section>
