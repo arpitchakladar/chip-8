@@ -1,0 +1,57 @@
+<section>
+	<h2>The Lexer</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|24-27|31|37-38|40|42-50|52-58"
+				data-load-code="internal/assembler/lexer/lexer.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="Lexing"
+			data-code-fragment-text="The lexer returns a map of <u>labels to addresses</u> and a slice of <u>Line</u> structs containing the mnemonic and arguments."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="Comment stripping"
+			data-code-fragment-text="Everything after <u>;</u> is treated as a comment and stripped away before processing."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Label detection"
+			data-code-fragment-text="Lines ending with <u>:</u> are labels. The current address is stored for that label."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Tokenizing"
+			data-code-fragment-text="For non-label lines, we split by whitespace and comma to get the <u>mnemonic and arguments</u>."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="Building the program"
+			data-code-fragment-text="Each line becomes a <u>Line</u> struct with mnemonic, args, address, and line number for error reporting."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="6"
+			data-code-fragment-title="Address tracking"
+			data-code-fragment-text="Most instructions are <u>2 bytes</u>, but <u>DB</u> (define byte) is only 1 byte. The address counter is incremented accordingly."
+		></div>
+	</div>
+</section>
