@@ -6,7 +6,7 @@
 			<code
 				class="language-go"
 				data-fragment-index="1"
-				data-line-numbers="|8-12|31-36|61-63|72-74|79,82,85"
+				data-line-numbers="|8-12|31-36|61-63|88-89|72-74|79,82,85"
 				data-load-code="internal/emulator/display/display.go"
 			>
 			</code>
@@ -42,6 +42,15 @@
 		<div
 			data-code-fragment
 			data-code-fragment-indexes="4"
+			data-code-fragment-title="Actually drawing to display"
+			data-code-fragment-text="This is the function that actually <u>displays</u> the content of the pixel buffer to screen. With the SDL2 API."
+			data-code-fragment-color="var(--red)"
+			data-code-fragment-position="top: 20%; right: 5%;"
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
 			data-code-fragment-title="Wrapping of pixels"
 			data-code-fragment-text="CHIP-8 doesn't raise exceptions when the pixels are out of bounds. It tries to wrap them, withing the bounds."
 			data-code-fragment-color="var(--red)"
@@ -50,7 +59,7 @@
 
 		<div
 			data-code-fragment
-			data-code-fragment-indexes="5"
+			data-code-fragment-indexes="6"
 			data-code-fragment-title="A quirk of CHIP-8"
 			data-code-fragment-text="CHIP-8 doesn't have separate instructions to turn a pixel on/off. It just has <u>DRW Vx, Vy, n</u> which basically <u>toggles</u> the pixel value between on/off."
 			data-code-fragment-color="var(--blue)"
