@@ -8,7 +8,7 @@ async function cycleBackground() {
 		const backgroundImages = titleSlide
 			.getAttribute("data-cycling-bg")
 			.split(",")
-			.map((assetName) => `/assets/${assetName}`);
+			.map((assetName) => `assets/${assetName}`);
 		let currentIndex = parseInt(
 			titleSlide.getAttribute("data-cycling-bg-index") || 0,
 		);
