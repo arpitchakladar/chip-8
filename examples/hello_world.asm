@@ -1,7 +1,7 @@
 ; --- CHIP-8 Hello World ---
 ; Displays "HELO" on the screen
 
-START:
+__START:
 	LD V0, 0x02      ; X coordinate start
 	LD V1, 0x0A      ; Y coordinate
 
