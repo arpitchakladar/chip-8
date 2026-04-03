@@ -6,7 +6,7 @@
 			<code
 				class="language-go"
 				data-fragment-index="1"
-				data-line-numbers="|119-137|55-72|141-171"
+				data-line-numbers="|119-137|55-72|141-171|141-171|157,162|128,130"
 				data-load-code="internal/emulator/emulator.go"
 			>
 			</code>
@@ -33,10 +33,37 @@
 		<div
 			data-code-fragment
 			data-code-fragment-indexes="3"
-			data-code-fragment-title="Interrupts"
-			data-code-fragment-text="Handling syncing of information between the display/timer and CPU goroutines"
+			data-code-fragment-title="The display/timer loop"
+			data-code-fragment-text="Rendering and timer countdowns happen at 60Hz ONLY, so there is a benefit of running them in parallel."
 			data-code-fragment-color="#ff2c2d"
 			data-code-fragment-position="top: 10%; right: 5%;"
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="The display/timer loop"
+			data-code-fragment-text="This introduces a problem of data races. The cpu execution loop being so much faster may override memory while display loop is reading from it."
+			data-code-fragment-color="#ff2c2d"
+			data-code-fragment-position="top: 20%; right: 5%;"
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="Interrupts"
+			data-code-fragment-text="Locking the CPU's access to memory. Using a mutex to prevent CPU from accessing the memory as the rendering/timer loop is accessing it."
+			data-code-fragment-color="#ff2c2d"
+			data-code-fragment-position="top: 10%; right: 5%;"
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="6"
+			data-code-fragment-title="Not really an interrupt..."
+			data-code-fragment-text="Unlike <u>most interrupts</u> this only blocks CPU execution. Wheseas in most other cases interrupts are instructions for CPU to <u>do something else</u>."
+			data-code-fragment-color="#ff2c2d"
+			data-code-fragment-position="top: 20%; right: 5%;"
 		></div>
 	</div>
 
