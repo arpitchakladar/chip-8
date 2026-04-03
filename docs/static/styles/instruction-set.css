@@ -1,0 +1,56 @@
+/* Container for the three columns */
+.instruction-grid {
+	display: flex;
+	gap: 15px;
+	align-items: stretch;
+}
+
+/* Individual column styling */
+.instruction-column {
+	flex: 1;
+	padding: 15px;
+	border-radius: 8px;
+	border: 1px solid var(--secondary);
+}
+
+/* Group Headers */
+.instruction-column h4 {
+	font-size: 0.43em;
+	color: var(--primary);
+	border-bottom: 1px solid var(--secondary);
+	padding-bottom: 5px;
+	margin-bottom: 10px;
+	text-align: center;
+}
+
+/* Table layout for Code | Instruction | Description */
+.instruction-table {
+	width: 100%;
+	font-size: 0.38em;
+	border-collapse: collapse;
+}
+
+.instruction-table tr:last-child {
+	border-bottom: none;
+}
+
+.instruction-table td {
+	padding: 4px 2px;
+	vertical-align: middle;
+	border: none;
+}
+
+/* Specific column widths for alignment */
+.instruction-table td:first-child {
+	width: 30px;
+	font-family: monospace;
+	color: var(--secondary);
+} /* Opcode */
+.instruction-table td:nth-child(2) {
+	width: 80px;
+	font-weight: bold;
+} /* Mnemonic */
+.instruction-table td:last-child {
+	width: auto;
+	color: var(--secondary);
+} /* Description */

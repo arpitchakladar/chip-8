@@ -46,7 +46,11 @@ Thumbs.db
 # depending on their copyright status.
 /roms/*.ch8
 /roms/*.bin
+/roms/*.rom
 
 # --- Compiled Examples ---
 examples/*.ch8
 games/*.ch8
+
+# --- Documentation ---
+docs/node_modules

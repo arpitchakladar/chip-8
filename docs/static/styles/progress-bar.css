@@ -1,0 +1,11 @@
+/* The track (background of the progress bar) */
+.reveal .progress {
+	background: rgba(255, 255, 255, 0.1); /* Very faint white track */
+	height: 4px; /* Slim, modern look */
+}
+
+/* The actual progress bar */
+.reveal .progress span {
+	background: rgba(255, 255, 255, 0.6); /* Semi-transparent white */
+	box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* Optional: Soft glow */
+}
