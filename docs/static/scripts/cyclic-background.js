@@ -1,5 +1,5 @@
 // Function to change the background of any slide
-function cycleBackground() {
+async function cycleBackground() {
 	// 1. Find the section elements
 	const titleSlides = document.querySelectorAll("section[data-cycling-bg]");
 
@@ -26,7 +26,9 @@ function cycleBackground() {
 			Reveal.getRevealElement()
 				.querySelector(".backgrounds")
 				.querySelectorAll(".slide-background")[0] // Targets first slide
-				.querySelector(".slide-background-content").style.backgroundImage =
+				.querySelector(
+					".slide-background-content",
+				).style.backgroundImage =
 				`url("${backgroundImages[currentIndex]}")`;
 		}
 	});

@@ -30,6 +30,7 @@
 		<script src="/reveal.js/plugin/markdown.js"></script>
 		<script src="/reveal.js/plugin/highlight.js"></script>
 		<script src="/scripts/code-loader.js"></script>
+		<script src="/scripts/code-snippet.js"></script>
 		<script src="/scripts/cyclic-background.js"></script>
 		<script>
 			const slideFiles = [
@@ -61,10 +62,8 @@
 
 				await Promise.all([
 					loadCode(),
-					new Promise((then, except) => {
-						cycleBackground();
-						return then();
-					}),
+					cycleBackground(),
+					prepareCodeFragments(),
 				]);
 
 				// IMPORTANT: Initialize Reveal ONLY after slides are loaded
