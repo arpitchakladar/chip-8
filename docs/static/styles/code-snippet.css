@@ -1,6 +1,6 @@
 [data-code-fragment-element] {
 	position: absolute;
-	top: 0;
+	top: 1.8em;
 	right: 5%;
 	width: 300px;
 	background: rgba(34, 34, 34, 0.9);
@@ -10,4 +10,10 @@
 	z-index: 10;
 	text-align: left;
 	border-radius: 8px;
+}
+
+.reveal .code-path {
+	text-align: left;
+	display: block;
+	padding: 0 48px 0 48px;
 }
