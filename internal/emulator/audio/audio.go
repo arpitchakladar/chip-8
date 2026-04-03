@@ -1,7 +1,6 @@
 package audio
 
 import (
-	"math"
 	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -45,9 +44,12 @@ func (a *Audio) GenerateBeep() error {
 
 	length := SampleRate
 	data := make([]int16, length)
+	period := SampleRate / int(Frequency)
 
 	for i := range length {
-		if math.Sin(2.0*math.Pi*Frequency*float64(i)/SampleRate) > 0 {
+		// Generating a square wave
+		// If we are in the first half of the wave period, stay high
+		if i % period < (period / 2) {
 			data[i] = 3000
 		} else {
 			data[i] = -3000
