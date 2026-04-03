@@ -27,8 +27,9 @@ app.get("/code", async (req, res) => {
 			return res.status(400).send("Missing 'file' parameter");
 		}
 
+		// TODO: Use the master branch after merging
 		const GITHUB_RAW_BASE =
-			"https://raw.githubusercontent.com/arpitchakladar/chip-8/refs/heads/master/";
+			"https://raw.githubusercontent.com/arpitchakladar/chip-8/refs/heads/dev/more-docs-presentation/";
 
 		const url = GITHUB_RAW_BASE + file;
 		console.log(url);
