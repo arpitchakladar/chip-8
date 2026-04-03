@@ -22,6 +22,32 @@ func New() *Display {
 	return new(Display)
 }
 
+// InitSDL sets up the window and renderer
+func (d *Display) Init() error {
+	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
+		return &SDLError{Subsystem: "Initialization", Err: err}
+	}
+
+	window, err := sdl.CreateWindow(
+		"Chip-8 Emulator",
+		int32(sdl.WINDOWPOS_CENTERED), int32(sdl.WINDOWPOS_CENTERED),
+		int32(Width*Scale), int32(Height*Scale),
+		uint32(sdl.WINDOW_SHOWN),
+	)
+	if err != nil {
+		return &SDLError{Subsystem: "Window Creation", Err: err}
+	}
+
+	dr, err := sdl.CreateRenderer(window, -1, uint32(sdl.RENDERER_ACCELERATED))
+	if err != nil {
+		return &SDLError{Subsystem: "Renderer Creation", Err: err}
+	}
+
+	d.window = window
+	d.renderer = dr
+	return nil
+}
+
 // Reset clears the entire pixel buffer to black (0).
 func (d *Display) Reset() {
 	d.Pixels = [Width * Height]byte{}
@@ -57,32 +83,6 @@ func (d *Display) SetPixel(x, y uint8) (bool, error) {
 
 	// Returns collision status AND the error (which is nil if in-bounds)
 	return collision, err
-}
-
-// InitSDL sets up the window and renderer
-func (d *Display) Init() error {
-	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
-		return &SDLError{Subsystem: "Initialization", Err: err}
-	}
-
-	window, err := sdl.CreateWindow(
-		"Chip-8 Emulator",
-		int32(sdl.WINDOWPOS_CENTERED), int32(sdl.WINDOWPOS_CENTERED),
-		int32(Width*Scale), int32(Height*Scale),
-		uint32(sdl.WINDOW_SHOWN),
-	)
-	if err != nil {
-		return &SDLError{Subsystem: "Window Creation", Err: err}
-	}
-
-	dr, err := sdl.CreateRenderer(window, -1, uint32(sdl.RENDERER_ACCELERATED))
-	if err != nil {
-		return &SDLError{Subsystem: "Renderer Creation", Err: err}
-	}
-
-	d.window = window
-	d.renderer = dr
-	return nil
 }
 
 // Present draws the current Pixels buffer to the SDL window
