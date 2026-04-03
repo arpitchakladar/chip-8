@@ -3,9 +3,14 @@
 A Chip-8 virtual machine and assembler written in Go with SDL2 for graphics and audio.
 
 ## Demo
+
 ![Demo](https://github.com/user-attachments/assets/c48a8e14-bb22-4dd9-ab96-d436de5da920)
 
 This is a demo of the Snake game running from `games/snake.asm`.
+
+## Documentation
+
+For a more detailed explanation of the project, see the [docs](https://arpitchakladar.github.io/chip-8/). Note that it is more of a presentation than traditional documentation.
 
 ## Prerequisites
 
