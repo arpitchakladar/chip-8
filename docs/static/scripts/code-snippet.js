@@ -15,26 +15,18 @@ async function prepareCodeFragments() {
 			const text =
 				el.getAttribute("data-code-fragment-text") || "No text";
 			const color = sequence % 2 === 0 ? "var(--blue)" : "var(--red)";
-			const pos = "top: 0; right: 5%;";
+			const pos = "";
 
 			indexes.split(",").forEach((fragmentIndex) => {
 				// 2. Create the fragment popup
 				const popup = document.createElement("div");
 				popup.className = "fragment fade-in-then-out";
 				popup.setAttribute("data-fragment-index", fragmentIndex.trim());
+				popup.setAttribute("data-code-fragment-element", "");
 
 				// 3. Apply Styling
 				popup.style.cssText = `
-					position: absolute;
-					${pos};
-					width: 300px;
-					background: rgba(34, 34, 34, 0.9);
-					border: 2px solid ${color};
-					padding: 15px;
-					box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
-					z-index: 10;
-					text-align: left;
-					border-radius: 8px;
+					--code-fragment-element-color: ${color}
 				`;
 
 				popup.innerHTML = `
