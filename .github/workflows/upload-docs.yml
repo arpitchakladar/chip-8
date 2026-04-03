@@ -2,6 +2,7 @@ name: Deploy Static Site
 
 on:
   push:
+    # This ensures it ONLY runs when you push a tag starting with 'v'
     tags:
       - 'v*'
 
