@@ -17,13 +17,21 @@ func main() {
 	}
 
 	command := strings.ToLower(os.Args[1])
-	filePath := os.Args[2]
+	filePaths := os.Args[2:]
 
 	switch command {
 	case "run":
-		runEmulator(filePath)
+		if len(filePaths) != 1 {
+			printUsage()
+			return
+		}
+		runEmulator(filePaths[0])
 	case "compile":
-		compileAssembly(filePath)
+		if len(filePaths) < 1 {
+			printUsage()
+			return
+		}
+		compileAssembly(filePaths)
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		printUsage()
@@ -32,8 +40,8 @@ func main() {
 
 func printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("run <path-to-rom>     - Runs a .ch8 file")
-	fmt.Println("compile <path-to-asm> - Compiles .asm to .ch8")
+	fmt.Println("run <path-to-rom>           - Runs a .ch8 file")
+	fmt.Println("compile <path-to-asm> ...   - Compiles one or more .asm files to .ch8")
 }
 
 func runEmulator(path string) {
@@ -56,23 +64,34 @@ func runEmulator(path string) {
 	}
 }
 
-func compileAssembly(path string) {
-	fmt.Printf("Compiling %s...\n", path)
+func compileAssembly(filePaths []string) {
+	var allContent strings.Builder
 
-	content, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "File Error: %v\n", err)
-		os.Exit(1)
+	for _, path := range filePaths {
+		fmt.Printf("Reading %s...\n", path)
+		content, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "File Error: %v\n", err)
+			os.Exit(1)
+		}
+		allContent.Write(content)
+		allContent.WriteString("\n")
 	}
 
-	asm := assembler.WithSource(string(content))
+	outputPath := strings.TrimSuffix(filePaths[0], filepath.Ext(filePaths[0])) + ".ch8"
+	if len(filePaths) > 1 {
+		outputPath = "combined.ch8"
+	}
+
+	fmt.Printf("Assembling...\n")
+
+	asm := assembler.WithSource(allContent.String())
 	binary, err := asm.Assemble()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Assembly Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	outputPath := strings.TrimSuffix(path, filepath.Ext(path)) + ".ch8"
 	if err := os.WriteFile(outputPath, binary, 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "Write Error: %v\n", err)
 		os.Exit(1)
