@@ -1,8 +1,6 @@
 package lexer
 
-import (
-	"strings"
-)
+import "strings"
 
 // Lexer tokenizes CHIP-8 assembly source code and performs the first pass of assembly.
 // It scans for labels and collects them into a map for the parser to use.
@@ -68,17 +66,11 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
 		} else {
 			// __START should be before anything else
 			if !seenStart {
-				return nil, nil, &LexerError{
-					LineNumber: i,
-					Message:    "__START label must be defined before any instructions",
-				}
+				return nil, nil, &StartAfterCodeError{LineNumber: i}
 			}
 			// __END should be after everything else
 			if seenEnd {
-				return nil, nil, &LexerError{
-					LineNumber: i,
-					Message:    "No instructions allowed after __END label",
-				}
+				return nil, nil, &EndAfterCodeError{LineNumber: i}
 			}
 
 			parts := strings.Fields(strings.ReplaceAll(content, ",", " "))
