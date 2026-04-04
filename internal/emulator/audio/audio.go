@@ -1,8 +1,5 @@
 package audio
 
-// Audio manages sound output for the CHIP-8 emulator.
-// It generates square wave beeps using SDL2 audio devices.
-
 import (
 	"unsafe"
 

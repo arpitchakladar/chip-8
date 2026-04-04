@@ -1,5 +1,7 @@
 package cpu
 
+// The CentralProcessingUnit is responsible for identifying and running
+// each opcode
 type CentralProcessingUnit struct {
 	// Registers are the 16 general-purpose 8-bit registers.
 	// Historically referred to as V0 through VF.

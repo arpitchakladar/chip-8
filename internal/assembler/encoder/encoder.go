@@ -3,9 +3,6 @@ package encoder
 // Encoder builds CHIP-8 opcodes from instruction components.
 // It provides methods for encoding different instruction formats using bit masks.
 
-// Encoder builds CHIP-8 opcodes from instruction components.
-// It provides methods for encoding different instruction formats using bit masks.
-
 // Instruction represents a 16-bit CHIP-8 opcode.
 type Instruction uint16
 

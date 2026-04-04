@@ -1,8 +1,5 @@
 package parser
 
-// Parser converts CHIP-8 assembly instructions into binary opcodes.
-// It uses the label map from the lexer to resolve label references.
-
 import (
 	"encoding/binary"
 	"strconv"

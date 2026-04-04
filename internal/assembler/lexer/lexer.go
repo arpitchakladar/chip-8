@@ -1,8 +1,5 @@
 package lexer
 
-// Lexer tokenizes CHIP-8 assembly source code and performs the first pass of assembly.
-// It scans for labels and collects them into a map for the parser to use.
-
 import (
 	"strings"
 )
