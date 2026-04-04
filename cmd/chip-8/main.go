@@ -10,6 +10,8 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
+// chip-8 is a CHIP-8 emulator and assembler written in Go with SDL2.
+// It provides a command-line interface to run CHIP-8 ROMs or assemble .asm files.
 func main() {
 	if len(os.Args) < 3 {
 		printUsage()
@@ -48,12 +50,15 @@ func main() {
 	}
 }
 
+// printUsage displays the command-line usage information.
 func printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("run <path-to-rom>             - Runs a .ch8 file")
 	fmt.Println("compile [-o <output>] <path-to-asm> ... - Compiles one or more .asm files to .ch8")
 }
 
+// runEmulator loads and runs a CHIP-8 ROM file.
+// It creates a new emulator instance, loads the ROM, and starts the main loop.
 func runEmulator(path string) {
 	vm := emulator.New(100000)
 	fmt.Printf("Starting emulator with: %s\n", path)
@@ -74,6 +79,9 @@ func runEmulator(path string) {
 	}
 }
 
+// compileAssembly assembles one or more .asm files into a .ch8 bytecode file.
+// It handles the __START and __END markers to order files correctly.
+// If multiple files are provided, they are concatenated in order: start -> regular -> end.
 func compileAssembly(filePaths []string, outputPath string) {
 	var startFiles, endFiles, regularFiles []string
 

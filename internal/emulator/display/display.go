@@ -130,6 +130,9 @@ func (d *Display) Present() error {
 	return nil
 }
 
+// Close releases the display resources.
+// It destroys the renderer and window, then quits SDL.
+// Returns the last error encountered during cleanup.
 func (d *Display) Close() error {
 	lastErr := error(nil)
 
