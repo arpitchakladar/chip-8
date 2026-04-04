@@ -1,35 +1,56 @@
 package display
 
+// Display manages the display output for the CHIP-8 emulator.
+// It maintains a pixel buffer and renders it to an SDL2 window.
+
 import (
 	"fmt"
+
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 const (
-	Width  = 64
+	// Width is the display width in pixels (standard CHIP-8).
+	Width = 64
+	// Height is the display height in pixels (standard CHIP-8).
 	Height = 32
-	Scale  = 15 // Each Chip-8 pixel will be 15x15 on screen
+	// Scale is the scaling factor for rendering pixels to screen.
+	// Each CHIP-8 pixel will be rendered as Scale x Scale on screen.
+	Scale = 15
 )
 
-// Display manages Display output for the CHIP-8 emulator.
-// It draws the content of its display buffer to SDL2 window.
+// Display maintains the CHIP-8 display state and SDL2 rendering resources.
 type Display struct {
-	Pixels   [Width * Height]byte
-	window   *sdl.Window
+	// Pixels is the display buffer (2048 bytes for 64x32 display).
+	// Each byte represents one pixel: 0 = off, 1 = on.
+	Pixels [Width * Height]byte
+	// window is the SDL2 window handle.
+	window *sdl.Window
+	// renderer is the SDL2 renderer for drawing to the window.
 	renderer *sdl.Renderer
 }
 
-// New creates a new, cleared display instance.
+// New creates a new, cleared Display instance.
+// The pixel buffer is initialized to all zeros (black).
+// Call Init() before use to create the SDL window.
 func New() *Display {
 	return new(Display)
 }
 
-// Init sets up the window and renderer
+// Init initializes the SDL2 subsystem and creates the window and renderer.
+// It initializes all SDL2 subsystems, creates a centered window at 64*Scale x 32*Scale
+// pixels, and creates an accelerated renderer for the window.
+//
+// Returns:
+//   - nil on success
+//   - *SDLError if SDL initialization, window creation, or renderer creation fails
 func (d *Display) Init() error {
+	// Initialize all SDL2 subsystems
 	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
 		return &SDLError{Subsystem: "Initialization", Child: err}
 	}
 
+	// Create the emulator window
 	window, err := sdl.CreateWindow(
 		"Chip-8 Emulator",
 		int32(sdl.WINDOWPOS_CENTERED), int32(sdl.WINDOWPOS_CENTERED),
@@ -40,6 +61,7 @@ func (d *Display) Init() error {
 		return &SDLError{Subsystem: "Window Creation", Child: err}
 	}
 
+	// Create the renderer (hardware accelerated preferred)
 	dr, err := sdl.CreateRenderer(window, -1, uint32(sdl.RENDERER_ACCELERATED))
 	if err != nil {
 		return &SDLError{Subsystem: "Renderer Creation", Child: err}
@@ -50,69 +72,98 @@ func (d *Display) Init() error {
 	return nil
 }
 
-// Reset clears the entire pixel buffer to black (0).
+// Reset clears the entire pixel buffer to black (all zeros).
+// This is equivalent to turning off all pixels.
+// Note: This only clears the in-memory buffer, not the actual screen.
 func (d *Display) Reset() {
 	d.Pixels = [Width * Height]byte{}
 }
 
-// Clear is an alias for Reset, often called by the 00E0 opcode.
+// Clear is an alias for Reset.
+// It is called by the CLS (0x00E0) opcode to clear the display.
 func (d *Display) Clear() {
 	d.Reset()
 }
 
-// SetPixel toggles a pixel at (x, y) and returns true if a collision occurred.
-// Chip-8 uses XOR drawing: if a pixel is already on and we draw it again, it turns off.
+// SetPixel toggles a pixel at the specified coordinates using XOR mode.
+// CHIP-8 uses XOR drawing: if a pixel is already on, drawing it again turns it off.
+//
+// Coordinates are wrapped to stay within bounds (standard CHIP-8 behavior):
+//   - x wraps to 0-63 (64 pixels wide)
+//   - y wraps to 0-31 (32 pixels tall)
+//
+// Parameters:
+//   - x: X coordinate (0-63)
+//   - y: Y coordinate (0-31)
+//
+// Returns:
+//   - bool: true if the pixel was already on (collision), false otherwise
+//   - error: *CoordinateError if coordinates are out of bounds (before wrapping),
+//     or nil if coordinates are valid (even after wrapping)
 func (d *Display) SetPixel(x, y uint8) (bool, error) {
 	var err *CoordinateError
 
-	// Check if the original coordinates were out of bounds
-	// even though we will wrap them below.
+	// Check if coordinates were out of bounds (before wrapping)
+	// This allows detection of "strict mode" errors if needed
 	if x >= Width || y >= Height {
 		err = &CoordinateError{X: x, Y: y}
 	}
 
-	// Wrap coordinates (standard Chip-8 behavior)
+	// Wrap coordinates to display bounds
 	x %= Width
 	y %= Height
 
+	// Calculate pixel index in buffer
 	index := uint16(x) + (uint16(y) * Width)
 
-	// Check for collision (pixel was 1, now will be 0)
+	// Check for collision: pixel was on (1) before XOR
 	collision := d.Pixels[index] == 1
 
-	// XOR the pixel
+	// XOR the pixel: 0 -> 1, or 1 -> 0
 	d.Pixels[index] ^= 1
 
-	// Returns collision status AND the error (which is nil if in-bounds)
 	return collision, err
 }
 
-// Present draws the current Pixels buffer to the SDL window
+// Present renders the current pixel buffer to the SDL window.
+// It clears the screen to black, then draws all pixels that are set (value 1)
+// as white rectangles. Each pixel is scaled according to the Scale constant.
+//
+// The rendering order is:
+//  1. Clear screen to black
+//  2. Set draw color to white
+//  3. Draw all "on" pixels as rectangles
+//  4. Present (flip) the screen
+//
+// Returns:
+//   - nil on success
+//   - *SDLError if renderer is not initialized or drawing fails
 func (d *Display) Present() error {
 	if d.renderer == nil {
 		return &SDLError{Subsystem: "Renderer", Child: fmt.Errorf("renderer not initialized")}
 	}
 
-	// 1. Set Background to Black
+	// Clear screen to black
 	if err := d.renderer.SetDrawColor(0, 0, 0, 255); err != nil {
 		return &SDLError{Subsystem: "SetDrawColor (Background)", Child: err}
 	}
-
 	if err := d.renderer.Clear(); err != nil {
 		return &SDLError{Subsystem: "Clear", Child: err}
 	}
 
-	// 2. Set Pixel Color to White
+	// Set pixel color to white
 	if err := d.renderer.SetDrawColor(255, 255, 255, 255); err != nil {
 		return &SDLError{Subsystem: "SetDrawColor (Pixel)", Child: err}
 	}
 
-	// 3. Draw the active pixels
+	// Draw each "on" pixel as a scaled rectangle
 	for i, val := range d.Pixels {
 		if val == 1 {
+			// Calculate pixel position
 			x := int32(i % Width)
 			y := int32(i / Width)
 
+			// Create scaled rectangle for pixel
 			rect := sdl.Rect{
 				X: x * Scale,
 				Y: y * Scale,
@@ -126,35 +177,39 @@ func (d *Display) Present() error {
 		}
 	}
 
-	// 4. Update screen
+	// Present the rendered frame to the screen
 	d.renderer.Present()
 
 	return nil
 }
 
-// Close releases the display resources.
-// It destroys the renderer and window, then quits SDL.
-// Returns the last error encountered during cleanup.
+// Close releases all display resources.
+// It destroys the renderer first, then the window, and finally calls sdl.Quit().
+// If either destroy operation fails, the error is returned (preferring the renderer error).
+//
+// This function is safe to call multiple times (subsequent calls will be no-ops).
+//
+// Returns:
+//   - nil on success
+//   - *SDLError containing the last error encountered during cleanup
 func (d *Display) Close() error {
 	lastErr := error(nil)
 
-	// 1. Attempt to destroy the renderer
+	// Destroy renderer first
 	if d.renderer != nil {
 		if err := d.renderer.Destroy(); err != nil {
 			lastErr = &SDLError{Subsystem: "Renderer Destruction", Child: err}
 		}
 	}
 
-	// 2. Attempt to destroy the window (even if renderer failed)
+	// Then destroy window
 	if d.window != nil {
 		if err := d.window.Destroy(); err != nil {
-			// We wrap the error, but if there was a previous error,
-			// you might want to log it or concatenate it.
 			lastErr = &SDLError{Subsystem: "Window Destruction", Child: err}
 		}
 	}
 
-	// 3. Global SDL Cleanup
+	// Clean up SDL subsystems
 	sdl.Quit()
 
 	return lastErr
