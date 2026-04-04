@@ -1,7 +1,7 @@
 import { fileURLToPath } from "url";
 import express from "express";
 import path from "path";
-import { buildPresentation } from "../lib/static-generator";
+import { buildPresentation } from "../lib/static-generator.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
