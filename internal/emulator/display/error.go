@@ -4,8 +4,8 @@ import "fmt"
 
 // RenderError: Failed to communicate with the GPU or SDL.
 type RenderError struct {
-	Subsystem   string
-	Child       error
+	Subsystem string
+	Child     error
 }
 
 func (e *RenderError) Error() string {
