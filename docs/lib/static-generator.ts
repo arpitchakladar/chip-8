@@ -25,7 +25,6 @@ export async function buildPresentation() {
 	slideFiles.forEach((file) => {
 		const content = fs.readFileSync(path.join(slidesDir, file), "utf8");
 		slidesContainer.append(content);
-		console.log(`✓ Injected Slide: ${file}`);
 	});
 
 	// 3. Process CSS (Inject into <head>)
@@ -41,30 +40,19 @@ export async function buildPresentation() {
 	const scriptsDir = path.join(__dirname, "../static", "scripts");
 	const scriptFiles = fs.readdirSync(scriptsDir);
 
+	const lastScript = $("script[data-last-script]");
+
 	scriptFiles.forEach((file) => {
-		$("body").append(`<script src="scripts/${file}"></script>\n`);
+		const scriptTag = `<script src="scripts/${file}"></script>\n`;
+
+		if (lastScript.length > 0) {
+			// If the marker exists, insert before it
+			lastScript.before(scriptTag);
+		} else {
+			// Fallback: if no marker is found, just append to body
+			$("body").append(scriptTag);
+		}
 	});
-
-	// 5. Final Reveal.js Initialization
-	// We add this at the very end so it runs after all scripts are loaded
-	$("body").append(`
-		<script defer>
-			(async function () {
-				await Promise.all([
-					loadCode(),
-					cycleBackground(),
-					prepareCodeFragments(),
-				]);
-
-				Reveal.initialize({
-					hash: true,
-					keyboard: true,
-					controls: false,
-					plugins: [RevealMarkdown, RevealHighlight],
-				});
-			})();
-		</script>
-	`);
 
 	return $.html();
 
