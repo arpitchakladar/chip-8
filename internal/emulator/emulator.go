@@ -25,7 +25,7 @@ type Emulator struct {
 	MemoryLock sync.Mutex
 }
 
-func WithClockSpeed(clockSpeed uint32) *Emulator {
+func New(clockSpeed uint32) *Emulator {
 	e := &Emulator{
 		CPU:        cpu.New(),
 		Memory:     memory.New(),

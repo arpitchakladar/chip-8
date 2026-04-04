@@ -25,7 +25,7 @@ func New() *Display {
 // InitSDL sets up the window and renderer
 func (d *Display) Init() error {
 	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
-		return &SDLError{Subsystem: "Initialization", Err: err}
+		return &SDLError{Subsystem: "Initialization", Child: err}
 	}
 
 	window, err := sdl.CreateWindow(
@@ -35,12 +35,12 @@ func (d *Display) Init() error {
 		uint32(sdl.WINDOW_SHOWN),
 	)
 	if err != nil {
-		return &SDLError{Subsystem: "Window Creation", Err: err}
+		return &SDLError{Subsystem: "Window Creation", Child: err}
 	}
 
 	dr, err := sdl.CreateRenderer(window, -1, uint32(sdl.RENDERER_ACCELERATED))
 	if err != nil {
-		return &SDLError{Subsystem: "Renderer Creation", Err: err}
+		return &SDLError{Subsystem: "Renderer Creation", Child: err}
 	}
 
 	d.window = window
@@ -88,21 +88,21 @@ func (d *Display) SetPixel(x, y uint8) (bool, error) {
 // Present draws the current Pixels buffer to the SDL window
 func (d *Display) Present() error {
 	if d.renderer == nil {
-		return &SDLError{Subsystem: "Renderer", Err: fmt.Errorf("renderer not initialized")}
+		return &SDLError{Subsystem: "Renderer", Child: fmt.Errorf("renderer not initialized")}
 	}
 
 	// 1. Set Background to Black
 	if err := d.renderer.SetDrawColor(0, 0, 0, 255); err != nil {
-		return &SDLError{Subsystem: "SetDrawColor (Background)", Err: err}
+		return &SDLError{Subsystem: "SetDrawColor (Background)", Child: err}
 	}
 
 	if err := d.renderer.Clear(); err != nil {
-		return &SDLError{Subsystem: "Clear", Err: err}
+		return &SDLError{Subsystem: "Clear", Child: err}
 	}
 
 	// 2. Set Pixel Color to White
 	if err := d.renderer.SetDrawColor(255, 255, 255, 255); err != nil {
-		return &SDLError{Subsystem: "SetDrawColor (Pixel)", Err: err}
+		return &SDLError{Subsystem: "SetDrawColor (Pixel)", Child: err}
 	}
 
 	// 3. Draw the active pixels
@@ -119,7 +119,7 @@ func (d *Display) Present() error {
 			}
 
 			if err := d.renderer.FillRect(&rect); err != nil {
-				return &SDLError{Subsystem: "FillRect", Err: err}
+				return &SDLError{Subsystem: "FillRect", Child: err}
 			}
 		}
 	}
@@ -136,7 +136,7 @@ func (d *Display) Close() error {
 	// 1. Attempt to destroy the renderer
 	if d.renderer != nil {
 		if err := d.renderer.Destroy(); err != nil {
-			lastErr = &SDLError{Subsystem: "Renderer Destruction", Err: err}
+			lastErr = &SDLError{Subsystem: "Renderer Destruction", Child: err}
 		}
 	}
 
@@ -145,7 +145,7 @@ func (d *Display) Close() error {
 		if err := d.window.Destroy(); err != nil {
 			// We wrap the error, but if there was a previous error,
 			// you might want to log it or concatenate it.
-			lastErr = &SDLError{Subsystem: "Window Destruction", Err: err}
+			lastErr = &SDLError{Subsystem: "Window Destruction", Child: err}
 		}
 	}
 
