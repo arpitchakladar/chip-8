@@ -8,6 +8,44 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Finds all <link> and <script> tags pointing to reveal.js/ paths,
+ * reads the files from node_modules/reveal.js/dist, and inlines them.
+ */
+function inlineRevealAssets($: cheerio.CheerioAPI) {
+		const revealDistPath = path.join(__dirname, "../node_modules/reveal.js/dist");
+
+		// 1. Handle Reveal.js CSS
+		$('link[href^="reveal.js/"]').each((_, el) => {
+				const $el = $(el);
+				const fileName = $el.attr("href")!.replace("reveal.js/", "");
+				const filePath = path.join(revealDistPath, fileName);
+
+				if (fs.existsSync(filePath)) {
+						const css = fs.readFileSync(filePath, "utf8");
+						$el.replaceWith(`<style>\n${css}\n</style>`);
+						console.log(`	✓ Inlined Reveal CSS: ${fileName}`);
+				} else {
+						console.warn(`	× Reveal CSS not found: ${filePath}`);
+				}
+		});
+
+		// 2. Handle Reveal.js JS
+		$('script[src^="reveal.js/"]').each((_, el) => {
+				const $el = $(el);
+				const fileName = $el.attr("src")!.replace("reveal.js/", "");
+				const filePath = path.join(revealDistPath, fileName);
+
+				if (fs.existsSync(filePath)) {
+						const js = fs.readFileSync(filePath, "utf8");
+						$el.replaceWith(`<script>\n${js}\n</script>`);
+						console.log(`	✓ Inlined Reveal JS: ${fileName}`);
+				} else {
+						console.warn(`	× Reveal JS not found: ${filePath}`);
+				}
+		});
+}
+
+/**
  * Pre-generates code fragment popups and GitHub links at build time.
  * NOTE: Should be called before injectRemoteCode
  */
@@ -99,10 +137,10 @@ async function injectRemoteCode($: cheerio.CheerioAPI) {
 				// Remove attribute to clean up production HTML
 				$block.removeAttr("data-load-code");
 
-				console.log(`  ✓ Fetched: ${fileName}`);
+				console.log(`	✓ Fetched: ${fileName}`);
 			} catch (err) {
 				console.error(
-					`  × Failed: ${fileName} (${(err as any).message})`,
+					`	× Failed: ${fileName} (${(err as any).message})`,
 				);
 				$block.text(`// Error loading remote code: ${fileName}`);
 			}
@@ -119,6 +157,9 @@ export async function buildPresentation() {
 
 	const templateHtml = fs.readFileSync(layoutPath, "utf8");
 	const $ = cheerio.load(templateHtml);
+
+	// 1. Inline the reveal assets
+	inlineRevealAssets($);
 
 	// 1. Process Slides
 	const slidesDir = path.join(__dirname, "../static", "slides");
