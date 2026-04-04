@@ -4,6 +4,13 @@ import "strings"
 
 // Lexer tokenizes CHIP-8 assembly source code and performs the first pass of assembly.
 // It scans for labels and collects them into a map for the parser to use.
+// It holds the state for tokenizing assembly source code.
+type Lexer struct {
+	// Source is the raw assembly source code.
+	Source string
+	// CurrentAddr tracks the current address during scanning.
+	CurrentAddr uint16
+}
 
 // Line represents a single instruction line parsed from the source.
 type Line struct {
@@ -15,14 +22,6 @@ type Line struct {
 	Address uint16
 	// LineNumber is the original source line number (for error reporting).
 	LineNumber uint16
-}
-
-// Lexer holds the state for tokenizing assembly source code.
-type Lexer struct {
-	// Source is the raw assembly source code.
-	Source string
-	// CurrentAddr tracks the current address during scanning.
-	CurrentAddr uint16
 }
 
 // New creates a new Lexer with the given source code and starting address.
