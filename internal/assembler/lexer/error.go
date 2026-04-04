@@ -9,6 +9,13 @@ func (e *MissingStartLabelError) Error() string {
 	return "missing __START label: file must contain a __START marker"
 }
 
+// MissingEndLabelError occurs when no __END label is found.
+type MissingEndLabelError struct{}
+
+func (e *MissingEndLabelError) Error() string {
+	return "missing __END label: file must contain a __END marker"
+}
+
 // StartAfterCodeError occurs when __START appears after instructions.
 type StartAfterCodeError struct {
 	LineNumber uint16

@@ -91,5 +91,14 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
 			}
 		}
 	}
+
+	// Validate required markers are present
+	if !seenStart {
+		return nil, nil, &MissingStartLabelError{}
+	}
+	if !seenEnd {
+		return nil, nil, &MissingEndLabelError{}
+	}
+
 	return labels, program, nil
 }
