@@ -80,28 +80,38 @@ func (e *Emulator) Run() error {
 		e.Audio.Close()
 	}()
 
-	// Channels to communicate between the main routine (display) and
-	// the cpu execution goroutine
+	// Channels to communicate stop signal and errors back to main
 	stop := make(chan struct{})
-	defer close(stop)
 	errChan := make(chan error, 1)
+	defer close(stop)
 
-	// Start the CPU execution loop as a goroutine
+	// Start the CPU loop as goroutine
 	go e.runCPU(stop, errChan)
+	// Start the display loop on the main thread (SDL2 needs it)
+	e.runDisplay(stop, errChan)
 
+	// Block until an error occurs
+	return <-errChan
+}
+
+// runDisplay is the display and timer loop.
+// It runs on the main thread (SDL2 requires it), handling events, updating timers, and rendering at 60Hz.
+// It communicates errors back through the errChan channel.
+func (e *Emulator) runDisplay(stop <-chan struct{}, errChan chan<- error) {
 	uiClock := time.NewTicker(time.Second / 60)
 	defer uiClock.Stop()
 
 	for {
 		select {
-		case err := <-errChan:
-			return err
+		case <-stop:
+			return
 		case <-uiClock.C:
 			// A. Handle Events (Must be main thread)
 			for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 				switch t := event.(type) {
 				case *sdl.QuitEvent:
-					return nil
+					errChan <- nil
+					return
 				case *sdl.KeyboardEvent:
 					e.Keyboard.HandleKeyboard(t)
 				}
@@ -115,10 +125,12 @@ func (e *Emulator) Run() error {
 			e.MemoryLock.Unlock()
 
 			if timerErr != nil {
-				return timerErr
+				errChan <- timerErr
+				return
 			}
 			if displayErr != nil {
-				return displayErr
+				errChan <- displayErr
+				return
 			}
 		}
 	}
