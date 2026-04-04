@@ -8,12 +8,17 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/assembler/encoder"
 )
 
+// Parser converts CHIP-8 assembly instructions into binary opcodes.
+// It uses the label map from the lexer to resolve label references.
 type Parser struct {
-	Labels  map[string]uint16
+	// Labels maps label names to their memory addresses (from lexer).
+	Labels map[string]uint16
+	// Encoder builds the binary opcode representations.
 	Encoder *encoder.Encoder
 }
 
-func WithLabels(labels map[string]uint16) *Parser {
+// New creates a new Parser with the given label map.
+func New(labels map[string]uint16) *Parser {
 	return &Parser{
 		Labels:  labels,
 		Encoder: encoder.New(),
@@ -200,6 +205,7 @@ func (p *Parser) Parse(mnemonic string, args []string, line uint16) ([]byte, err
 
 // --- Helper Handlers ---
 
+// handleLoad processes LD (load) instructions with various source/destination combinations.
 func (p *Parser) handleLoad(args []string, line uint16) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, &WrongArgCountError{"LD", line, 2, len(args)}
@@ -266,6 +272,8 @@ func (p *Parser) handleLoad(args []string, line uint16) ([]byte, error) {
 	return nil, &InvalidLoadError{line, dst, src}
 }
 
+// handleSkip processes SE (skip if equal) and SNE (skip if not equal) instructions.
+// It handles both register-to-immediate and register-to-register comparisons.
 func (p *Parser) handleSkip(immBase, regBase uint16, mnemonic string, args []string, line uint16) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, &WrongArgCountError{mnemonic, line, 2, len(args)}
@@ -290,6 +298,7 @@ func (p *Parser) handleSkip(immBase, regBase uint16, mnemonic string, args []str
 	return p.toBinary(p.Encoder.RegImm(immBase, vx, uint8(val))), nil
 }
 
+// handleRegReg processes two-register arithmetic/logic instructions (OR, AND, XOR, SUB, etc.).
 func (p *Parser) handleRegReg(base uint16, mnemonic string, args []string, suffix uint16, line uint16) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, &WrongArgCountError{mnemonic, line, 2, len(args)}
@@ -307,17 +316,21 @@ func (p *Parser) handleRegReg(base uint16, mnemonic string, args []string, suffi
 
 // --- Utility Functions ---
 
+// toBinary converts a 16-bit opcode to a 2-byte slice in big-endian format.
 func (p *Parser) toBinary(opcode uint16) []byte {
 	buf := make([]byte, 2)
 	binary.BigEndian.PutUint16(buf, opcode)
 	return buf
 }
 
+// isRegister returns true if the string looks like a register (e.g., "V0", "VF").
 func (p *Parser) isRegister(s string) bool {
 	s = strings.ToUpper(s)
 	return len(s) >= 2 && s[0] == 'V'
 }
 
+// parseReg parses a register string (Vx) and returns the register index.
+// It returns an error if the string is not a valid register.
 func (p *Parser) parseReg(s string, mnemonic string, line uint16) (uint8, error) {
 	if !p.isRegister(s) {
 		return 0, &InvalidRegisterError{mnemonic, line, s}
@@ -331,6 +344,9 @@ func (p *Parser) parseReg(s string, mnemonic string, line uint16) (uint8, error)
 	return uint8(val), nil
 }
 
+// resolveValue resolves a string to a numeric value.
+// It first checks the label map, then tries to parse as a literal (hex or decimal).
+// The bits parameter specifies the maximum bit width for range checking.
 func (p *Parser) resolveValue(s string, mnemonic string, line uint16, bits int) (uint16, error) {
 	var val uint16
 	var ok bool
@@ -365,7 +381,7 @@ func (p *Parser) resolveValue(s string, mnemonic string, line uint16, bits int) 
 	return val, nil
 }
 
-// Error handler wrapper
+// parseErr wraps a child error into a ParseError with context about the failing instruction.
 func (p *Parser) parseErr(mnemonic string, args []string, line uint16, child error) error {
 	// If it's already a ParseError, don't double wrap
 	if _, ok := child.(*ParseError); ok {

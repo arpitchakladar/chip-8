@@ -1,10 +1,13 @@
 package encoder
 
+// Encoder builds CHIP-8 opcodes from instruction components.
+// It provides methods for encoding different instruction formats using bit masks.
+
+// Instruction represents a 16-bit CHIP-8 opcode.
 type Instruction uint16
 
-type Encoder struct {
-	// You could store configuration or state here if needed (e.g., quirks mode)
-}
+// Encoder builds CHIP-8 opcodes from their component parts.
+type Encoder struct{}
 
 // New creates a new instance of the Encoder.
 func New() *Encoder {

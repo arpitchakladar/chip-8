@@ -9,6 +9,7 @@ type Keyboard struct {
 	Keys [16]bool
 }
 
+// New creates a new Keyboard instance.
 func New() *Keyboard {
 	return new(Keyboard)
 }
@@ -18,6 +19,8 @@ func (kb *Keyboard) IsKeyPressed(key byte) bool {
 	return key <= 15 && kb.Keys[key]
 }
 
+// AnyKeyPressed returns the key code and true if any key is currently pressed,
+// otherwise returns 0 and false. Used by the LD Vx, K opcode.
 func (kb *Keyboard) AnyKeyPressed() (byte, bool) {
 	for i, isPressed := range kb.Keys {
 		if isPressed {
@@ -27,6 +30,8 @@ func (kb *Keyboard) AnyKeyPressed() (byte, bool) {
 	return 0, false
 }
 
+// HandleKeyboard updates the keyboard state based on an SDL keyboard event.
+// It maps PC keyboard keys to CHIP-8 hex keys (0-F).
 func (kb *Keyboard) HandleKeyboard(event *sdl.KeyboardEvent) {
 	keyCode := event.Keysym.Sym
 	// Type 0x300 is KeyDown, 0x301 is KeyUp in SDL

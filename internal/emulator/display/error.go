@@ -5,11 +5,11 @@ import "fmt"
 // RenderError: Failed to communicate with the GPU or SDL.
 type RenderError struct {
 	Subsystem string
-	Err       error
+	Child     error
 }
 
 func (e *RenderError) Error() string {
-	return fmt.Sprintf("DISPLAY RENDER ERROR [%s]: %v", e.Subsystem, e.Err)
+	return fmt.Sprintf("DISPLAY RENDER ERROR [%s]: %v", e.Subsystem, e.Child)
 }
 
 // OutOfBoundsError: Attempted to draw outside the 64x32 grid.
@@ -25,11 +25,11 @@ func (e *OutOfBoundsError) Error() string {
 // SDLError represents a failure in the SDL2 hardware abstraction layer.
 type SDLError struct {
 	Subsystem string
-	Err       error
+	Child     error
 }
 
 func (e *SDLError) Error() string {
-	return fmt.Sprintf("SDL %s Error: %v", e.Subsystem, e.Err)
+	return fmt.Sprintf("SDL %s Error: %v", e.Subsystem, e.Child)
 }
 
 // CoordinateError represents an attempt to draw outside the allowed grid
