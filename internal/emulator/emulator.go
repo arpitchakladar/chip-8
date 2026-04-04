@@ -1,6 +1,7 @@
 package emulator
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
@@ -59,7 +60,7 @@ func (e *Emulator) LoadROM(romData []byte) error {
 }
 
 // Run starts the emulator main loop.
-// It initializes the display and audio subsystems, then runs the CPU and UI loops.
+// It initializes the display and audio subsystems, then runs the CPU and Display loops.
 // The function blocks until the emulator is closed or an error occurs.
 func (e *Emulator) Run() error {
 	// 1. Setup
@@ -72,23 +73,25 @@ func (e *Emulator) Run() error {
 		fmt.Printf("Warning: Audio failed to init: %v\n", err)
 	}
 
+	// Close audio and display when finished
 	defer func() {
 		if err := e.Display.Close(); err != nil {
+			// Error in closing display doesn't need to be handled, just mentioned
 			fmt.Fprintf(os.Stderr, "Error closing display: %v\n", err)
 		}
 
 		e.Audio.Close()
 	}()
 
-	// Channels to communicate stop signal and errors back to main
-	stop := make(chan struct{})
+	// Create cancellable context for goroutine cancellation
+	ctx, cancel := context.WithCancel(context.Background())
 	errChan := make(chan error, 1)
-	defer close(stop)
+	defer cancel()
 
 	// Start the CPU loop as goroutine
-	go e.runCPU(stop, errChan)
+	go e.runCPU(ctx, errChan)
 	// Start the display loop on the main thread (SDL2 needs it)
-	e.runDisplay(stop, errChan)
+	e.runDisplay(ctx, errChan)
 
 	// Block until an error occurs
 	return <-errChan
@@ -97,13 +100,13 @@ func (e *Emulator) Run() error {
 // runDisplay is the display and timer loop.
 // It runs on the main thread (SDL2 requires it), handling events, updating timers, and rendering at 60Hz.
 // It communicates errors back through the errChan channel.
-func (e *Emulator) runDisplay(stop <-chan struct{}, errChan chan<- error) {
+func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
 	uiClock := time.NewTicker(time.Second / 60)
 	defer uiClock.Stop()
 
 	for {
 		select {
-		case <-stop:
+		case <-ctx.Done():
 			return
 		case <-uiClock.C:
 			// A. Handle Events (Must be main thread)
@@ -139,13 +142,13 @@ func (e *Emulator) runDisplay(stop <-chan struct{}, errChan chan<- error) {
 // runCPU is the CPU execution loop.
 // It runs as a goroutine, fetching and executing instructions at the configured ClockSpeed.
 // It communicates errors back through the errChan channel.
-func (e *Emulator) runCPU(stop <-chan struct{}, errChan chan<- error) {
+func (e *Emulator) runCPU(ctx context.Context, errChan chan<- error) {
 	cpuClock := time.NewTicker(time.Second / time.Duration(e.ClockSpeed))
 	defer cpuClock.Stop()
 
 	for {
 		select {
-		case <-stop:
+		case <-ctx.Done():
 			return
 		case <-cpuClock.C:
 			e.MemoryLock.Lock()
