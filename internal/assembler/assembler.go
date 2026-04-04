@@ -11,7 +11,7 @@ type Assembler struct {
 	ProgramCounter uint16
 }
 
-func WithSource(source string) *Assembler {
+func New(source string) *Assembler {
 	return &Assembler{
 		Source:         source,
 		Labels:         make(map[string]uint16),
@@ -28,7 +28,7 @@ func (a *Assembler) Assemble() ([]byte, error) {
 
 	var program []byte
 
-	parser := parser.WithLabels(labels)
+	parser := parser.New(labels)
 
 	for _, line := range lines {
 		opcode, err := parser.Parse(line.Mnemonic, line.Args, line.LineNumber)

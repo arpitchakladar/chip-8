@@ -13,7 +13,7 @@ type Parser struct {
 	Encoder *encoder.Encoder
 }
 
-func WithLabels(labels map[string]uint16) *Parser {
+func New(labels map[string]uint16) *Parser {
 	return &Parser{
 		Labels:  labels,
 		Encoder: encoder.New(),

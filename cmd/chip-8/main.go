@@ -55,7 +55,7 @@ func printUsage() {
 }
 
 func runEmulator(path string) {
-	vm := emulator.WithClockSpeed(100000)
+	vm := emulator.New(100000)
 	fmt.Printf("Starting emulator with: %s\n", path)
 
 	content, err := os.ReadFile(path)
@@ -143,7 +143,7 @@ func compileAssembly(filePaths []string, outputPath string) {
 
 	fmt.Printf("Assembling...\n")
 
-	asm := assembler.WithSource(allContent.String())
+	asm := assembler.New(allContent.String())
 	binary, err := asm.Assemble()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Assembly Error: %v\n", err)
