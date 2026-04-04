@@ -1,26 +1,46 @@
 package keyboard
 
+// Keyboard tracks the state of the 16 CHIP-8 keys.
+// It maintains a map of which keys are currently pressed and provides
+// methods for checking key state, used by CPU opcodes for input handling.
+
 import "github.com/veandco/go-sdl2/sdl"
 
-// Keyboard tracks the state of the 16 Chip-8 keys.
+// Keyboard tracks the state of the 16 CHIP-8 keys.
 type Keyboard struct {
-	// Keys stores true if a key is currently pressed.
-	// Index 0-15 corresponds to Chip-8 keys 0x0-0xF.
+	// Keys stores the pressed state of each CHIP-8 key.
+	// Index 0-15 corresponds to CHIP-8 keys 0x0-0xF.
+	// true = pressed, false = released
 	Keys [16]bool
 }
 
-// New creates a new Keyboard instance.
+// New creates a new Keyboard instance with all keys initialized to released.
 func New() *Keyboard {
 	return new(Keyboard)
 }
 
-// IsKeyPressed is a helper for the CPU opcodes (EX9E and EXA1).
+// IsKeyPressed checks if a specific CHIP-8 key is currently pressed.
+// It is used by the SKP (0xEx9E) and SKNP (0xExA1) opcodes.
+//
+// Parameters:
+//   - key: the CHIP-8 key index (0-15, corresponds to Vx register values)
+//
+// Returns:
+//   - true if the key is currently pressed
+//   - false if the key is released OR if key is out of range (>15)
 func (kb *Keyboard) IsKeyPressed(key byte) bool {
 	return key <= 15 && kb.Keys[key]
 }
 
-// AnyKeyPressed returns the key code and true if any key is currently pressed,
-// otherwise returns 0 and false. Used by the LD Vx, K opcode.
+// AnyKeyPressed checks if any CHIP-8 key is currently pressed.
+// It is used by the LD Vx, K (0xFx0A) opcode to wait for key input.
+//
+// When no key is pressed, the CPU uses this to implement a blocking wait:
+// it repeatedly executes this instruction until a key is pressed.
+//
+// Returns:
+//   - byte: the key index (0-15) of the first pressed key found
+//   - bool: true if any key is pressed, false if no keys are pressed
 func (kb *Keyboard) AnyKeyPressed() (byte, bool) {
 	for i, isPressed := range kb.Keys {
 		if isPressed {
@@ -31,13 +51,25 @@ func (kb *Keyboard) AnyKeyPressed() (byte, bool) {
 }
 
 // HandleKeyboard updates the keyboard state based on an SDL keyboard event.
-// It maps PC keyboard keys to CHIP-8 hex keys (0-F).
+// It maps PC keyboard keys to CHIP-8 hex keys (0-F) and tracks press/release state.
+//
+// The key mapping follows the standard CHIP-8 layout:
+//
+//  PC Key  | CHIP-8
+//	--------|--------
+//	1 2 3 4 | 1 2 3 C
+//	q w e r | 4 5 6 D
+//	a s d f | 7 8 9 E
+//	z x c v | A 0 B F
+//
+// Parameters:
+//   - event: pointer to an SDL KeyboardEvent (key press or release)
 func (kb *Keyboard) HandleKeyboard(event *sdl.KeyboardEvent) {
 	keyCode := event.Keysym.Sym
-	// Type 0x300 is KeyDown, 0x301 is KeyUp in SDL
+	// Determine if this is a key press (true) or release (false)
 	isPressed := event.Type == sdl.KEYDOWN
 
-	// Explicitly cast constants to sdl.Keycode to satisfy the map type
+	// Map PC keyboard keys to CHIP-8 key indices
 	mapping := map[sdl.Keycode]byte{
 		sdl.Keycode(sdl.K_1): 0x1, sdl.Keycode(sdl.K_2): 0x2, sdl.Keycode(sdl.K_3): 0x3, sdl.Keycode(sdl.K_4): 0xC,
 		sdl.Keycode(sdl.K_q): 0x4, sdl.Keycode(sdl.K_w): 0x5, sdl.Keycode(sdl.K_e): 0x6, sdl.Keycode(sdl.K_r): 0xD,
@@ -45,8 +77,8 @@ func (kb *Keyboard) HandleKeyboard(event *sdl.KeyboardEvent) {
 		sdl.Keycode(sdl.K_z): 0xA, sdl.Keycode(sdl.K_x): 0x0, sdl.Keycode(sdl.K_c): 0xB, sdl.Keycode(sdl.K_v): 0xF,
 	}
 
+	// Update the key state if the PC key maps to a CHIP-8 key
 	if chipKey, ok := mapping[keyCode]; ok {
-		// Ensure your keyboard package uses a slice or array of bools
 		kb.Keys[chipKey] = isPressed
 	}
 }
