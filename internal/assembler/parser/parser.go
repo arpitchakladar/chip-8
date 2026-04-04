@@ -25,7 +25,27 @@ func New(labels map[string]uint16) *Parser {
 	}
 }
 
-// Parse takes a mnemonic and its arguments, resolving any labels to their addresses.
+// Parse converts a single assembly instruction into its binary opcode representation.
+// It resolves labels to their addresses and validates arguments.
+//
+// The function handles all CHIP-8 opcodes:
+//   - Flow control: CLS, RET, JP, CALL
+//   - Conditional: SE, SNE
+//   - Arithmetic: ADD, SUB, SUBN, AND, OR, XOR, SHR, SHL
+//   - Memory: LD (various forms)
+//   - Display: DRW
+//   - Input: SKP, SKNP
+//   - Random: RND
+//   - Data: DB (1-byte), DW (2-byte)
+//
+// Arguments:
+//   - mnemonic: the instruction name (e.g., "LD", "JP")
+//   - args: the instruction arguments (e.g., ["V0", "0x10"])
+//   - line: the source line number for error reporting
+//
+// Returns:
+//   - []byte: the binary opcode (2 bytes for most instructions, 1 for DB)
+//   - error: if the mnemonic is unknown, arguments are invalid, or values are out of range
 func (p *Parser) Parse(mnemonic string, args []string, line uint16) ([]byte, error) {
 	upperMnemonic := strings.ToUpper(mnemonic)
 
