@@ -98,7 +98,7 @@ func (e *Emulator) Run() error {
 	}
 
 	if err := e.Audio.Init(); err != nil {
-		// NOTE: Log error but maybe don't crash? Some systems don't have speakere.
+		// NOTE: Log error but maybe don't crash? Some systems don't have speaker.
 		fmt.Printf("Warning: Audio failed to init: %v\n", err)
 	}
 
