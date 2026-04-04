@@ -22,7 +22,7 @@ func New() *Display {
 	return new(Display)
 }
 
-// InitSDL sets up the window and renderer
+// Init sets up the window and renderer
 func (d *Display) Init() error {
 	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
 		return &SDLError{Subsystem: "Initialization", Child: err}
