@@ -7,6 +7,71 @@ import { minify } from "html-minifier-terser";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/**
+ * Pre-generates code fragment popups and GitHub links at build time.
+ * NOTE: Should be called before injectRemoteCode
+ */
+function prepareCodeFragments($: cheerio.CheerioAPI) {
+	const containers = $("[data-code-snippet]");
+
+	containers.each((_, container) => {
+		const $container = $(container);
+
+		// 1. Generate the GitHub Link
+		const codeSnippetElement = $container.find("[data-load-code]");
+		const codePath = codeSnippetElement.attr("data-load-code") || "No file";
+
+		const githubUrl = `https://github.com/arpitchakladar/chip-8/blob/master/${codePath}`;
+		const codeFilePathLink = `
+			<a href="${githubUrl}" class="secondary code-path">
+			${codePath}
+			</a>
+		`;
+
+		$container.prepend(codeFilePathLink);
+
+		// 2. Process Fragment Templates
+		const templates = $container.find("[data-code-fragment]");
+
+		templates.each((sequence, el) => {
+			const $el = $(el);
+
+			// Extract attributes
+			const indexes = $el.attr("data-code-fragment-indexes") || "0";
+			const title = $el.attr("data-code-fragment-title") || "No title";
+			const text = $el.attr("data-code-fragment-text") || "No text";
+
+			// Determine color (alternating)
+			const color = sequence % 2 === 0 ? "var(--blue)" : "var(--red)";
+
+			// Create popups for each index
+			indexes.split(",").forEach((fragmentIndex) => {
+				const cleanIndex = fragmentIndex.trim();
+
+				const popup = `
+					<div class="fragment fade-in-then-out"
+						data-fragment-index="${cleanIndex}"
+						data-code-fragment-element=""
+						style="--code-fragment-element-color: ${color}"
+					>
+						<h5 style="margin: 0 0 10px 0; color: ${color}; font-size: 0.5em;">${title}</h5>
+						<p style="font-size: 0.5em; margin: 0; line-height: 1.4;">${text}</p>
+					</div>
+				`;
+
+				$container.append(popup);
+			});
+
+			// Remove the original template element from the final HTML
+			$el.remove();
+		});
+	});
+}
+
+/**
+ * Pre-loads code snippets from github at build time/serverside
+ * NOTE: Should be called after prepareCodeFragments
+ */
 async function injectRemoteCode($: cheerio.CheerioAPI) {
 	const codeBlocks = $("[data-load-code]");
 	const baseUrl =
@@ -32,17 +97,23 @@ async function injectRemoteCode($: cheerio.CheerioAPI) {
 				$block.text(text);
 
 				// Remove attribute to clean up production HTML
-				// $block.removeAttr("data-load-code");
+				$block.removeAttr("data-load-code");
 
 				console.log(`  ✓ Fetched: ${fileName}`);
 			} catch (err) {
-				console.error(`  × Failed: ${fileName} (${(err as any).message})`);
+				console.error(
+					`  × Failed: ${fileName} (${(err as any).message})`,
+				);
 				$block.text(`// Error loading remote code: ${fileName}`);
 			}
 		}),
 	);
 }
 
+/**
+ * Takes the contents of static/slides, static/styles and static/scripts
+ * and injects them into static/index.html and returns the final html
+ */
 export async function buildPresentation() {
 	const layoutPath = path.join(__dirname, "../static", "index.html");
 
@@ -61,6 +132,7 @@ export async function buildPresentation() {
 	});
 
 	// 2. Populated all of the code snippets from github
+	prepareCodeFragments($);
 	await injectRemoteCode($);
 
 	// 3. Process CSS (Inlining into <style data-last-style>)

@@ -28,10 +28,7 @@
 		<script src="reveal.js/plugin/highlight.js"></script>
 		<script data-last-script>
 			(async function () {
-				await Promise.all([
-					cycleBackground(),
-					prepareCodeFragments(),
-				]);
+				await Promise.all([cycleBackground()]);
 
 				Reveal.initialize({
 					hash: true,
