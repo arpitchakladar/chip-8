@@ -15,7 +15,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf build && mkdir -p build && cp -r node_modules/reveal.js/dist build/reveal.js && cp -r static/* build/",
+    "build": "tsx scripts/build.ts",
     "start": "tsx scripts/serve.ts"
   },
   "devDependencies": {
