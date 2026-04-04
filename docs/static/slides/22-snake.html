@@ -1,58 +1,42 @@
 <section data-auto-animate data-background-image="assets/snake.png">
 	<h2 data-id="snake-title">The Snake Game</h2>
-
-	<div data-code-snippet style="position: relative; width: 100%">
-		<!-- TODO: Change this to assembly -->
-		<pre>
-			<code
-				class="language-x86asm"
-				data-fragment-index="1"
-				data-line-numbers="|5-18|20-42|60-80|128-164|183-199|290-292"
-				data-load-code="games/snake.asm"
-			>
-			</code>
-		</pre>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="1"
-			data-code-fragment-title="Game loop"
-			data-code-fragment-text="Uses <u>delay timer</u> to create ~166ms tick. Waits for DT to reach zero before each move."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="2"
-			data-code-fragment-title="Initialization"
-			data-code-fragment-text="Sets initial velocity (1, 0), length (4), and builds initial body by placing segments at decreasing X positions."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="3"
-			data-code-fragment-title="Input handling"
-			data-code-fragment-text="Checks keys 2, 8, 4, 6. <u>SKNP</u> (skip if not pressed) is used - calls direction setter only if key is pressed."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="4"
-			data-code-fragment-title="Movement logic"
-			data-code-fragment-text="The core: checks <u>collision</u> with body and food, handles wrapping, then shifts all body segments forward."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="5"
-			data-code-fragment-title="Eating food"
-			data-code-fragment-text="When head matches food position: don't remove tail (<u>snake grows</u>), play beep, generate new food."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="6"
-			data-code-fragment-title="Game over"
-			data-code-fragment-text="Clears screen, draws 'GAME OVER' text using 8×8 sprite data, then <u>infinite loop</u> to freeze."
-		></div>
-	</div>
+	<ul>
+		<li class="fragment">
+			<span class="secondary">Control scheme:</span> <u>Q</u>
+			<span class="secondary">(left),</span> <u>E</u>
+			<span class="secondary">(right),</span> <u>2</u>
+			<span class="secondary">(up),</span> <u>S</u>
+			<span class="secondary">(down)</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Movement update every</span> <u>~166ms</u>
+			<span class="secondary">using delay timer</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Snake stored in RAM at</span>
+			<u>SNAKE_BODY_DATA</u>
+			<span class="secondary">as X,Y coordinate pairs</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Collision detection with</span> <u>body</u>
+			<span class="secondary">and</span> <u>food</u>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Food generates at random</span> <u>64×32</u>
+			<span class="secondary">position</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Screen wrapping on</span> <u>edges</u>
+			<span class="secondary">(mask with 0x3F and 0x1F)</span>
+		</li>
+		<li class="fragment">
+			<span class="secondary">Beep plays on</span> <u>eating food</u>
+			<span class="secondary">and</span> <u>game over</u>
+		</li>
+		<li class="fragment">
+			<span class="secondary">"GAME OVER" drawn using</span>
+			<u>8×8 sprite data</u>
+			<span class="secondary">at end</span>
+		</li>
+	</ul>
 </section>
