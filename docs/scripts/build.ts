@@ -11,9 +11,6 @@ const __dirname = path.dirname(__filename);
 	const distDir = path.join(__dirname, "../build");
 	const distPath = path.join(distDir, "index.html");
 
-	const revealSource = path.join(__dirname, "../node_modules/reveal.js/dist");
-	const revealDest = path.join(distDir, "reveal.js");
-
 	const assetsSource = path.join(__dirname, "../static/assets");
 	const assetsDest = path.join(distDir, "assets");
 
@@ -28,15 +25,7 @@ const __dirname = path.dirname(__filename);
 	// 3. Write the index.html
 	fs.writeFileSync(distPath, finalHtml);
 
-	// 4. Copy reveal.js dist folder
-	if (fs.existsSync(revealSource)) {
-		fs.cpSync(revealSource, revealDest, { recursive: true });
-		console.log("✓ Copied: reveal.js core files");
-	} else {
-		console.warn("⚠ Warning: node_modules/reveal.js/dist not found!");
-	}
-
-	// 5. Copy static assets
+	// 4. Copy static assets
 	if (fs.existsSync(assetsSource)) {
 		fs.cpSync(assetsSource, assetsDest, { recursive: true });
 		console.log("✓ Copied: static assets");
