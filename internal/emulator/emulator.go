@@ -58,48 +58,6 @@ func (e *Emulator) LoadROM(romData []byte) error {
 	return nil
 }
 
-// Step performs one CPU cycle
-func (e *Emulator) Step() error {
-	// 1. Fetch
-	hi, err := e.Memory.Read(e.CPU.ProgramCounter)
-	if err != nil {
-		return err
-	}
-	lo, err := e.Memory.Read(e.CPU.ProgramCounter + 1)
-	if err != nil {
-		return err
-	}
-	opcode := uint16(hi)<<8 | uint16(lo)
-
-	// 2. Increment PC before execution
-	e.CPU.ProgramCounter += 2
-
-	// 3. Execute
-	return e.CPU.Execute(opcode, e.Memory, e.Display, e.Keyboard)
-}
-
-// UpdateTimers decrements the delay and sound timers at 60Hz.
-// If the sound timer is greater than zero, it triggers audio playback.
-func (e *Emulator) UpdateTimers() error {
-	if e.CPU.SoundTimer > 0 {
-		// Unpause the audio device to start the buzz
-		if err := e.Audio.GenerateBeep(); err != nil {
-			return err
-		}
-		e.Audio.Play()
-		e.CPU.SoundTimer--
-	} else {
-		// Pause the audio device when timer hits 0
-		e.Audio.Pause()
-	}
-
-	if e.CPU.DelayTimer > 0 {
-		e.CPU.DelayTimer--
-	}
-
-	return nil
-}
-
 // Run starts the emulator main loop.
 // It initializes the display and audio subsystems, then runs the CPU and UI loops.
 // The function blocks until the emulator is closed or an error occurs.
@@ -128,25 +86,8 @@ func (e *Emulator) Run() error {
 	defer close(stop)
 	errChan := make(chan error, 1)
 
-	go func() {
-		cpuClock := time.NewTicker(time.Second / time.Duration(e.ClockSpeed))
-		defer cpuClock.Stop()
-
-		for {
-			select {
-			case <-stop:
-				return
-			case <-cpuClock.C:
-				e.MemoryLock.Lock()
-				err := e.Step()
-				e.MemoryLock.Unlock()
-				if err != nil {
-					errChan <- err
-					return
-				}
-			}
-		}
-	}()
+	// Start the CPU execution loop as a goroutine
+	go e.runCPU(stop, errChan)
 
 	uiClock := time.NewTicker(time.Second / 60)
 	defer uiClock.Stop()
@@ -168,7 +109,7 @@ func (e *Emulator) Run() error {
 
 			e.MemoryLock.Lock()
 			// B. Update Timers (60Hz)
-			timerErr := e.UpdateTimers()
+			timerErr := e.updateTimers()
 			// C. Display buffer (60Hz)
 			displayErr := e.Display.Present()
 			e.MemoryLock.Unlock()
@@ -181,4 +122,69 @@ func (e *Emulator) Run() error {
 			}
 		}
 	}
+}
+
+// runCPU is the CPU execution loop.
+// It runs as a goroutine, fetching and executing instructions at the configured ClockSpeed.
+// It communicates errors back through the errChan channel.
+func (e *Emulator) runCPU(stop <-chan struct{}, errChan chan<- error) {
+	cpuClock := time.NewTicker(time.Second / time.Duration(e.ClockSpeed))
+	defer cpuClock.Stop()
+
+	for {
+		select {
+		case <-stop:
+			return
+		case <-cpuClock.C:
+			e.MemoryLock.Lock()
+			err := e.tick()
+			e.MemoryLock.Unlock()
+			if err != nil {
+				errChan <- err
+				return
+			}
+		}
+	}
+}
+
+// tick performs one CPU fetch-decode-execute cycle.
+func (e *Emulator) tick() error {
+	// 1. Fetch
+	hi, err := e.Memory.Read(e.CPU.ProgramCounter)
+	if err != nil {
+		return err
+	}
+	lo, err := e.Memory.Read(e.CPU.ProgramCounter + 1)
+	if err != nil {
+		return err
+	}
+	opcode := uint16(hi)<<8 | uint16(lo)
+
+	// 2. Increment PC before execution
+	e.CPU.ProgramCounter += 2
+
+	// 3. Execute
+	return e.CPU.Execute(opcode, e.Memory, e.Display, e.Keyboard)
+}
+
+// updateTimers decrements the delay and sound timers at 60Hz.
+// If the sound timer is greater than zero, it triggers audio playback.
+func (e *Emulator) updateTimers() error {
+	if e.CPU.SoundTimer > 0 {
+		// Unpause the audio device to start the buzz
+		if err := e.Audio.GenerateBeep(); err != nil {
+			return err
+		}
+		e.Audio.Play()
+		e.CPU.SoundTimer--
+	} else {
+		// Pause the audio device when timer hits 0
+		e.Audio.Pause()
+	}
+
+	if e.CPU.DelayTimer > 0 {
+		e.CPU.DelayTimer--
+	}
+
+	return nil
 }
