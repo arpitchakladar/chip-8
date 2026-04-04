@@ -1,65 +1,62 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as cheerio from "cheerio";
-
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function buildPresentation() {
-	const layoutPath = path.join(__dirname, "../static", "index.html"); // Your template
-	const distPath = path.join(__dirname, "../build/index.html"); // Output destination
+	const layoutPath = path.join(__dirname, "../static", "index.html");
 
-	// 1. Read the template
 	const templateHtml = fs.readFileSync(layoutPath, "utf8");
 	const $ = cheerio.load(templateHtml);
 
-	// 2. Process Slides (Inject into .slides)
+	// 1. Process Slides
 	const slidesDir = path.join(__dirname, "../static", "slides");
-	const slideFiles = fs.readdirSync(slidesDir).sort(); // Sorts 01, 02, etc.
-
+	const slideFiles = fs.readdirSync(slidesDir).sort();
 	const slidesContainer = $(".slides");
-	slidesContainer.empty(); // Clear existing placeholders
+	slidesContainer.empty();
 
 	slideFiles.forEach((file) => {
 		const content = fs.readFileSync(path.join(slidesDir, file), "utf8");
 		slidesContainer.append(content);
 	});
 
-	// 3. Process CSS (Inject into <head>)
+	// 2. Process CSS (Inlining into <style data-last-style>)
 	const stylesDir = path.join(__dirname, "../static", "styles");
 	const styleFiles = fs.readdirSync(stylesDir);
+	const targetStyleTag = $("style[data-last-style]");
 
 	styleFiles.forEach((file) => {
-		// We use the relative path for the href
-		$("head").append(`<link rel="stylesheet" href="styles/${file}">\n`);
+		const cssContent = fs.readFileSync(path.join(stylesDir, file), "utf8");
+		const styleTag = `<style>\n${cssContent}\n</style>`;
+		if (targetStyleTag.length > 0) {
+			// Prepend ensures new CSS is above the "last" CSS content
+			targetStyleTag.before(styleTag);
+		} else {
+			$("head").append(styleTag);
+		}
 	});
 
-	// 4. Process JS Scripts (Inject into <body>)
+	// 3. Process JS (Inlining into <script data-last-script>)
 	const scriptsDir = path.join(__dirname, "../static", "scripts");
 	const scriptFiles = fs.readdirSync(scriptsDir);
-
-	const lastScript = $("script[data-last-script]");
+	const targetScriptTag = $("script[data-last-script]");
 
 	scriptFiles.forEach((file) => {
-		const scriptTag = `<script src="scripts/${file}"></script>\n`;
-
-		if (lastScript.length > 0) {
-			// If the marker exists, insert before it
-			lastScript.before(scriptTag);
+		const jsContent = fs.readFileSync(path.join(scriptsDir, file), "utf8");
+		const scriptTag = `<script>\n${jsContent}\n</script>`;
+		if (targetScriptTag.length > 0) {
+			// Prepend content so original content stays at the bottom
+			targetScriptTag.before(scriptTag);
 		} else {
-			// Fallback: if no marker is found, just append to body
 			$("body").append(scriptTag);
 		}
 	});
 
-	return $.html();
+	// 4. Final Output Logic
+	const finalHtml = $.html();
 
-	// 6. Write the final file
-	if (!fs.existsSync(path.dirname(distPath)))
-		fs.mkdirSync(path.dirname(distPath));
-	fs.writeFileSync(distPath, $.html());
-
-	console.log("\nBuild complete! Check the dist/ folder.");
+	return finalHtml;
 }
