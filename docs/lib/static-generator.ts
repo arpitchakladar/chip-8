@@ -2,10 +2,118 @@ import * as fs from "fs";
 import * as path from "path";
 import * as cheerio from "cheerio";
 import { fileURLToPath } from "url";
+import { minify } from "html-minifier-terser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/**
+ * Pre-generates code fragment popups and GitHub links at build time.
+ * NOTE: Should be called before injectRemoteCode
+ */
+function prepareCodeFragments($: cheerio.CheerioAPI) {
+	const containers = $("[data-code-snippet]");
+
+	containers.each((_, container) => {
+		const $container = $(container);
+
+		// 1. Generate the GitHub Link
+		const codeSnippetElement = $container.find("[data-load-code]");
+		const codePath = codeSnippetElement.attr("data-load-code") || "No file";
+
+		const githubUrl = `https://github.com/arpitchakladar/chip-8/blob/master/${codePath}`;
+		const codeFilePathLink = `
+			<a href="${githubUrl}" class="secondary code-path">
+			${codePath}
+			</a>
+		`;
+
+		$container.prepend(codeFilePathLink);
+
+		// 2. Process Fragment Templates
+		const templates = $container.find("[data-code-fragment]");
+
+		templates.each((sequence, el) => {
+			const $el = $(el);
+
+			// Extract attributes
+			const indexes = $el.attr("data-code-fragment-indexes") || "0";
+			const title = $el.attr("data-code-fragment-title") || "No title";
+			const text = $el.attr("data-code-fragment-text") || "No text";
+
+			// Determine color (alternating)
+			const color = sequence % 2 === 0 ? "var(--blue)" : "var(--red)";
+
+			// Create popups for each index
+			indexes.split(",").forEach((fragmentIndex) => {
+				const cleanIndex = fragmentIndex.trim();
+
+				const popup = `
+					<div class="fragment fade-in-then-out"
+						data-fragment-index="${cleanIndex}"
+						data-code-fragment-element=""
+						style="--code-fragment-element-color: ${color}"
+					>
+						<h5 style="margin: 0 0 10px 0; color: ${color}; font-size: 0.5em;">${title}</h5>
+						<p style="font-size: 0.5em; margin: 0; line-height: 1.4;">${text}</p>
+					</div>
+				`;
+
+				$container.append(popup);
+			});
+
+			// Remove the original template element from the final HTML
+			$el.remove();
+		});
+	});
+}
+
+/**
+ * Pre-loads code snippets from github at build time/serverside
+ * NOTE: Should be called after prepareCodeFragments
+ */
+async function injectRemoteCode($: cheerio.CheerioAPI) {
+	const codeBlocks = $("[data-load-code]");
+	const baseUrl =
+		"https://raw.githubusercontent.com/arpitchakladar/chip-8/refs/heads/master/";
+
+	console.log(
+		`\n--- Fetching Remote Assets (${codeBlocks.length} found) ---`,
+	);
+
+	await Promise.all(
+		codeBlocks.toArray().map(async (el) => {
+			const $block = $(el);
+			const fileName = $block.attr("data-load-code");
+			const url = `${baseUrl}${fileName}`;
+
+			try {
+				const response = await fetch(url);
+				if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+				const text = await response.text();
+
+				// Inject the raw text (Cheerio handles encoding < and >)
+				$block.text(text);
+
+				// Remove attribute to clean up production HTML
+				$block.removeAttr("data-load-code");
+
+				console.log(`  ✓ Fetched: ${fileName}`);
+			} catch (err) {
+				console.error(
+					`  × Failed: ${fileName} (${(err as any).message})`,
+				);
+				$block.text(`// Error loading remote code: ${fileName}`);
+			}
+		}),
+	);
+}
+
+/**
+ * Takes the contents of static/slides, static/styles and static/scripts
+ * and injects them into static/index.html and returns the final html
+ */
 export async function buildPresentation() {
 	const layoutPath = path.join(__dirname, "../static", "index.html");
 
@@ -23,7 +131,11 @@ export async function buildPresentation() {
 		slidesContainer.append(content);
 	});
 
-	// 2. Process CSS (Inlining into <style data-last-style>)
+	// 2. Populated all of the code snippets from github
+	prepareCodeFragments($);
+	await injectRemoteCode($);
+
+	// 3. Process CSS (Inlining into <style data-last-style>)
 	const stylesDir = path.join(__dirname, "../static", "styles");
 	const styleFiles = fs.readdirSync(stylesDir);
 	const targetStyleTag = $("style[data-last-style]");
@@ -39,7 +151,7 @@ export async function buildPresentation() {
 		}
 	});
 
-	// 3. Process JS (Inlining into <script data-last-script>)
+	// 4. Process JS (Inlining into <script data-last-script>)
 	const scriptsDir = path.join(__dirname, "../static", "scripts");
 	const scriptFiles = fs.readdirSync(scriptsDir);
 	const targetScriptTag = $("script[data-last-script]");
@@ -55,8 +167,19 @@ export async function buildPresentation() {
 		}
 	});
 
-	// 4. Final Output Logic
-	const finalHtml = $.html();
+	// 5. Final Output Logic
+	const rawHtml = $.html();
 
-	return finalHtml;
+	// 6. Minify the output html
+	const minifiedHtml = await minify(rawHtml, {
+		collapseWhitespace: true,
+		removeComments: true,
+		minifyJS: true, // This minifies code inside <script> tags
+		minifyCSS: true, // This minifies code inside <style> tags
+		processConditionalComments: true,
+		removeEmptyAttributes: true,
+		decodeEntities: true,
+	});
+
+	return minifiedHtml;
 }
