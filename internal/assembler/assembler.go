@@ -1,8 +1,5 @@
 package assembler
 
-// Assembler converts CHIP-8 assembly source code into executable bytecode.
-// It uses a two-pass pipeline: lexer scans for labels, then parser generates opcodes.
-
 import (
 	"github.com/arpitchakladar/chip-8/internal/assembler/lexer"
 	"github.com/arpitchakladar/chip-8/internal/assembler/parser"

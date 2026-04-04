@@ -11,6 +11,8 @@ const (
 	Scale  = 15 // Each Chip-8 pixel will be 15x15 on screen
 )
 
+// Display manages Display output for the CHIP-8 emulator.
+// It draws the content of its display buffer to SDL2 window.
 type Display struct {
 	Pixels   [Width * Height]byte
 	window   *sdl.Window
