@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as cheerio from "cheerio";
 import { fileURLToPath } from "url";
+import { minify } from "html-minifier-terser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,7 +57,18 @@ export async function buildPresentation() {
 	});
 
 	// 4. Final Output Logic
-	const finalHtml = $.html();
+	const rawHtml = $.html();
 
-	return finalHtml;
+	// 5. Minify the output html
+	const minifiedHtml = await minify(rawHtml, {
+		collapseWhitespace: true,
+		removeComments: true,
+		minifyJS: true, // This minifies code inside <script> tags
+		minifyCSS: true, // This minifies code inside <style> tags
+		processConditionalComments: true,
+		removeEmptyAttributes: true,
+		decodeEntities: true,
+	});
+
+	return minifiedHtml;
 }
