@@ -33,24 +33,41 @@ func New(source string, currentAddr uint16) *Lexer {
 }
 
 // ScanLabels performs the first pass of assembly.
-// It identifies all labels and their addresses, then returns the label map
-// and a list of instruction lines for the parser.
+// It scans the source code for labels and builds a map of label names to their addresses.
+// It also collects all instruction lines for the parser to process in the second pass.
+//
+// The function enforces the following rules:
+//   - __START must be defined before any instructions
+//   - __END must be defined after all instructions
+//   - Both __START and __END markers are required
+//
+// Returns:
+//   - labels: map of label name -> memory address
+//   - program: list of instruction lines to be parsed
+//   - error: if any validation fails
 func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
+	// Initialize label map and program list
 	labels := make(map[string]uint16)
 	var program []Line
 
+	// Line counter for error reporting
 	i := uint16(0)
+	// Track whether __START and __END markers have been seen
 	seenStart := false
 	seenEnd := false
 
+	// Iterate through each line of the source code
 	for raw := range strings.SplitSeq(l.Source, "\n") {
 		i++
+		// Remove comments (everything after semicolon)
 		content := strings.Split(raw, ";")[0]
 		content = strings.TrimSpace(content)
+		// Skip empty lines
 		if content == "" {
 			continue
 		}
 
+		// Check if this line defines a label (ends with colon)
 		if label, found := strings.CutSuffix(content, ":"); found {
 			switch label {
 			case "__START":
@@ -60,20 +77,24 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
 				seenEnd = true
 				labels[label] = l.CurrentAddr
 			default:
+				// Store user-defined label with current address
 				labels[label] = l.CurrentAddr
 			}
 		} else {
-			// __START should be before anything else
+			// This is an instruction, not a label
+			// Validate: __START must appear before any instructions
 			if !seenStart {
 				return nil, nil, &StartAfterCodeError{LineNumber: i}
 			}
-			// __END should be after everything else
+			// Validate: no instructions allowed after __END
 			if seenEnd {
 				return nil, nil, &EndAfterCodeError{LineNumber: i}
 			}
 
+			// Parse the instruction: split by whitespace or comma
 			parts := strings.Fields(strings.ReplaceAll(content, ",", " "))
 
+			// Only process non-empty instruction lines
 			if len(parts) > 0 {
 				mnemonic := strings.ToUpper(parts[0])
 				program = append(program, Line{
@@ -82,6 +103,7 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
 					Address:    l.CurrentAddr,
 					LineNumber: i,
 				})
+				// Update program counter: DB is 1 byte, all other instructions are 2 bytes
 				if mnemonic != "DB" {
 					l.CurrentAddr += 2
 				} else {
@@ -91,7 +113,7 @@ func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
 		}
 	}
 
-	// Validate required markers are present
+	// Validate that required markers are present
 	if !seenStart {
 		return nil, nil, &MissingStartLabelError{}
 	}
