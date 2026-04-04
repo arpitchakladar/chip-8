@@ -7,8 +7,10 @@ import (
 )
 
 const (
+	// SampleRate is the audio sample rate in Hz.
 	SampleRate = 44100
-	Frequency  = 440.0 // Standard A4 pitch
+	// Frequency is the beep frequency in Hz (440Hz = standard A4 pitch).
+	Frequency = 440.0
 )
 
 // Audio manages sound output for the CHIP-8 emulator.
@@ -18,13 +20,18 @@ type Audio struct {
 	Device sdl.AudioDeviceID
 }
 
-// New creates a new Audio instance.
+// New creates a new Audio instance with an uninitialized audio device.
+// Call Init() before use to open the audio device.
 func New() *Audio {
 	return new(Audio)
 }
 
 // Init opens the default audio device and configures it for sound output.
-// It sets up mono audio at 44.1kHz with 16-bit signed samples.
+// It sets up mono audio at 44.1kHz with 16-bit signed samples and 2048 sample buffer.
+// Returns an error if the audio device cannot be opened.
+//
+// Note: On systems without audio hardware, this may return an error but the
+// emulator should continue to run without sound.
 func (a *Audio) Init() error {
 	spec := &sdl.AudioSpec{
 		Freq:     SampleRate,
@@ -33,7 +40,7 @@ func (a *Audio) Init() error {
 		Samples:  2048,
 	}
 
-	// Get audio device
+	// Open the default audio device
 	dev, err := sdl.OpenAudioDevice("", false, spec, nil, 0)
 	if err != nil {
 		return err
@@ -43,21 +50,26 @@ func (a *Audio) Init() error {
 	return nil
 }
 
-// GenerateBeep queues a square wave tone to the audio buffer.
-// The tone plays at 440Hz (A4) for approximately 1 second.
-// It returns early if there's already sufficient audio queued.
+// GenerateBeep generates a 440Hz square wave tone and queues it to the audio buffer.
+// The tone plays for approximately 1 second (one full cycle at SampleRate).
+// It returns early if there's already sufficient audio queued to avoid buffering overflow.
+//
+// A square wave alternates between positive and negative amplitude:
+//   - First half of period: +3000 (high)
+//   - Second half of period: -3000 (low)
 func (a *Audio) GenerateBeep() error {
+	// Check if sufficient audio is already queued
 	if sdl.GetQueuedAudioSize(a.Device) >= 4096 {
 		return nil
 	}
 
+	// Generate samples for 1 second of audio
 	length := SampleRate
 	data := make([]int16, length)
 	period := SampleRate / int(Frequency)
 
+	// Generate square wave: alternate between +3000 and -3000
 	for i := range length {
-		// Generating a square wave
-		// If we are in the first half of the wave period, stay high
 		if i%period < (period / 2) {
 			data[i] = 3000
 		} else {
@@ -65,13 +77,11 @@ func (a *Audio) GenerateBeep() error {
 		}
 	}
 
-	// 1. Calculate the byte length (each int16 is 2 bytes)
+	// Convert int16 samples to bytes for SDL
 	byteLen := len(data) * 2
-
-	// 2. Convert the int16 slice to a byte slice using unsafe pointers
 	byteData := unsafe.Slice((*byte)(unsafe.Pointer(&data[0])), byteLen)
 
-	// 3. Queue the raw bytes
+	// Queue the audio data for playback
 	if err := sdl.QueueAudio(a.Device, byteData); err != nil {
 		return err
 	}
@@ -80,23 +90,24 @@ func (a *Audio) GenerateBeep() error {
 }
 
 // Play unpauses the audio device to resume sound output.
+// Use this when the sound timer is greater than 0 to start/beep.
 func (a *Audio) Play() {
-	// Re-queue the sound if needed, or just Unpause
 	sdl.PauseAudioDevice(a.Device, false)
 }
 
 // Pause pauses the audio device to stop sound output.
+// Use this when the sound timer reaches 0 to silence the beep.
 func (a *Audio) Pause() {
-	// Re-queue the sound if needed, or just Unpause
 	sdl.PauseAudioDevice(a.Device, true)
 }
 
-// Close stops and closes the audio device.
-// It first silences the device, then releases the audio resources.
+// Close stops and releases the audio device resources.
+// It first silences the device by pausing, then closes the SDL audio device,
+// and finally resets the device ID to 0. Safe to call multiple times.
 func (a *Audio) Close() {
 	if a.Device != 0 {
-		sdl.PauseAudioDevice(a.Device, true) // Silence it first
+		sdl.PauseAudioDevice(a.Device, true) // Silence first
 		sdl.CloseAudioDevice(a.Device)
-		a.Device = 0 // Reset the ID
+		a.Device = 0 // Reset ID
 	}
 }
