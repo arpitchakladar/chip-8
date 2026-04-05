@@ -9,7 +9,11 @@ type InvalidOpcodeError struct {
 }
 
 func (e *InvalidOpcodeError) Error() string {
-	return fmt.Sprintf("INVALID OPCODE: 0x%04X at PC 0x%03X", e.Opcode, e.ProgramCounter)
+	return fmt.Sprintf(
+		"INVALID OPCODE: 0x%04X at PC 0x%03X",
+		e.Opcode,
+		e.ProgramCounter,
+	)
 }
 
 // StackError: Attempted to CALL when full (Overflow) or RET when empty (Underflow).
@@ -34,5 +38,10 @@ type MemorySyncError struct {
 }
 
 func (e *MemorySyncError) Error() string {
-	return fmt.Sprintf("CPU MEMORY ERROR [Opcode 0x%04X at PC 0x%03X]: %v", e.Opcode, e.ProgramCounter, e.Child)
+	return fmt.Sprintf(
+		"CPU MEMORY ERROR [Opcode 0x%04X at PC 0x%03X]: %v",
+		e.Opcode,
+		e.ProgramCounter,
+		e.Child,
+	)
 }

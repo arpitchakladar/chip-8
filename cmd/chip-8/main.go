@@ -24,7 +24,11 @@ func main() {
 	switch command {
 	case "run":
 		runCommand := flag.NewFlagSet("run", flag.ExitOnError)
-		clockSpeed := runCommand.Uint("c", defaultClockSpeed, "CPU clock speed in Hz")
+		clockSpeed := runCommand.Uint(
+			"c",
+			defaultClockSpeed,
+			"CPU clock speed in Hz",
+		)
 		if err := runCommand.Parse(os.Args[2:]); err != nil {
 			fmt.Println("Error: invalid arguments")
 			runCommand.Usage()
@@ -63,7 +67,9 @@ func main() {
 func printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  chip-8 run [-c <hz>] <rom>   - Run a .ch8 file")
-	fmt.Println("  chip-8 compile [-o <out>] <files...> - Assemble .asm files to .ch8")
+	fmt.Println(
+		"  chip-8 compile [-o <out>] <files...> - Assemble .asm files to .ch8",
+	)
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  chip-8 run rom.ch8")
@@ -151,7 +157,10 @@ func compileAssembly(filePaths []string, outputPath string) {
 	}
 
 	if outputPath == "" {
-		outputPath = strings.TrimSuffix(filePaths[0], filepath.Ext(filePaths[0])) + ".ch8"
+		outputPath = strings.TrimSuffix(
+			filePaths[0],
+			filepath.Ext(filePaths[0]),
+		) + ".ch8"
 		if len(filePaths) > 1 {
 			outputPath = "combined.ch8"
 		}

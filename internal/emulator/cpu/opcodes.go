@@ -45,7 +45,12 @@ import (
 //   - *InvalidOpcodeError: if the opcode is not recognized
 //   - *StackError: if stack overflow/underflow occurs
 //   - *MemorySyncError: if memory read/write fails
-func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, keyb keyboard.Keyboard) error {
+func (c *CPU) Execute(
+	opcode uint16,
+	mem *memory.Memory,
+	disp display.Display,
+	keyb keyboard.Keyboard,
+) error {
 	// Decode opcode into component parts
 	// Format: 0x FXXX YYYN -> nibble, X, Y, N
 	x := (opcode & 0x0F00) >> 8 // Register index (Vx)
@@ -73,7 +78,10 @@ func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, k
 			c.ProgramCounter = c.Stack[c.StackPointer]
 		default:
 			// Unknown 0xxx opcode
-			return &InvalidOpcodeError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2}
+			return &InvalidOpcodeError{
+				Opcode:         opcode,
+				ProgramCounter: c.ProgramCounter - 2,
+			}
 		}
 
 	case 0x1000: // 1NNN: JP addr
@@ -83,7 +91,10 @@ func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, k
 	case 0x2000: // 2NNN: CALL addr
 		// Push current PC onto stack and jump to address
 		if c.StackPointer >= 16 {
-			return &StackError{IsOverflow: true, ProgramCounter: c.ProgramCounter - 2}
+			return &StackError{
+				IsOverflow:     true,
+				ProgramCounter: c.ProgramCounter - 2,
+			}
 		}
 		c.Stack[c.StackPointer] = c.ProgramCounter
 		c.StackPointer++
@@ -179,7 +190,11 @@ func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, k
 		for row := range uint16(n) {
 			spriteByte, err := mem.Read(c.IndexRegister + row)
 			if err != nil {
-				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+				return &MemorySyncError{
+					Opcode:         opcode,
+					ProgramCounter: c.ProgramCounter - 2,
+					Child:          err,
+				}
 			}
 			for col := range uint16(8) {
 				// Check if bit is set in sprite
@@ -245,20 +260,36 @@ func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, k
 			// Store BCD representation of Vx at I, I+1, I+2
 			val := c.Registers[x]
 			if err := mem.Write(c.IndexRegister, val/100); err != nil {
-				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+				return &MemorySyncError{
+					Opcode:         opcode,
+					ProgramCounter: c.ProgramCounter - 2,
+					Child:          err,
+				}
 			}
 			if err := mem.Write(c.IndexRegister+1, (val/10)%10); err != nil {
-				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+				return &MemorySyncError{
+					Opcode:         opcode,
+					ProgramCounter: c.ProgramCounter - 2,
+					Child:          err,
+				}
 			}
 			if err := mem.Write(c.IndexRegister+2, val%10); err != nil {
-				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+				return &MemorySyncError{
+					Opcode:         opcode,
+					ProgramCounter: c.ProgramCounter - 2,
+					Child:          err,
+				}
 			}
 
 		case 0x55: // LD [I], Vx
 			// Store registers V0 through Vx in memory starting at I
 			for i := range x + 1 {
 				if err := mem.Write(c.IndexRegister+uint16(i), c.Registers[i]); err != nil {
-					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+					return &MemorySyncError{
+						Opcode:         opcode,
+						ProgramCounter: c.ProgramCounter - 2,
+						Child:          err,
+					}
 				}
 			}
 
@@ -267,7 +298,11 @@ func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, k
 			for i := range x + 1 {
 				val, err := mem.Read(c.IndexRegister + uint16(i))
 				if err != nil {
-					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
+					return &MemorySyncError{
+						Opcode:         opcode,
+						ProgramCounter: c.ProgramCounter - 2,
+						Child:          err,
+					}
 				}
 				c.Registers[i] = val
 			}
@@ -275,7 +310,10 @@ func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, k
 
 	default:
 		// Unrecognized opcode
-		return &InvalidOpcodeError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2}
+		return &InvalidOpcodeError{
+			Opcode:         opcode,
+			ProgramCounter: c.ProgramCounter - 2,
+		}
 	}
 
 	return nil

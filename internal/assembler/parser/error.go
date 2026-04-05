@@ -12,7 +12,11 @@ type UnknownMnemonicError struct {
 }
 
 func (e *UnknownMnemonicError) Error() string {
-	return fmt.Sprintf("UNKNOWN MNEMONIC: \"%s\" at line %d", e.Mnemonic, e.LineNumber)
+	return fmt.Sprintf(
+		"UNKNOWN MNEMONIC: \"%s\" at line %d",
+		e.Mnemonic,
+		e.LineNumber,
+	)
 }
 
 // WrongArgCountError: The instruction was given too few or too many arguments.
@@ -40,7 +44,9 @@ type InvalidRegisterError struct {
 func (e *InvalidRegisterError) Error() string {
 	return fmt.Sprintf(
 		"INVALID REGISTER [%s] at line %d: \"%s\" is not a valid register (expected V0–VF)",
-		e.Mnemonic, e.LineNumber, e.Token,
+		e.Mnemonic,
+		e.LineNumber,
+		e.Token,
 	)
 }
 
@@ -73,7 +79,12 @@ func (e *ImmediateOutOfRangeError) Error() string {
 	max := (uint16(1) << e.MaxBits) - 1
 	return fmt.Sprintf(
 		"IMMEDIATE OUT OF RANGE [%s] at line %d: \"%s\" resolves to 0x%X, but field is %d-bit (max 0x%X)",
-		e.Mnemonic, e.LineNumber, e.Token, e.Value, e.MaxBits, max,
+		e.Mnemonic,
+		e.LineNumber,
+		e.Token,
+		e.Value,
+		e.MaxBits,
+		max,
 	)
 }
 

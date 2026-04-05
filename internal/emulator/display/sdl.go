@@ -135,7 +135,10 @@ func (d *SDLDisplay) SetPixel(x, y uint8) (bool, error) {
 //   - *SDLError if renderer is not initialized or drawing fails
 func (d *SDLDisplay) Present() error {
 	if d.renderer == nil {
-		return &SDLError{Subsystem: "Renderer", Child: fmt.Errorf("renderer not initialized")}
+		return &SDLError{
+			Subsystem: "Renderer",
+			Child:     fmt.Errorf("renderer not initialized"),
+		}
 	}
 
 	// Clear screen to black
@@ -179,8 +182,9 @@ func (d *SDLDisplay) Present() error {
 }
 
 // Close releases all display resources.
-// It destroys the renderer first, then the window, and finally calls sdl.Quit().
-// If either destroy operation fails, the error is returned (preferring the renderer error).
+// It destroys the renderer first, then the window, and finally calls
+// sdl.Quit(). If either destroy operation fails, the error is returned
+// (preferring the renderer error).
 //
 // This function is safe to call multiple times (subsequent calls will be no-ops).
 //

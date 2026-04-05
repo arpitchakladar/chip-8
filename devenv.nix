@@ -34,6 +34,7 @@ in
   packages = with pkgs; [
     git
     pkg-config
+    golines
   ] ++ libraries;
 
   env = {
@@ -47,6 +48,13 @@ in
   pre-commit.hooks = {
     gotest.enable = true;
     golangci-lint.enable = true;
+    golines = {
+      enable = true;
+      name = "golines";
+      entry = "${pkgs.golines}/bin/golines -w --max-len=80";
+      files = "\\.go$";
+      pass_filenames = true;
+    };
   };
   pre-commit.hooks.editorconfig-checker.enable = true;
 

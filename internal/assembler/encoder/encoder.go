@@ -49,14 +49,21 @@ func (e *Encoder) RegImm(prefix uint16, vx uint8, byte uint8) uint16 {
 
 // RegReg handles instructions with two registers (xy).
 // Used by: SE (5xy0), LD (8xy0), ALU operations (8xy1-E), SNE (9xy0)
-func (e *Encoder) RegReg(prefix uint16, vx uint8, vy uint8, suffix uint16) uint16 {
+func (e *Encoder) RegReg(
+	prefix uint16,
+	vx uint8,
+	vy uint8,
+	suffix uint16,
+) uint16 {
 	return prefix | (uint16(vx&0xF) << 8) | (uint16(vy&0xF) << 4) | (suffix & 0xF)
 }
 
 // RegNibble handles instructions with two registers and a 4-bit nibble (xyn).
 // Used by: DRW (Dxyn)
 func (e *Encoder) RegNibble(prefix uint16, vx uint8, vy uint8, n uint8) uint16 {
-	return prefix | (uint16(vx&0xF) << 8) | (uint16(vy&0xF) << 4) | uint16(n&0xF)
+	return prefix | (uint16(vx&0xF) << 8) | (uint16(vy&0xF) << 4) | uint16(
+		n&0xF,
+	)
 }
 
 // RegOnly handles instructions that only specify one register (x).
