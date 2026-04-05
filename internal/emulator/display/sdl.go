@@ -1,3 +1,5 @@
+//go:build !wasm || !js
+
 package display
 
 // SDLDisplay manages the display output for the CHIP-8 emulator.

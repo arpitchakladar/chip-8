@@ -29,24 +29,6 @@ type Emulator struct {
 	MemoryLock sync.Mutex
 }
 
-// WithSDL creates a new Emulator with SDL2-based display, keyboard, and audio.
-// The clockSpeed parameter specifies CPU instructions per second (e.g., 100000 for 100kHz).
-func WithSDL(clockSpeed uint32) *Emulator {
-	e := &Emulator{
-		CPU:        cpu.New(),
-		Memory:     memory.New(),
-		Display:    display.WithSDL(),
-		Keyboard:   keyboard.WithSDL(),
-		Audio:      audio.WithSDL(),
-		MemoryLock: sync.Mutex{},
-		ClockSpeed: clockSpeed,
-	}
-
-	e.Memory.LoadFontSet()
-	e.CPU.ProgramCounter = ProgramStart
-	return e
-}
-
 // LoadROM loads a CHIP-8 ROM into memory starting at ProgramStart (0x200).
 func (e *Emulator) LoadROM(romData []byte) error {
 	for i, b := range romData {
@@ -171,4 +153,14 @@ func (e *Emulator) updateTimers() error {
 	}
 
 	return nil
+}
+
+// Destroy releases emulator resources.
+func (e *Emulator) Destroy() {
+	if err := e.Display.Close(); err != nil {
+		// TODO: Handle this error
+		// Just pass for now
+		fmt.Printf("Error: Failed to close display")
+	}
+	e.Audio.Close()
 }

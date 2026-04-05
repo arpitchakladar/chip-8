@@ -1,3 +1,5 @@
+//go:build !wasm || !js
+
 // Package main provides a CHIP-8 emulator and assembler command-line tool.
 //
 // The chip-8 command supports two subcommands:

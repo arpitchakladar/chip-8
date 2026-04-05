@@ -1,3 +1,5 @@
+//go:build !wasm || !js
+
 package audio
 
 import (

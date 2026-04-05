@@ -1,3 +1,5 @@
+//go:build !wasm || !js
+
 package keyboard
 
 // SDLKeyboard tracks the state of the 16 CHIP-8 keys.
