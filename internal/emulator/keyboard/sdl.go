@@ -73,7 +73,7 @@ func (kb *SDLKeyboard) PollEvents() {
 //
 // The key mapping follows the standard CHIP-8 layout:
 //
-//	 PC Key  | CHIP-8
+//	    PC Key  | CHIP-8
 //		--------|--------
 //		1 2 3 4 | 1 2 3 C
 //		q w e r | 4 5 6 D
