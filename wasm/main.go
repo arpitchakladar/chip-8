@@ -11,7 +11,6 @@ import (
 
 var (
 	vm      *emulator.Emulator
-	ctx     context.Context
 	cancel  context.CancelFunc
 	errChan chan error
 )
@@ -61,7 +60,6 @@ func chip8Run(this js.Value, args []js.Value) any {
 		return map[string]string{"error": "emulator not initialized"}
 	}
 
-	ctx, cancel = context.WithCancel(context.Background())
 	errChan = make(chan error, 1)
 
 	go func() {
