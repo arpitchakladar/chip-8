@@ -16,8 +16,11 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// ProgramStart is the memory address where CHIP-8 programs begin (0x200).
 const ProgramStart = 0x200
 
+// Emulator represents a complete CHIP-8 virtual machine.
+// It coordinates the CPU, memory, display, keyboard, and audio subsystems.
 type Emulator struct {
 	CPU        *cpu.CPU
 	Memory     *memory.Memory
@@ -28,6 +31,8 @@ type Emulator struct {
 	MemoryLock sync.Mutex
 }
 
+// WithSDL creates a new Emulator with SDL2-based display, keyboard, and audio.
+// The clockSpeed parameter specifies CPU instructions per second (e.g., 100000 for 100kHz).
 func WithSDL(clockSpeed uint32) *Emulator {
 	e := &Emulator{
 		CPU:        cpu.New(),
@@ -44,6 +49,7 @@ func WithSDL(clockSpeed uint32) *Emulator {
 	return e
 }
 
+// LoadROM loads a CHIP-8 ROM into memory starting at ProgramStart (0x200).
 func (e *Emulator) LoadROM(romData []byte) error {
 	for i, b := range romData {
 		if err := e.Memory.Write(ProgramStart+uint16(i), b); err != nil {
@@ -53,6 +59,9 @@ func (e *Emulator) LoadROM(romData []byte) error {
 	return nil
 }
 
+// Run starts the emulator main loop.
+// It initializes the display and audio subsystems, then runs the CPU and display loops.
+// The function blocks until the emulator is closed or an error occurs.
 func (e *Emulator) Run() error {
 	if err := e.Display.Init(); err != nil {
 		return fmt.Errorf("failed to init display: %w", err)
@@ -79,6 +88,8 @@ func (e *Emulator) Run() error {
 	return <-errChan
 }
 
+// runDisplay handles the display update loop at 60Hz.
+// It polls for SDL events, updates timers, and renders the display.
 func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
 	uiClock := time.NewTicker(time.Second / 60)
 	defer uiClock.Stop()
@@ -111,6 +122,8 @@ func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
 	}
 }
 
+// handleSDLEvents processes SDL keyboard and quit events.
+// This is SDL-specific and will be called when using SDLKeyboard.
 func (e *Emulator) handleSDLEvents(sdlKeyboard *keyboard.SDLKeyboard, errChan chan<- error) {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
@@ -123,6 +136,7 @@ func (e *Emulator) handleSDLEvents(sdlKeyboard *keyboard.SDLKeyboard, errChan ch
 	}
 }
 
+// runCPU runs the CPU execution loop at the configured ClockSpeed.
 func (e *Emulator) runCPU(ctx context.Context, errChan chan<- error) {
 	cpuClock := time.NewTicker(time.Second / time.Duration(e.ClockSpeed))
 	defer cpuClock.Stop()
@@ -143,6 +157,7 @@ func (e *Emulator) runCPU(ctx context.Context, errChan chan<- error) {
 	}
 }
 
+// tick performs one CPU fetch-decode-execute cycle.
 func (e *Emulator) tick() error {
 	hi, err := e.Memory.Read(e.CPU.ProgramCounter)
 	if err != nil {
@@ -159,6 +174,7 @@ func (e *Emulator) tick() error {
 	return e.CPU.Execute(opcode, e.Memory, e.Display, e.Keyboard)
 }
 
+// updateTimers decrements the delay and sound timers at 60Hz.
 func (e *Emulator) updateTimers() error {
 	if e.CPU.SoundTimer > 0 {
 		if err := e.Audio.GenerateBeep(); err != nil {
