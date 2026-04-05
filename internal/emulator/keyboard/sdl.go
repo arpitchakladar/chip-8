@@ -63,9 +63,8 @@ func (kb *SDLKeyboard) SetKey(key byte, pressed bool) {
 // Call this at 60Hz to update the keyboard state.
 func (kb *SDLKeyboard) PollEvents() {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-		switch t := event.(type) {
-		case *sdl.KeyboardEvent:
-			kb.HandleKeyboard(t)
+		if kbdEvent, ok := event.(*sdl.KeyboardEvent); ok {
+			kb.HandleKeyboard(kbdEvent)
 		}
 	}
 }

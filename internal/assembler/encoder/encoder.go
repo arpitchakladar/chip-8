@@ -14,7 +14,7 @@ func New() *Encoder {
 	return new(Encoder)
 }
 
-// Instruction Masks (Constants associated with the Encoder logic)
+// Instruction Masks (Constants associated with the Encoder logic).
 const (
 	MaskCLS  uint16 = 0x00E0
 	MaskRET  uint16 = 0x00EE
@@ -36,19 +36,19 @@ const (
 )
 
 // Addr handles instructions with a 12-bit address (nnn).
-// Used by: JP (1nnn), CALL (2nnn), LD I (Annn), JP V0 (Bnnn)
+// Used by: JP (1nnn), CALL (2nnn), LD I (Annn), JP V0 (Bnnn).
 func (e *Encoder) Addr(prefix uint16, addr uint16) uint16 {
 	return prefix | (addr & 0x0FFF)
 }
 
 // RegImm handles instructions with a register and an 8-bit immediate (xkk).
-// Used by: SE (3xkk), SNE (4xkk), LD (6xkk), ADD (7xkk)
-func (e *Encoder) RegImm(prefix uint16, vx uint8, byte uint8) uint16 {
-	return prefix | (uint16(vx&0xF) << 8) | uint16(byte)
+// Used by: SE (3xkk), SNE (4xkk), LD (6xkk), ADD (7xkk).
+func (e *Encoder) RegImm(prefix uint16, vx uint8, valueByte uint8) uint16 {
+	return prefix | (uint16(vx&0xF) << 8) | uint16(valueByte)
 }
 
 // RegReg handles instructions with two registers (xy).
-// Used by: SE (5xy0), LD (8xy0), ALU operations (8xy1-E), SNE (9xy0)
+// Used by: SE (5xy0), LD (8xy0), ALU operations (8xy1-E), SNE (9xy0).
 func (e *Encoder) RegReg(
 	prefix uint16,
 	vx uint8,
@@ -59,7 +59,7 @@ func (e *Encoder) RegReg(
 }
 
 // RegNibble handles instructions with two registers and a 4-bit nibble (xyn).
-// Used by: DRW (Dxyn)
+// Used by: DRW (Dxyn).
 func (e *Encoder) RegNibble(prefix uint16, vx uint8, vy uint8, n uint8) uint16 {
 	return prefix | (uint16(vx&0xF) << 8) | (uint16(vy&0xF) << 4) | uint16(
 		n&0xF,
@@ -73,7 +73,7 @@ func (e *Encoder) RegOnly(prefix uint16, vx uint8, suffix uint16) uint16 {
 }
 
 // Raw returns instructions that have no variables.
-// Used by: CLS (00E0), RET (00EE)
+// Used by: CLS (00E0), RET (00EE).
 func (e *Encoder) Raw(opcode uint16) uint16 {
 	return opcode
 }

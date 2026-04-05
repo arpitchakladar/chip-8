@@ -132,30 +132,20 @@ func orderByMarkers(filePaths []string) []string {
 	hasEndMarker := false
 
 	for _, path := range filePaths {
-		content, err := os.ReadFile(path)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "File Error: %v\n", err)
-			os.Exit(1)
-		}
-		hasStart := strings.Contains(string(content), "__START")
-		hasEnd := strings.Contains(string(content), "__END")
+		kind := categorizeFile(path)
 
-		if hasStart && hasEnd {
+		switch kind {
+		case "both":
 			startFiles = append(startFiles, path)
 			hasStartMarker = true
 			hasEndMarker = true
-			continue
-		}
-
-		if hasStart {
+		case "start":
 			startFiles = append(startFiles, path)
 			hasStartMarker = true
-		}
-		if hasEnd {
+		case "end":
 			endFiles = append(endFiles, path)
 			hasEndMarker = true
-		}
-		if !hasStart && !hasEnd {
+		case "regular":
 			regularFiles = append(regularFiles, path)
 		}
 	}
@@ -171,6 +161,27 @@ func orderByMarkers(filePaths []string) []string {
 	}
 
 	return append(startFiles, append(regularFiles, endFiles...)...)
+}
+
+func categorizeFile(path string) string {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "File Error: %v\n", err)
+		os.Exit(1)
+	}
+	hasStart := strings.Contains(string(content), "__START")
+	hasEnd := strings.Contains(string(content), "__END")
+
+	if hasStart && hasEnd {
+		return "both"
+	}
+	if hasStart {
+		return "start"
+	}
+	if hasEnd {
+		return "end"
+	}
+	return "regular"
 }
 
 // readAllFiles reads all files from the given paths and concatenates their contents.

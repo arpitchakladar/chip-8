@@ -76,7 +76,7 @@ type ImmediateOutOfRangeError struct {
 }
 
 func (e *ImmediateOutOfRangeError) Error() string {
-	max := (uint16(1) << e.MaxBits) - 1
+	maxValue := (uint16(1) << e.MaxBits) - 1
 	return fmt.Sprintf(
 		"IMMEDIATE OUT OF RANGE [%s] at line %d: \"%s\" resolves to 0x%X, but field is %d-bit (max 0x%X)",
 		e.Mnemonic,
@@ -84,7 +84,7 @@ func (e *ImmediateOutOfRangeError) Error() string {
 		e.Token,
 		e.Value,
 		e.MaxBits,
-		max,
+		maxValue,
 	)
 }
 
