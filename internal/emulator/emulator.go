@@ -35,9 +35,9 @@ func WithSDL(clockSpeed uint32) *Emulator {
 	e := &Emulator{
 		CPU:        cpu.New(),
 		Memory:     memory.New(),
-		Display:    display.New(),
-		Keyboard:   keyboard.New(),
-		Audio:      audio.New(),
+		Display:    display.WithSDL(),
+		Keyboard:   keyboard.WithSDL(),
+		Audio:      audio.WithSDL(),
 		MemoryLock: sync.Mutex{},
 		ClockSpeed: clockSpeed,
 	}

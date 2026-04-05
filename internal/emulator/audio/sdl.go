@@ -22,7 +22,7 @@ type SDLAudio struct {
 
 // New creates a new SDLAudio instance with an uninitialized audio device.
 // Call Init() before use to open the audio device.
-func New() *SDLAudio {
+func WithSDL() *SDLAudio {
 	return new(SDLAudio)
 }
 

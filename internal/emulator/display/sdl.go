@@ -33,7 +33,7 @@ type SDLDisplay struct {
 // New creates a new, cleared SDLDisplay instance.
 // The pixel buffer is initialized to all zeros (black).
 // Call Init() before use to create the SDL window.
-func New() *SDLDisplay {
+func WithSDL() *SDLDisplay {
 	return new(SDLDisplay)
 }
 

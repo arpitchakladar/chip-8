@@ -15,7 +15,7 @@ type SDLKeyboard struct {
 }
 
 // New creates a new SDLKeyboard instance with all keys initialized to released.
-func New() *SDLKeyboard {
+func WithSDL() *SDLKeyboard {
 	return new(SDLKeyboard)
 }
 
