@@ -12,8 +12,6 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator/display"
 	"github.com/arpitchakladar/chip-8/internal/emulator/keyboard"
 	"github.com/arpitchakladar/chip-8/internal/emulator/memory"
-
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 // ProgramStart is the memory address where CHIP-8 programs begin (0x200).
@@ -89,21 +87,17 @@ func (e *Emulator) Run() error {
 }
 
 // runDisplay handles the display update loop at 60Hz.
-// It polls for SDL events, updates timers, and renders the display.
+// It polls for keyboard events, updates timers, and renders the display.
 func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
 	uiClock := time.NewTicker(time.Second / 60)
 	defer uiClock.Stop()
-
-	sdlKeyboard, isSDL := e.Keyboard.(*keyboard.SDLKeyboard)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-uiClock.C:
-			if isSDL {
-				e.handleSDLEvents(sdlKeyboard, errChan)
-			}
+			e.Keyboard.PollEvents()
 
 			e.MemoryLock.Lock()
 			timerErr := e.updateTimers()
@@ -118,20 +112,6 @@ func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
 				errChan <- displayErr
 				return
 			}
-		}
-	}
-}
-
-// handleSDLEvents processes SDL keyboard and quit events.
-// This is SDL-specific and will be called when using SDLKeyboard.
-func (e *Emulator) handleSDLEvents(sdlKeyboard *keyboard.SDLKeyboard, errChan chan<- error) {
-	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-		switch t := event.(type) {
-		case *sdl.QuitEvent:
-			errChan <- nil
-			return
-		case *sdl.KeyboardEvent:
-			sdlKeyboard.HandleKeyboard(t)
 		}
 	}
 }

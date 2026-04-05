@@ -57,6 +57,17 @@ func (kb *SDLKeyboard) SetKey(key byte, pressed bool) {
 	}
 }
 
+// PollEvents processes SDL keyboard events.
+// Call this at 60Hz to update the keyboard state.
+func (kb *SDLKeyboard) PollEvents() {
+	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		switch t := event.(type) {
+		case *sdl.KeyboardEvent:
+			kb.HandleKeyboard(t)
+		}
+	}
+}
+
 // HandleKeyboard updates the keyboard state based on an SDL keyboard event.
 // It maps PC keyboard keys to CHIP-8 hex keys (0-F) and tracks press/release state.
 //
