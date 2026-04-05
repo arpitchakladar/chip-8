@@ -58,25 +58,30 @@ func (e *Emulator) Run() error {
 		e.Audio.Close()
 	}()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	runEmulatorContext, cancelRunEmulatorContext := context.WithCancel(
+		context.Background(),
+	)
 	errChan := make(chan error, 1)
-	defer cancel()
+	defer cancelRunEmulatorContext()
 
-	go e.runCPU(ctx, errChan)
-	e.runDisplay(ctx, errChan)
+	go e.runCPU(runEmulatorContext, errChan)
+	e.runDisplay(runEmulatorContext, errChan)
 
 	return <-errChan
 }
 
 // runDisplay handles the display update loop at 60Hz.
 // It polls for keyboard events, updates timers, and renders the display.
-func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
+func (e *Emulator) runDisplay(
+	runEmulatorContext context.Context,
+	errChan chan<- error,
+) {
 	uiClock := time.NewTicker(time.Second / 60)
 	defer uiClock.Stop()
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-runEmulatorContext.Done():
 			return
 		case <-uiClock.C:
 			e.Keyboard.PollEvents()
@@ -99,13 +104,16 @@ func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
 }
 
 // runCPU runs the CPU execution loop at the configured ClockSpeed.
-func (e *Emulator) runCPU(ctx context.Context, errChan chan<- error) {
+func (e *Emulator) runCPU(
+	runEmulatorContext context.Context,
+	errChan chan<- error,
+) {
 	cpuClock := time.NewTicker(time.Second / time.Duration(e.ClockSpeed))
 	defer cpuClock.Stop()
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-runEmulatorContext.Done():
 			return
 		case <-cpuClock.C:
 			e.MemoryLock.Lock()
