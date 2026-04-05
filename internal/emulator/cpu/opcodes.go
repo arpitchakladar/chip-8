@@ -45,7 +45,7 @@ import (
 //   - *InvalidOpcodeError: if the opcode is not recognized
 //   - *StackError: if stack overflow/underflow occurs
 //   - *MemorySyncError: if memory read/write fails
-func (c *CentralProcessingUnit) Execute(opcode uint16, mem *memory.Memory, disp *display.Display, keyb *keyboard.Keyboard) error {
+func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, keyb keyboard.Keyboard) error {
 	// Decode opcode into component parts
 	// Format: 0x FXXX YYYN -> nibble, X, Y, N
 	x := (opcode & 0x0F00) >> 8 // Register index (Vx)

@@ -13,17 +13,17 @@ const (
 	Frequency = 440.0
 )
 
-// Audio manages sound output for the CHIP-8 emulator.
+// SDLAudio manages sound output for the CHIP-8 emulator.
 // It generates square wave beeps using SDL2 audio devices.
-type Audio struct {
+type SDLAudio struct {
 	// Device is the SDL audio device ID used for sound output.
 	Device sdl.AudioDeviceID
 }
 
-// New creates a new Audio instance with an uninitialized audio device.
+// New creates a new SDLAudio instance with an uninitialized audio device.
 // Call Init() before use to open the audio device.
-func New() *Audio {
-	return new(Audio)
+func New() *SDLAudio {
+	return new(SDLAudio)
 }
 
 // Init opens the default audio device and configures it for sound output.
@@ -32,7 +32,7 @@ func New() *Audio {
 //
 // Note: On systems without audio hardware, this may return an error but the
 // emulator should continue to run without sound.
-func (a *Audio) Init() error {
+func (a *SDLAudio) Init() error {
 	spec := &sdl.AudioSpec{
 		Freq:     SampleRate,
 		Format:   sdl.AUDIO_S16SYS,
@@ -57,7 +57,7 @@ func (a *Audio) Init() error {
 // A square wave alternates between positive and negative amplitude:
 //   - First half of period: +3000 (high)
 //   - Second half of period: -3000 (low)
-func (a *Audio) GenerateBeep() error {
+func (a *SDLAudio) GenerateBeep() error {
 	// Check if sufficient audio is already queued
 	if sdl.GetQueuedAudioSize(a.Device) >= 4096 {
 		return nil
@@ -91,20 +91,20 @@ func (a *Audio) GenerateBeep() error {
 
 // Play unpauses the audio device to resume sound output.
 // Use this when the sound timer is greater than 0 to start/beep.
-func (a *Audio) Play() {
+func (a *SDLAudio) Play() {
 	sdl.PauseAudioDevice(a.Device, false)
 }
 
 // Pause pauses the audio device to stop sound output.
 // Use this when the sound timer reaches 0 to silence the beep.
-func (a *Audio) Pause() {
+func (a *SDLAudio) Pause() {
 	sdl.PauseAudioDevice(a.Device, true)
 }
 
 // Close stops and releases the audio device resources.
 // It first silences the device by pausing, then closes the SDL audio device,
 // and finally resets the device ID to 0. Safe to call multiple times.
-func (a *Audio) Close() {
+func (a *SDLAudio) Close() {
 	if a.Device != 0 {
 		sdl.PauseAudioDevice(a.Device, true) // Silence first
 		sdl.CloseAudioDevice(a.Device)

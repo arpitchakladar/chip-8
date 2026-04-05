@@ -1,22 +1,22 @@
 package keyboard
 
-// Keyboard tracks the state of the 16 CHIP-8 keys.
+// SDLKeyboard tracks the state of the 16 CHIP-8 keys.
 // It maintains a map of which keys are currently pressed and provides
 // methods for checking key state, used by CPU opcodes for input handling.
 
 import "github.com/veandco/go-sdl2/sdl"
 
-// Keyboard tracks the state of the 16 CHIP-8 keys.
-type Keyboard struct {
+// SDLKeyboard tracks the state of the 16 CHIP-8 keys.
+type SDLKeyboard struct {
 	// Keys stores the pressed state of each CHIP-8 key.
 	// Index 0-15 corresponds to CHIP-8 keys 0x0-0xF.
 	// true = pressed, false = released
 	Keys [16]bool
 }
 
-// New creates a new Keyboard instance with all keys initialized to released.
-func New() *Keyboard {
-	return new(Keyboard)
+// New creates a new SDLKeyboard instance with all keys initialized to released.
+func New() *SDLKeyboard {
+	return new(SDLKeyboard)
 }
 
 // IsKeyPressed checks if a specific CHIP-8 key is currently pressed.
@@ -28,7 +28,7 @@ func New() *Keyboard {
 // Returns:
 //   - true if the key is currently pressed
 //   - false if the key is released OR if key is out of range (>15)
-func (kb *Keyboard) IsKeyPressed(key byte) bool {
+func (kb *SDLKeyboard) IsKeyPressed(key byte) bool {
 	return key <= 15 && kb.Keys[key]
 }
 
@@ -41,7 +41,7 @@ func (kb *Keyboard) IsKeyPressed(key byte) bool {
 // Returns:
 //   - byte: the key index (0-15) of the first pressed key found
 //   - bool: true if any key is pressed, false if no keys are pressed
-func (kb *Keyboard) AnyKeyPressed() (byte, bool) {
+func (kb *SDLKeyboard) AnyKeyPressed() (byte, bool) {
 	for i, isPressed := range kb.Keys {
 		if isPressed {
 			return byte(i), true
@@ -50,21 +50,28 @@ func (kb *Keyboard) AnyKeyPressed() (byte, bool) {
 	return 0, false
 }
 
+// SetKey sets the pressed state of a CHIP-8 key.
+func (kb *SDLKeyboard) SetKey(key byte, pressed bool) {
+	if key <= 15 {
+		kb.Keys[key] = pressed
+	}
+}
+
 // HandleKeyboard updates the keyboard state based on an SDL keyboard event.
 // It maps PC keyboard keys to CHIP-8 hex keys (0-F) and tracks press/release state.
 //
 // The key mapping follows the standard CHIP-8 layout:
 //
-//  PC Key  | CHIP-8
-//	--------|--------
-//	1 2 3 4 | 1 2 3 C
-//	q w e r | 4 5 6 D
-//	a s d f | 7 8 9 E
-//	z x c v | A 0 B F
+//	 PC Key  | CHIP-8
+//		--------|--------
+//		1 2 3 4 | 1 2 3 C
+//		q w e r | 4 5 6 D
+//		a s d f | 7 8 9 E
+//		z x c v | A 0 B F
 //
 // Parameters:
 //   - event: pointer to an SDL KeyboardEvent (key press or release)
-func (kb *Keyboard) HandleKeyboard(event *sdl.KeyboardEvent) {
+func (kb *SDLKeyboard) HandleKeyboard(event *sdl.KeyboardEvent) {
 	keyCode := event.Keysym.Sym
 	// Determine if this is a key press (true) or release (false)
 	isPressed := event.Type == sdl.KEYDOWN

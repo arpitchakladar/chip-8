@@ -1,8 +1,8 @@
 package cpu
 
-// The CentralProcessingUnit is responsible for identifying and running
+// The CPU is responsible for identifying and running
 // each opcode
-type CentralProcessingUnit struct {
+type CPU struct {
 	// Registers are the 16 general-purpose 8-bit registers.
 	// Historically referred to as V0 through VF.
 	Registers [16]byte
@@ -29,6 +29,6 @@ type CentralProcessingUnit struct {
 }
 
 // New initializes a CPU with the standard entry point for Chip-8 programs.
-func New() *CentralProcessingUnit {
-	return new(CentralProcessingUnit)
+func New() *CPU {
+	return new(CPU)
 }

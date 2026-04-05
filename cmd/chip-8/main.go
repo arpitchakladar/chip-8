@@ -70,7 +70,7 @@ func printUsage() {
 // and starts the main emulation loop which handles display, audio, and input.
 func runEmulator(path string) {
 	// Create emulator with 100kHz clock speed (100,000 instructions per second)
-	vm := emulator.New(100000)
+	vm := emulator.WithSDL(100000)
 	fmt.Printf("Starting emulator with: %s\n", path)
 
 	// Read the ROM file into memory

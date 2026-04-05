@@ -1,6 +1,6 @@
 package display
 
-// Display manages the display output for the CHIP-8 emulator.
+// SDLDisplay manages the display output for the CHIP-8 emulator.
 // It maintains a pixel buffer and renders it to an SDL2 window.
 
 import (
@@ -19,8 +19,8 @@ const (
 	Scale = 15
 )
 
-// Display maintains the CHIP-8 display state and SDL2 rendering resources.
-type Display struct {
+// SDLDisplay maintains the CHIP-8 display state and SDL2 rendering resources.
+type SDLDisplay struct {
 	// Pixels is the display buffer (2048 bytes for 64x32 display).
 	// Each byte represents one pixel: 0 = off, 1 = on.
 	Pixels [Width * Height]byte
@@ -30,11 +30,11 @@ type Display struct {
 	renderer *sdl.Renderer
 }
 
-// New creates a new, cleared Display instance.
+// New creates a new, cleared SDLDisplay instance.
 // The pixel buffer is initialized to all zeros (black).
 // Call Init() before use to create the SDL window.
-func New() *Display {
-	return new(Display)
+func New() *SDLDisplay {
+	return new(SDLDisplay)
 }
 
 // Init initializes the SDL2 subsystem and creates the window and renderer.
@@ -44,7 +44,7 @@ func New() *Display {
 // Returns:
 //   - nil on success
 //   - *SDLError if SDL initialization, window creation, or renderer creation fails
-func (d *Display) Init() error {
+func (d *SDLDisplay) Init() error {
 	// Initialize all SDL2 subsystems
 	if err := sdl.Init(uint32(sdl.INIT_EVERYTHING)); err != nil {
 		return &SDLError{Subsystem: "Initialization", Child: err}
@@ -75,13 +75,13 @@ func (d *Display) Init() error {
 // Reset clears the entire pixel buffer to black (all zeros).
 // This is equivalent to turning off all pixels.
 // Note: This only clears the in-memory buffer, not the actual screen.
-func (d *Display) Reset() {
+func (d *SDLDisplay) Reset() {
 	d.Pixels = [Width * Height]byte{}
 }
 
 // Clear is an alias for Reset.
 // It is called by the CLS (0x00E0) opcode to clear the display.
-func (d *Display) Clear() {
+func (d *SDLDisplay) Clear() {
 	d.Reset()
 }
 
@@ -100,7 +100,7 @@ func (d *Display) Clear() {
 //   - bool: true if the pixel was already on (collision), false otherwise
 //   - error: *CoordinateError if coordinates are out of bounds (before wrapping),
 //     or nil if coordinates are valid (even after wrapping)
-func (d *Display) SetPixel(x, y uint8) (bool, error) {
+func (d *SDLDisplay) SetPixel(x, y uint8) (bool, error) {
 	var err *CoordinateError
 
 	// Check if coordinates were out of bounds (before wrapping)
@@ -138,7 +138,7 @@ func (d *Display) SetPixel(x, y uint8) (bool, error) {
 // Returns:
 //   - nil on success
 //   - *SDLError if renderer is not initialized or drawing fails
-func (d *Display) Present() error {
+func (d *SDLDisplay) Present() error {
 	if d.renderer == nil {
 		return &SDLError{Subsystem: "Renderer", Child: fmt.Errorf("renderer not initialized")}
 	}
@@ -192,7 +192,7 @@ func (d *Display) Present() error {
 // Returns:
 //   - nil on success
 //   - *SDLError containing the last error encountered during cleanup
-func (d *Display) Close() error {
+func (d *SDLDisplay) Close() error {
 	lastErr := error(nil)
 
 	// Destroy renderer first
