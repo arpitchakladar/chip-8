@@ -72,17 +72,12 @@ func (d *SDLDisplay) Init() error {
 	return nil
 }
 
-// Reset clears the entire pixel buffer to black (all zeros).
+// Clears the entire pixel buffer to black (all zeros).
 // This is equivalent to turning off all pixels.
-// Note: This only clears the in-memory buffer, not the actual screen.
-func (d *SDLDisplay) Reset() {
-	d.Pixels = [Width * Height]byte{}
-}
-
-// Clear is an alias for Reset.
 // It is called by the CLS (0x00E0) opcode to clear the display.
+// Note: This only clears the in-memory buffer, not the actual screen.
 func (d *SDLDisplay) Clear() {
-	d.Reset()
+	d.Pixels = [Width * Height]byte{}
 }
 
 // SetPixel toggles a pixel at the specified coordinates using XOR mode.
