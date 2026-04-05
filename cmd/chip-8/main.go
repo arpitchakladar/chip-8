@@ -26,7 +26,7 @@ func main() {
 		runCommand := flag.NewFlagSet("run", flag.ExitOnError)
 		clockSpeed := runCommand.Uint("c", defaultClockSpeed, "CPU clock speed in Hz")
 		if err := runCommand.Parse(os.Args[2:]); err != nil {
-			fmt.Println("Error: Failed to run emulator")
+			fmt.Println("Error: invalid arguments")
 			runCommand.Usage()
 			os.Exit(1)
 		}
@@ -42,7 +42,7 @@ func main() {
 		compileCommand := flag.NewFlagSet("compile", flag.ExitOnError)
 		outputPath := compileCommand.String("o", "", "Output file path")
 		if err := compileCommand.Parse(os.Args[2:]); err != nil {
-			fmt.Println("Error: Failed to run emulator")
+			fmt.Println("Error: invalid arguments")
 			compileCommand.Usage()
 			os.Exit(1)
 		}
