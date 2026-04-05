@@ -1,3 +1,8 @@
+// Package main provides a CHIP-8 emulator and assembler command-line tool.
+//
+// The chip-8 command supports two subcommands:
+//   - run: Execute a CHIP-8 ROM file
+//   - compile: Assemble .asm files into a CHIP-8 ROM file
 package main
 
 import (
@@ -11,6 +16,7 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
+// defaultClockSpeed is the default CPU clock speed in Hz.
 const defaultClockSpeed = 100000
 
 func main() {
@@ -64,6 +70,7 @@ func main() {
 	}
 }
 
+// printUsage prints the usage information for the chip-8 command.
 func printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  chip-8 run [-c <hz>] <rom>   - Run a .ch8 file")
@@ -77,6 +84,7 @@ func printUsage() {
 	fmt.Println("  chip-8 compile -o out.ch8 a.asm b.asm")
 }
 
+// runEmulator loads and runs a CHIP-8 ROM file with the specified clock speed.
 func runEmulator(path string, clockSpeed uint32) {
 	vm := emulator.WithSDL(clockSpeed)
 	fmt.Printf("Starting emulator with: %s (clock: %d Hz)\n", path, clockSpeed)
@@ -98,7 +106,25 @@ func runEmulator(path string, clockSpeed uint32) {
 	}
 }
 
+// compileAssembly assembles one or more .asm files into a CHIP-8 ROM file.
+// Files containing __START marker are placed at the beginning, files with __END
+// marker are placed at the end, and remaining files are placed in between.
+// If no output path is specified, it defaults to the first input filename with
+// .ch8 extension, or "combined.ch8" if multiple files are provided.
 func compileAssembly(filePaths []string, outputPath string) {
+	orderedPaths := orderByMarkers(filePaths)
+	allContent := readAllFiles(orderedPaths)
+
+	if outputPath == "" {
+		outputPath = determineOutputPath(orderedPaths)
+	}
+
+	assembleAndWrite(allContent, outputPath)
+}
+
+// orderByMarkers reads all input files, categorizes them by __START and __END
+// markers, and returns them in the correct order for assembly.
+func orderByMarkers(filePaths []string) []string {
 	var startFiles, endFiles, regularFiles []string
 	hasStartMarker := false
 	hasEndMarker := false
@@ -142,9 +168,13 @@ func compileAssembly(filePaths []string, outputPath string) {
 		os.Exit(1)
 	}
 
-	filePaths = append(startFiles, append(regularFiles, endFiles...)...)
+	return append(startFiles, append(regularFiles, endFiles...)...)
+}
 
+// readAllFiles reads all files from the given paths and concatenates their contents.
+func readAllFiles(filePaths []string) strings.Builder {
 	var allContent strings.Builder
+
 	for _, path := range filePaths {
 		fmt.Printf("Reading %s...\n", path)
 		content, err := os.ReadFile(path)
@@ -156,19 +186,26 @@ func compileAssembly(filePaths []string, outputPath string) {
 		allContent.WriteString("\n")
 	}
 
-	if outputPath == "" {
-		outputPath = strings.TrimSuffix(
-			filePaths[0],
-			filepath.Ext(filePaths[0]),
-		) + ".ch8"
-		if len(filePaths) > 1 {
-			outputPath = "combined.ch8"
-		}
-	}
+	return allContent
+}
 
+// determineOutputPath determines the output path for the compiled ROM file.
+func determineOutputPath(filePaths []string) string {
+	outputPath := strings.TrimSuffix(
+		filePaths[0],
+		filepath.Ext(filePaths[0]),
+	) + ".ch8"
+	if len(filePaths) > 1 {
+		outputPath = "combined.ch8"
+	}
+	return outputPath
+}
+
+// assembleAndWrite assembles the combined source and writes the result to the output path.
+func assembleAndWrite(source strings.Builder, outputPath string) {
 	fmt.Printf("Assembling...\n")
 
-	asm := assembler.New(allContent.String())
+	asm := assembler.New(source.String())
 	binary, err := asm.Assemble()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Assembly Error: %v\n", err)
