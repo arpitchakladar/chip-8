@@ -8,6 +8,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -48,7 +49,8 @@ func main() {
 			runCommand.Usage()
 			os.Exit(1)
 		}
-		runEmulator(runCommand.Arg(0), uint32(*clockSpeed))
+		statusCode := runEmulator(runCommand.Arg(0), uint32(*clockSpeed))
+		os.Exit(statusCode)
 
 	case "compile":
 		compileCommand := flag.NewFlagSet("compile", flag.ExitOnError)
@@ -87,25 +89,33 @@ func printUsage() {
 }
 
 // runEmulator loads and runs a CHIP-8 ROM file with the specified clock speed.
-func runEmulator(path string, clockSpeed uint32) {
+func runEmulator(path string, clockSpeed uint32) int {
 	vm := emulator.WithSDL(clockSpeed)
 	fmt.Printf("Starting emulator with: %s (clock: %d Hz)\n", path, clockSpeed)
 
 	content, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Runtime Error: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	if err := vm.LoadROM(content); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load ROM: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
-	if err := vm.Run(); err != nil {
+	emulatorRunningContext, cancelEmulatorRunningContext := context.WithCancel(
+		context.Background(),
+	)
+
+	defer cancelEmulatorRunningContext()
+
+	if err := vm.Run(emulatorRunningContext); err != nil {
 		fmt.Fprintf(os.Stderr, "Runtime Error: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
+
+	return 0
 }
 
 // compileAssembly assembles one or more .asm files into a CHIP-8 ROM file.

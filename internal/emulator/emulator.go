@@ -42,7 +42,7 @@ func (e *Emulator) LoadROM(romData []byte) error {
 // Run starts the emulator main loop.
 // It initializes the display and audio subsystems, then runs the CPU and display loops.
 // The function blocks until the emulator is closed or an error occurs.
-func (e *Emulator) Run() error {
+func (e *Emulator) Run(parentContext context.Context) error {
 	if err := e.Display.Init(); err != nil {
 		return fmt.Errorf("failed to init display: %w", err)
 	}
@@ -59,7 +59,7 @@ func (e *Emulator) Run() error {
 	}()
 
 	runEmulatorContext, cancelRunEmulatorContext := context.WithCancel(
-		context.Background(),
+		parentContext,
 	)
 	errChan := make(chan error, 1)
 	defer cancelRunEmulatorContext()
