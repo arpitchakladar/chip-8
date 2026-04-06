@@ -21,7 +21,7 @@ func WithWASM(clockSpeed uint32) *Emulator {
 		Display:    display.WithWASM(),
 		Keyboard:   keyboard.WithWASM(),
 		Audio:      audio.WithWASM(),
-		MemoryLock: sync.Mutex{},
+		memoryLock: sync.Mutex{},
 		ClockSpeed: clockSpeed,
 	}
 

@@ -20,13 +20,14 @@ const ProgramStart = 0x200
 // Emulator represents a complete CHIP-8 virtual machine.
 // It coordinates the CPU, memory, display, keyboard, and audio subsystems.
 type Emulator struct {
-	CPU        *cpu.CPU
-	Memory     *memory.Memory
-	Display    display.Display
-	Keyboard   keyboard.Keyboard
-	Audio      audio.Audio
-	ClockSpeed uint32
-	MemoryLock sync.Mutex
+	CPU          *cpu.CPU
+	Memory       *memory.Memory
+	Display      display.Display
+	Keyboard     keyboard.Keyboard
+	Audio        audio.Audio
+	ClockSpeed   uint32
+	memoryLock   sync.Mutex
+	cancelRunner context.CancelFunc
 }
 
 // LoadROM loads a CHIP-8 ROM into memory starting at ProgramStart (0x200).
@@ -61,10 +62,12 @@ func (e *Emulator) Run(parentContext context.Context) error {
 	runEmulatorContext, cancelRunEmulatorContext := context.WithCancel(
 		parentContext,
 	)
+	e.cancelRunner = cancelRunEmulatorContext
 	errChan := make(chan error, 1)
 	defer cancelRunEmulatorContext()
 
 	go e.runCPU(runEmulatorContext, errChan)
+	// Cannot be goroutine as SDL2 wants* to be on the main thread
 	e.runDisplay(runEmulatorContext, errChan)
 
 	return <-errChan
@@ -86,10 +89,10 @@ func (e *Emulator) runDisplay(
 		case <-uiClock.C:
 			e.Keyboard.PollEvents()
 
-			e.MemoryLock.Lock()
+			e.memoryLock.Lock()
 			timerErr := e.updateTimers()
 			displayErr := e.Display.Present()
-			e.MemoryLock.Unlock()
+			e.memoryLock.Unlock()
 
 			if timerErr != nil {
 				errChan <- timerErr
@@ -116,9 +119,9 @@ func (e *Emulator) runCPU(
 		case <-runEmulatorContext.Done():
 			return
 		case <-cpuClock.C:
-			e.MemoryLock.Lock()
+			e.memoryLock.Lock()
 			err := e.tick()
-			e.MemoryLock.Unlock()
+			e.memoryLock.Unlock()
 			if err != nil {
 				errChan <- err
 				return
@@ -163,12 +166,7 @@ func (e *Emulator) updateTimers() error {
 	return nil
 }
 
-// Destroy releases emulator resources.
+// Stops the runner (CPU and Display goroutine) threads.
 func (e *Emulator) Destroy() {
-	if err := e.Display.Close(); err != nil {
-		// TODO: Handle this error
-		// Just pass for now
-		fmt.Printf("Error: Failed to close display")
-	}
-	e.Audio.Close()
+	e.cancelRunner()
 }
