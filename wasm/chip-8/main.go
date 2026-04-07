@@ -16,8 +16,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"sync/atomic"
 	"syscall/js"
 
 	"github.com/arpitchakladar/chip-8/internal/assembler"
@@ -28,10 +26,6 @@ var (
 	defaultClockSpeed = uint32(
 		100000,
 	) // Default 100kHz CPU speed
-	VMCounter uint32 // Atomic counter for generating unique VM IDs
-	VMs       = make(
-		map[string]*emulator.Emulator,
-	) // Active emulator instances
 )
 
 func throw(message string) {
@@ -48,14 +42,9 @@ func main() {
 // registerCallbacks exposes emulator functions to JavaScript as global functions.
 // Each function is wrapped in a js.Func to be callable from JS.
 func registerCallbacks() {
-	js.Global().Set("chip8Compile", js.FuncOf(chip8Compile))
-	js.Global().Set("chip8New", js.FuncOf(chip8New))
-	js.Global().Set("chip8LoadROM", js.FuncOf(chip8LoadROM))
-	js.Global().Set("chip8Run", js.FuncOf(chip8Run))
-	js.Global().Set("chip8Destroy", js.FuncOf(chip8Destroy))
-	js.Global().Set("chip8PlayAudio", js.FuncOf(chip8PlayAudio))
-	js.Global().
-		Set("chip8SetKeyboardHandler", js.FuncOf(chip8SetKeyboardHandler))
+	chip8 := js.FuncOf(chip8New)
+	chip8.Set("compile", js.FuncOf(chip8Compile))
+	js.Global().Set("CHIP8", chip8)
 }
 
 // chip8Compile compiles CHIP-8 assembly code to bytecode.
@@ -97,116 +86,53 @@ func chip8New(this js.Value, args []js.Value) any {
 
 	canvas := args[0]
 
-	atomic.AddUint32(&VMCounter, 1)
 	vm := emulator.WithWASM(canvas, clockSpeed)
-	id := fmt.Sprintf("chip-8-vm-%d", atomic.LoadUint32(&VMCounter))
-	VMs[id] = vm
-
-	return id
-}
-
-// chip8LoadROM loads ROM data into an existing emulator instance.
-// Parameters:
-//   - vmId: The VM ID returned by chip8New
-//   - romData: A Uint8Array containing the ROM bytecode
-//
-// Returns: null on success, or error object on failure.
-func chip8LoadROM(this js.Value, args []js.Value) any {
-	if len(args) < 2 {
-		throw("VM ID and ROM data are required")
-	}
-
-	vm := VMs[args[0].String()]
-	jsData := args[1]
-	romData := make([]byte, jsData.Length())
-	for i := 0; i < jsData.Length(); i++ {
-		romData[i] = uint8(jsData.Index(i).Int())
-	}
-
-	if err := vm.LoadROM(romData); err != nil {
-		throw(err.Error())
-	}
-	return nil
-}
-
-// chip8Run starts the emulator execution loop.
-// Parameter: vmId - The VM ID returned by chip8New
-// Returns: null on success (runs asynchronously), or error object on failure.
-func chip8Run(this js.Value, args []js.Value) any {
-	if len(args) < 1 {
-		throw("VM ID is required")
-	}
-
-	vm := VMs[args[0].String()]
-	if vm == nil {
-		throw("emulator not initialized")
-	}
-
-	errChan := make(chan error, 1)
-
-	go func() {
-		if err := vm.Run(context.Background()); err != nil {
-			errChan <- err
+	vmObj := js.Global().Get("Object").New()
+	vmObj.Set("loadROM", js.FuncOf(func(this js.Value, args []js.Value) any {
+		jsData := args[0]
+		romData := make([]byte, jsData.Length())
+		for i := 0; i < jsData.Length(); i++ {
+			romData[i] = uint8(jsData.Index(i).Int())
 		}
-	}()
+		if err := vm.LoadROM(romData); err != nil {
+			throw(err.Error())
+		}
+		return nil
+	}))
 
-	return nil
+	vmObj.Set("run", js.FuncOf(func(this js.Value, args []js.Value) any {
+		errChan := make(chan error, 1)
+
+		go func() {
+			if err := vm.Run(context.Background()); err != nil {
+				errChan <- err
+			}
+		}()
+
+		return nil
+	}))
+
+	vmObj.Set("destroy", js.FuncOf(func(this js.Value, args []js.Value) any {
+		vm.Destroy()
+
+		return nil
+	}))
+
+	setupKeyboardListeners(vm)
+
+	return vmObj
 }
 
-// chip8Destroy stops and destroys an emulator instance, releasing all resources.
-// Parameter: vmId - The VM ID of the instance to destroy
-// Returns: null on success, or error object if VM not found.
-func chip8Destroy(this js.Value, args []js.Value) any {
-	vm := VMs[args[0].String()]
-	if vm == nil {
-		throw("no VM was found.")
-	}
-
-	vm.Destroy()
-
-	return nil
-}
-
-// chip8PlayAudio manually triggers audio playback for the emulator.
-// Useful for testing or when user interaction is needed to start audio (browser policy).
-// Parameter: vmId - The VM ID
-// Returns: null on success, or error object on failure.
-func chip8PlayAudio(this js.Value, args []js.Value) any {
-	if len(args) < 1 {
-		throw("VM ID is required")
-	}
-
-	vm := VMs[args[0].String()]
-	if vm == nil {
-		throw("emulator not initialized")
-	}
-
-	if err := vm.Audio.Play(); err != nil {
-		throw(fmt.Sprintf("audio device error: %s", err))
-	}
-
-	return nil
-}
-
-// chip8SetKeyboardHandler attaches keyboard event listeners to the document.
-// Maps JavaScript keyboard events to CHIP-8 key presses for the specified VM.
-// Parameter: vmId - The VM ID
-// Returns: null on success, or error object on failure.
-func chip8SetKeyboardHandler(this js.Value, args []js.Value) any {
-	if len(args) < 1 {
-		throw("VM ID is required")
-	}
-
-	vm := VMs[args[0].String()]
-	if vm == nil {
-		throw("emulator not initialized")
-	}
-
+func setupKeyboardListeners(vm *emulator.Emulator) any {
 	document := js.Global().Get("document")
+
 	document.Call(
 		"addEventListener",
 		"keydown",
 		js.FuncOf(func(this js.Value, args []js.Value) any {
+			if !vm.IsRunning() {
+				return nil
+			}
 			event := args[0]
 			key := event.Get("key").String()
 			chip8Key := keyToChip8(key)
@@ -221,6 +147,9 @@ func chip8SetKeyboardHandler(this js.Value, args []js.Value) any {
 		"addEventListener",
 		"keyup",
 		js.FuncOf(func(this js.Value, args []js.Value) any {
+			if !vm.IsRunning() {
+				return nil
+			}
 			event := args[0]
 			key := event.Get("key").String()
 			chip8Key := keyToChip8(key)
