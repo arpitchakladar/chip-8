@@ -52,14 +52,45 @@ func (a *SDLAudio) Init() error {
 	return nil
 }
 
-// GenerateBeep generates a 440Hz square wave tone and queues it to the audio buffer.
+// Play unpauses the audio device to resume sound output.
+// Use this when the sound timer is greater than 0 to start/beep.
+func (a *SDLAudio) Play() error {
+	if err := a.generateBeep(); err != nil {
+		return err
+	}
+
+	sdl.PauseAudioDevice(a.Device, false)
+	return nil
+}
+
+// Pause pauses the audio device to stop sound output.
+// Use this when the sound timer reaches 0 to silence the beep.
+func (a *SDLAudio) Pause() error {
+	sdl.PauseAudioDevice(a.Device, true)
+	return nil
+}
+
+// Close stops and releases the audio device resources.
+// It first silences the device by pausing, then closes the SDL audio device,
+// and finally resets the device ID to 0. Safe to call multiple times.
+func (a *SDLAudio) Close() error {
+	if a.Device != 0 {
+		sdl.PauseAudioDevice(a.Device, true) // Silence first
+		sdl.CloseAudioDevice(a.Device)
+		a.Device = 0 // Reset ID
+	}
+
+	return nil
+}
+
+// generateBeep generates a 440Hz square wave tone and queues it to the audio buffer.
 // The tone plays for approximately 1 second (one full cycle at SampleRate).
 // It returns early if there's already sufficient audio queued to avoid buffering overflow.
 //
 // A square wave alternates between positive and negative amplitude:
 //   - First half of period: +3000 (high)
 //   - Second half of period: -3000 (low)
-func (a *SDLAudio) GenerateBeep() error {
+func (a *SDLAudio) generateBeep() error {
 	// Check if sufficient audio is already queued
 	if sdl.GetQueuedAudioSize(a.Device) >= 4096 {
 		return nil
@@ -86,33 +117,6 @@ func (a *SDLAudio) GenerateBeep() error {
 	// Queue the audio data for playback
 	if err := sdl.QueueAudio(a.Device, byteData); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// Play unpauses the audio device to resume sound output.
-// Use this when the sound timer is greater than 0 to start/beep.
-func (a *SDLAudio) Play() error {
-	sdl.PauseAudioDevice(a.Device, false)
-	return nil
-}
-
-// Pause pauses the audio device to stop sound output.
-// Use this when the sound timer reaches 0 to silence the beep.
-func (a *SDLAudio) Pause() error {
-	sdl.PauseAudioDevice(a.Device, true)
-	return nil
-}
-
-// Close stops and releases the audio device resources.
-// It first silences the device by pausing, then closes the SDL audio device,
-// and finally resets the device ID to 0. Safe to call multiple times.
-func (a *SDLAudio) Close() error {
-	if a.Device != 0 {
-		sdl.PauseAudioDevice(a.Device, true) // Silence first
-		sdl.CloseAudioDevice(a.Device)
-		a.Device = 0 // Reset ID
 	}
 
 	return nil
