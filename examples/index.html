@@ -80,23 +80,22 @@
 
 			async function runAudioInput() {
 				const canvas = document.getElementById("canvas1");
-				const vmId = chip8New(canvas, 500);
-				chip8SetKeyboardHandler(vmId);
+				const vm = new chip_8.Emulator(canvas, 500);
 
 				const response = await fetch("audio_input.asm");
 				const asmCode = await response.text();
 				console.log(asmCode);
-				const romData = chip8Compile(asmCode);
-				console.log(romData);
+				const assembler = new chip_8.Assembler(asmCode);
+				const romData = assembler.assemble();
+				console.log(romData)
 
-				chip8LoadROM(vmId, romData);
-				chip8Run(vmId);
+				vm.loadROM(romData);
+				vm.run();
 			}
 
 			async function runHelloWorld() {
 				const canvas = document.getElementById("canvas2");
-				const vmId = chip8New(canvas, 500);
-				chip8SetKeyboardHandler(vmId);
+				const vm = new chip_8.Emulator(canvas, 500);
 
 				const responses = await Promise.all([
 					fetch("hello_world.asm"),
@@ -105,10 +104,11 @@
 				const asmCode = (
 					await Promise.all(responses.map((response) => response.text()))
 				).join("\n");
-				const romData = chip8Compile(asmCode);
+				const assembler = new chip_8.Assembler(asmCode);
+				const romData = assembler.assemble();
 
-				chip8LoadROM(vmId, romData);
-				chip8Run(vmId);
+				vm.loadROM(romData);
+				vm.run();
 			}
 		</script>
 	</body>
