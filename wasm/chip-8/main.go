@@ -5,12 +5,12 @@
 // web applications to run CHIP-8 ROMs directly in the browser.
 //
 // Exposed JavaScript object:
-//   - CHIP8: Object with methods for creating and managing emulator instances
-//   - new CHIP8(canvasElement): Creates a new emulator instance
+//   - CHIP8: Acts as a constructor function for creating emulator instances
+//   - new CHIP8(canvasElement, clockSpeed?): Creates a new emulator instance
 //   - .compile(assemblyCode): Compiles CHIP-8 assembly to bytecode
-//   - .loadROM(romData): Loads a ROM into the VM
-//   - .run(): Starts the emulator execution
-//   - .destroy(): Stops and destroys the VM instance
+//   - .loadROM(romData): Loads a ROM into the VM (instance method)
+//   - .run(): Starts the emulator execution (instance method)
+//   - .destroy(): Stops and destroys the VM instance (instance method)
 package main
 
 import (
@@ -41,35 +41,50 @@ func main() {
 // registerCallbacks exposes emulator functions to JavaScript as global functions.
 // Each function is wrapped in a js.Func to be callable from JS.
 func registerCallbacks() {
-	chip8 := js.FuncOf(chip8New)
-	chip8.Set("compile", js.FuncOf(chip8Compile))
-	js.Global().Set("CHIP8", chip8)
+	chip8 := js.Global().Get("Object").New()
+
+	chip8.Set("Emulator", js.FuncOf(newEmulator))
+	chip8.Set("Assembler", js.FuncOf(newAssembler))
+
+	js.Global().Set("chip_8", chip8)
 }
 
-// chip8Compile compiles CHIP-8 assembly code to bytecode.
-// Returns a Uint8Array containing the compiled ROM.
-// Parameter: assemblyCode (string) - The CHIP-8 assembly source code.
-func chip8Compile(this js.Value, args []js.Value) any {
+// newAssembler acts as a JavaScript constructor for the Assembler.
+// It is intended to be used with `new Assembler(sourceCode)`.
+//
+// Parameters:
+//   - sourceCode: CHIP-8 assembly source code (required)
+//
+// JavaScript usage:
+//
+//	const asm = new Assembler(source);
+//	const rom = asm.assemble();
+func newAssembler(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
-		throw("the assembly code string is required")
+		throw("assembly code string is required")
 	}
 
 	assemblyCode := args[0].String()
 	asm := assembler.New(assemblyCode)
 
-	compiled, err := asm.Assemble()
-	if err != nil {
-		throw(err.Error())
-	}
+	// attach method to THIS instance
+	this.Set("assemble", js.FuncOf(func(this js.Value, args []js.Value) any {
+		compiled, err := asm.Assemble()
+		if err != nil {
+			throw(err.Error())
+		}
 
-	uint8Array := js.Global().Get("Uint8Array").New(len(compiled))
-	js.CopyBytesToJS(uint8Array, compiled)
+		uint8Array := js.Global().Get("Uint8Array").New(len(compiled))
+		js.CopyBytesToJS(uint8Array, compiled)
 
-	return uint8Array
+		return uint8Array
+	}))
+
+	return nil
 }
 
-// chip8New acts as a JavaScript constructor for the CHIP-8 emulator.
-// It is intended to be used with `new CHIP8(...)`.
+// newEmulator acts as a JavaScript constructor for the CHIP-8 emulator.
+// It is intended to be used with `new chip_8.Emulator(...)`.
 //
 // Parameters:
 //   - canvasElement: A JavaScript canvas element for rendering (required)
@@ -77,8 +92,8 @@ func chip8Compile(this js.Value, args []js.Value) any {
 //
 // JavaScript usage:
 //
-//	const chip = new CHIP8(canvas, 500);
-func chip8New(this js.Value, args []js.Value) any {
+//	const chip = new chip_8.Emulator(canvas, 500);
+func newEmulator(this js.Value, args []js.Value) any {
 	clockSpeed := defaultClockSpeed
 
 	if len(args) < 1 {
