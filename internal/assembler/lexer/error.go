@@ -22,7 +22,10 @@ type StartAfterCodeError struct {
 }
 
 func (e *StartAfterCodeError) Error() string {
-	return fmt.Sprintf("__START label must be defined before any instructions (line %d)", e.LineNumber)
+	return fmt.Sprintf(
+		"__START label must be defined before any instructions (line %d)",
+		e.LineNumber,
+	)
 }
 
 // EndAfterCodeError occurs when instructions appear after __END.
@@ -31,5 +34,8 @@ type EndAfterCodeError struct {
 }
 
 func (e *EndAfterCodeError) Error() string {
-	return fmt.Sprintf("no instructions allowed after __END (line %d)", e.LineNumber)
+	return fmt.Sprintf(
+		"no instructions allowed after __END (line %d)",
+		e.LineNumber,
+	)
 }

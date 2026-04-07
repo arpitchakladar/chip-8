@@ -12,7 +12,11 @@ type BoundsError struct {
 }
 
 func (e *BoundsError) Error() string {
-	return fmt.Sprintf("out of bounds: address 0x%03X exceeds maximum 0x%03X", e.Address, e.Max)
+	return fmt.Sprintf(
+		"out of bounds: address 0x%03X exceeds maximum 0x%03X",
+		e.Address,
+		e.Max,
+	)
 }
 
 // WriteProtectedError occurs when attempting to write to the system/interpreter area.
@@ -24,5 +28,8 @@ type WriteProtectedError struct {
 }
 
 func (e *WriteProtectedError) Error() string {
-	return fmt.Sprintf("write to protected address 0x%03X (reserved for font set)", e.Address)
+	return fmt.Sprintf(
+		"write to protected address 0x%03X (reserved for font set)",
+		e.Address,
+	)
 }

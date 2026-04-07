@@ -1,6 +1,15 @@
+//go:build !wasm || !js
+
+// Package main provides a CHIP-8 emulator and assembler command-line tool.
+//
+// The chip-8 command supports two subcommands:
+//   - run: Execute a CHIP-8 ROM file
+//   - compile: Assemble .asm files into a CHIP-8 ROM file
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,134 +19,147 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
-// chip-8 is a CHIP-8 emulator and assembler written in Go with SDL2.
-// It provides a command-line interface to run CHIP-8 ROMs or assemble .asm files.
-//
-// Usage:
-//
-//	chip-8 run <path-to-rom>             - Run a .ch8 file
-//	chip-8 compile [-o <output>] <file>  - Assemble .asm file(s) to .ch8
+// defaultClockSpeed is the default CPU clock speed in Hz.
+const defaultClockSpeed = 100000
+
 func main() {
-	// Validate minimum arguments: command + at least one argument
-	if len(os.Args) < 3 {
+	if len(os.Args) < 2 {
 		printUsage()
 		return
 	}
 
 	command := strings.ToLower(os.Args[1])
-	args := os.Args[2:]
 
-	// Parse optional -o flag for output path
-	outputPath := ""
-
-	for i := 0; i < len(args); i++ {
-		if args[i] == "-o" && i+1 < len(args) {
-			outputPath = args[i+1]
-			args = append(args[:i], args[i+2:]...)
-			i--
-		}
-	}
-
-	// Dispatch to appropriate command handler
 	switch command {
 	case "run":
-		if len(args) != 1 {
-			printUsage()
-			return
+		runCommand := flag.NewFlagSet("run", flag.ExitOnError)
+		clockSpeed := runCommand.Uint(
+			"c",
+			defaultClockSpeed,
+			"CPU clock speed in Hz",
+		)
+		if err := runCommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("Error: invalid arguments")
+			runCommand.Usage()
+			os.Exit(1)
 		}
-		runEmulator(args[0])
+
+		if runCommand.NArg() != 1 {
+			fmt.Println("Error: expected exactly one ROM file")
+			runCommand.Usage()
+			os.Exit(1)
+		}
+		statusCode := runEmulator(runCommand.Arg(0), uint32(*clockSpeed))
+		os.Exit(statusCode)
+
 	case "compile":
-		if len(args) < 1 {
-			printUsage()
-			return
+		compileCommand := flag.NewFlagSet("compile", flag.ExitOnError)
+		outputPath := compileCommand.String("o", "", "Output file path")
+		if err := compileCommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("Error: invalid arguments")
+			compileCommand.Usage()
+			os.Exit(1)
 		}
-		compileAssembly(args, outputPath)
+
+		if compileCommand.NArg() < 1 {
+			fmt.Println("Error: expected at least one .asm file")
+			compileCommand.Usage()
+			os.Exit(1)
+		}
+		compileAssembly(compileCommand.Args(), *outputPath)
+
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		printUsage()
 	}
 }
 
-// printUsage displays the command-line usage information.
+// printUsage prints the usage information for the chip-8 command.
 func printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("run <path-to-rom>             - Runs a .ch8 file")
-	fmt.Println("compile [-o <output>] <path-to-asm> ... - Compiles one or more .asm files to .ch8")
+	fmt.Println("  chip-8 run [-c <hz>] <rom>   - Run a .ch8 file")
+	fmt.Println(
+		"  chip-8 compile [-o <out>] <files...> - Assemble .asm files to .ch8",
+	)
+	fmt.Println()
+	fmt.Println("Examples:")
+	fmt.Println("  chip-8 run rom.ch8")
+	fmt.Println("  chip-8 run -c 500 rom.ch8       # Run at 500 Hz")
+	fmt.Println("  chip-8 compile -o out.ch8 a.asm b.asm")
 }
 
-// runEmulator loads and runs a CHIP-8 ROM file.
-// It creates a new emulator with 100kHz clock speed, loads the ROM into memory,
-// and starts the main emulation loop which handles display, audio, and input.
-func runEmulator(path string) {
-	// Create emulator with 100kHz clock speed (100,000 instructions per second)
-	vm := emulator.WithSDL(100000)
-	fmt.Printf("Starting emulator with: %s\n", path)
+// runEmulator loads and runs a CHIP-8 ROM file with the specified clock speed.
+func runEmulator(path string, clockSpeed uint32) int {
+	vm := emulator.WithSDL(clockSpeed)
+	fmt.Printf("Starting emulator with: %s (clock: %d Hz)\n", path, clockSpeed)
 
-	// Read the ROM file into memory
 	content, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Runtime Error: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
-	// Load ROM data into memory starting at ProgramStart (0x200)
 	if err := vm.LoadROM(content); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load ROM: %v\n", err)
+		return 1
 	}
 
-	// Run the emulator main loop (blocks until window is closed or error occurs)
-	if err := vm.Run(); err != nil {
+	emulatorRunningContext, cancelEmulatorRunningContext := context.WithCancel(
+		context.Background(),
+	)
+
+	defer cancelEmulatorRunningContext()
+
+	if err := vm.Run(emulatorRunningContext); err != nil {
 		fmt.Fprintf(os.Stderr, "Runtime Error: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
+
+	return 0
 }
 
-// compileAssembly assembles one or more .asm files into a .ch8 bytecode file.
-//
-// The assembler requires exactly one file with __START and one with __END markers.
-// Files are ordered: start files (with __START) -> regular files -> end files (with __END).
-//
-// If -o is not specified:
-//   - Single file: outputs to <input>.ch8
-//   - Multiple files: outputs to combined.ch8
+// compileAssembly assembles one or more .asm files into a CHIP-8 ROM file.
+// Files containing __START marker are placed at the beginning, files with __END
+// marker are placed at the end, and remaining files are placed in between.
+// If no output path is specified, it defaults to the first input filename with
+// .ch8 extension, or "combined.ch8" if multiple files are provided.
 func compileAssembly(filePaths []string, outputPath string) {
-	// Categorize files by their marker content
-	var startFiles, endFiles, regularFiles []string
+	orderedPaths := orderByMarkers(filePaths)
+	allContent := readAllFiles(orderedPaths)
 
+	if outputPath == "" {
+		outputPath = determineOutputPath(orderedPaths)
+	}
+
+	assembleAndWrite(allContent, outputPath)
+}
+
+// orderByMarkers reads all input files, categorizes them by __START and __END
+// markers, and returns them in the correct order for assembly.
+func orderByMarkers(filePaths []string) []string {
+	var startFiles, endFiles, regularFiles []string
 	hasStartMarker := false
 	hasEndMarker := false
 
-	// First pass: read each file and check for __START and __END markers
 	for _, path := range filePaths {
-		content, err := os.ReadFile(path)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "File Error: %v\n", err)
-			os.Exit(1)
-		}
-		hasStart := strings.Contains(string(content), "__START")
-		hasEnd := strings.Contains(string(content), "__END")
+		kind := categorizeFile(path)
 
-		if hasStart && hasEnd {
+		switch kind {
+		case "both":
 			startFiles = append(startFiles, path)
 			hasStartMarker = true
 			hasEndMarker = true
-			continue
-		}
-
-		if hasStart {
+		case "start":
 			startFiles = append(startFiles, path)
 			hasStartMarker = true
-		}
-		if hasEnd {
+		case "end":
 			endFiles = append(endFiles, path)
 			hasEndMarker = true
-		}
-		if !hasStart && !hasEnd {
+		case "regular":
 			regularFiles = append(regularFiles, path)
 		}
 	}
 
-	// Validate that required markers exist
 	if !hasStartMarker {
 		fmt.Fprintf(os.Stderr, "Error: No file contains __START marker\n")
 		os.Exit(1)
@@ -148,10 +170,32 @@ func compileAssembly(filePaths []string, outputPath string) {
 		os.Exit(1)
 	}
 
-	// Order files: start -> regular -> end
-	filePaths = append(startFiles, append(regularFiles, endFiles...)...)
+	return append(startFiles, append(regularFiles, endFiles...)...)
+}
 
-	// Concatenate all file contents
+func categorizeFile(path string) string {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "File Error: %v\n", err)
+		os.Exit(1)
+	}
+	hasStart := strings.Contains(string(content), "__START")
+	hasEnd := strings.Contains(string(content), "__END")
+
+	if hasStart && hasEnd {
+		return "both"
+	}
+	if hasStart {
+		return "start"
+	}
+	if hasEnd {
+		return "end"
+	}
+	return "regular"
+}
+
+// readAllFiles reads all files from the given paths and concatenates their contents.
+func readAllFiles(filePaths []string) strings.Builder {
 	var allContent strings.Builder
 
 	for _, path := range filePaths {
@@ -165,25 +209,32 @@ func compileAssembly(filePaths []string, outputPath string) {
 		allContent.WriteString("\n")
 	}
 
-	// Determine output path if not specified
-	if outputPath == "" {
-		outputPath = strings.TrimSuffix(filePaths[0], filepath.Ext(filePaths[0])) + ".ch8"
-		if len(filePaths) > 1 {
-			outputPath = "combined.ch8"
-		}
-	}
+	return allContent
+}
 
-	// Assemble the combined source
+// determineOutputPath determines the output path for the compiled ROM file.
+func determineOutputPath(filePaths []string) string {
+	outputPath := strings.TrimSuffix(
+		filePaths[0],
+		filepath.Ext(filePaths[0]),
+	) + ".ch8"
+	if len(filePaths) > 1 {
+		outputPath = "combined.ch8"
+	}
+	return outputPath
+}
+
+// assembleAndWrite assembles the combined source and writes the result to the output path.
+func assembleAndWrite(source strings.Builder, outputPath string) {
 	fmt.Printf("Assembling...\n")
 
-	asm := assembler.New(allContent.String())
+	asm := assembler.New(source.String())
 	binary, err := asm.Assemble()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Assembly Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Write the compiled bytecode to file
 	if err := os.WriteFile(outputPath, binary, 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "Write Error: %v\n", err)
 		os.Exit(1)

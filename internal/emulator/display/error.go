@@ -19,7 +19,11 @@ type OutOfBoundsError struct {
 }
 
 func (e *OutOfBoundsError) Error() string {
-	return fmt.Sprintf("DISPLAY BOUNDS VIOLATION: Attempted to draw at (%d, %d)", e.X, e.Y)
+	return fmt.Sprintf(
+		"DISPLAY BOUNDS VIOLATION: Attempted to draw at (%d, %d)",
+		e.X,
+		e.Y,
+	)
 }
 
 // SDLError represents a failure in the SDL2 hardware abstraction layer.
