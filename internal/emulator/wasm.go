@@ -4,6 +4,7 @@ package emulator
 
 import (
 	"sync"
+	"syscall/js"
 
 	"github.com/arpitchakladar/chip-8/internal/emulator/audio"
 	"github.com/arpitchakladar/chip-8/internal/emulator/cpu"
@@ -14,11 +15,11 @@ import (
 
 // WithSDL creates a new Emulator with SDL2-based display, keyboard, and audio.
 // The clockSpeed parameter specifies CPU instructions per second (e.g., 100000 for 100kHz).
-func WithWASM(clockSpeed uint32) *Emulator {
+func WithWASM(canvas js.Value, clockSpeed uint32) *Emulator {
 	e := &Emulator{
 		CPU:        cpu.New(),
 		Memory:     memory.New(),
-		Display:    display.WithWASM(),
+		Display:    display.WithWASM(canvas),
 		Keyboard:   keyboard.WithWASM(),
 		Audio:      audio.WithWASM(),
 		memoryLock: sync.Mutex{},

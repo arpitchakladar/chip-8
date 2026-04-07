@@ -34,12 +34,17 @@ func registerCallbacks() {
 
 func chip8New(this js.Value, args []js.Value) any {
 	clockSpeed := defaultClockSpeed
-	if len(args) > 0 {
+	if len(args) < 1 {
+		return map[string]string{"error": "a canvas element is required"}
+	}
+	if len(args) > 1 {
 		clockSpeed = uint32(args[0].Int())
 	}
 
+	canvas := args[0]
+
 	atomic.AddUint32(&VMCounter, 1)
-	vm := emulator.WithWASM(clockSpeed)
+	vm := emulator.WithWASM(canvas, clockSpeed)
 	id := fmt.Sprintf("chip-8-vm-%d", atomic.LoadUint32(&VMCounter))
 	VMs[id] = vm
 
