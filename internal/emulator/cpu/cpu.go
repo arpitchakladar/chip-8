@@ -1,3 +1,4 @@
+// Package cpu provides CPU execution and opcode handling for the CHIP-8 emulator.
 package cpu
 
 // The CPU is responsible for identifying and running

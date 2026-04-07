@@ -1,3 +1,5 @@
+// Package keyboard provides keyboard input implementations for the CHIP-8 emulator.
+// Implement the Keyboard interface to provide input handling for different platforms.
 package keyboard
 
 // Keyboard represents the keyboard input subsystem for the CHIP-8 emulator.
