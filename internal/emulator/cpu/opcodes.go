@@ -45,238 +45,543 @@ import (
 //   - *InvalidOpcodeError: if the opcode is not recognized
 //   - *StackError: if stack overflow/underflow occurs
 //   - *MemorySyncError: if memory read/write fails
-func (c *CPU) Execute(opcode uint16, mem *memory.Memory, disp display.Display, keyb keyboard.Keyboard) error {
-	// Decode opcode into component parts
-	// Format: 0x FXXX YYYN -> nibble, X, Y, N
-	x := (opcode & 0x0F00) >> 8 // Register index (Vx)
-	y := (opcode & 0x00F0) >> 4 // Register index (Vy)
-	nnn := opcode & 0x0FFF      // 12-bit address constant
-	kk := byte(opcode & 0x00FF) // 8-bit constant
-	n := byte(opcode & 0x000F)  // 4-bit constant
+type opcodeHandler func(*CPU, uint16, *memory.Memory, display.Display, keyboard.Keyboard, uint8, uint8, uint16, byte, byte) error
 
-	// Dispatch to the appropriate opcode handler
-	switch opcode & 0xF000 {
-	case 0x0000:
-		switch opcode {
-		case 0x00E0: // CLS: Clear Display
-			// Clears the display by resetting all pixels to 0
-			disp.Clear()
-		case 0x00EE: // RET: Return from subroutine
-			// Pop the return address from stack and jump to it
-			if c.StackPointer == 0 {
-				return &StackError{
-					IsOverflow:     false,
-					ProgramCounter: c.ProgramCounter - 2,
-				}
-			}
-			c.StackPointer--
-			c.ProgramCounter = c.Stack[c.StackPointer]
-		default:
-			// Unknown 0xxx opcode
-			return &InvalidOpcodeError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2}
-		}
+var opcodeHandlers = map[uint16]opcodeHandler{
+	0x0000: handleGroup0,
+	0x1000: handleGroup1,
+	0x2000: handleGroup2,
+	0x3000: handleGroup3,
+	0x4000: handleGroup4,
+	0x5000: handleGroup5,
+	0x6000: handleGroup6,
+	0x7000: handleGroup7,
+	0x8000: handleGroup8,
+	0x9000: handleGroup9,
+	0xA000: handleGroupA,
+	0xB000: handleGroupB,
+	0xC000: handleGroupC,
+	0xD000: handleGroupD,
+	0xE000: handleGroupE,
+	0xF000: handleGroupF,
+}
 
-	case 0x1000: // 1NNN: JP addr
-		// Jump to the 12-bit address nnn
-		c.ProgramCounter = nnn
+func (c *CPU) Execute(
+	opcode uint16,
+	mem *memory.Memory,
+	disp display.Display,
+	keyb keyboard.Keyboard,
+) error {
+	x := uint8((opcode & 0x0F00) >> 8)
+	y := uint8((opcode & 0x00F0) >> 4)
+	nnn := opcode & 0x0FFF
+	kk := byte(opcode & 0x00FF)
+	n := byte(opcode & 0x000F)
 
-	case 0x2000: // 2NNN: CALL addr
-		// Push current PC onto stack and jump to address
-		if c.StackPointer >= 16 {
-			return &StackError{IsOverflow: true, ProgramCounter: c.ProgramCounter - 2}
-		}
-		c.Stack[c.StackPointer] = c.ProgramCounter
-		c.StackPointer++
-		c.ProgramCounter = nnn
-
-	case 0x3000: // 3XKK: SE Vx, byte
-		// Skip next instruction if Vx == kk
-		if c.Registers[x] == kk {
-			c.ProgramCounter += 2
-		}
-
-	case 0x4000: // 4XKK: SNE Vx, byte
-		// Skip next instruction if Vx != kk
-		if c.Registers[x] != kk {
-			c.ProgramCounter += 2
-		}
-
-	case 0x5000: // 5XY0: SE Vx, Vy
-		// Skip next instruction if Vx == Vy
-		if c.Registers[x] == c.Registers[y] {
-			c.ProgramCounter += 2
-		}
-
-	case 0x6000: // 6XKK: LD Vx, byte
-		// Load constant kk into register Vx
-		c.Registers[x] = kk
-
-	case 0x7000: // 7XKK: ADD Vx, byte
-		// Add constant kk to register Vx (no carry flag)
-		c.Registers[x] += kk
-
-	case 0x8000: // ALU Operations (8xyN)
-		switch n {
-		case 0x0: // LD Vx, Vy
-			c.Registers[x] = c.Registers[y]
-		case 0x1: // OR Vx, Vy
-			c.Registers[x] |= c.Registers[y]
-		case 0x2: // AND Vx, Vy
-			c.Registers[x] &= c.Registers[y]
-		case 0x3: // XOR Vx, Vy
-			c.Registers[x] ^= c.Registers[y]
-		case 0x4: // ADD Vx, Vy (with carry)
-			sum := uint16(c.Registers[x]) + uint16(c.Registers[y])
-			c.Registers[0xF] = 0
-			if sum > 255 {
-				c.Registers[0xF] = 1 // Set carry flag
-			}
-			c.Registers[x] = byte(sum & 0xFF)
-		case 0x5: // SUB Vx, Vy
-			c.Registers[0xF] = 1
-			if c.Registers[x] < c.Registers[y] {
-				c.Registers[0xF] = 0 // Clear borrow flag
-			}
-			c.Registers[x] -= c.Registers[y]
-		case 0x6: // SHR Vx (Shift Right)
-			// VF = LSB before shift
-			c.Registers[0xF] = c.Registers[x] & 0x1
-			c.Registers[x] >>= 1
-		case 0x7: // SUBN Vx, Vy
-			c.Registers[0xF] = 1
-			if c.Registers[y] < c.Registers[x] {
-				c.Registers[0xF] = 0 // Clear borrow flag
-			}
-			c.Registers[x] = c.Registers[y] - c.Registers[x]
-		case 0xE: // SHL Vx (Shift Left)
-			// VF = MSB before shift
-			c.Registers[0xF] = (c.Registers[x] & 0x80) >> 7
-			c.Registers[x] <<= 1
-		}
-
-	case 0x9000: // 9XY0: SNE Vx, Vy
-		// Skip next instruction if Vx != Vy
-		if c.Registers[x] != c.Registers[y] {
-			c.ProgramCounter += 2
-		}
-
-	case 0xA000: // ANNN: LD I, addr
-		// Load 12-bit address into index register I
-		c.IndexRegister = nnn
-
-	case 0xB000: // BNNN: JP V0, addr
-		// Jump to address + V0 (for legacy compatibility)
-		c.ProgramCounter = nnn + uint16(c.Registers[0])
-
-	case 0xC000: // CXKK: RND Vx, byte
-		// Generate random number and AND with kk
-		c.Registers[x] = byte(rand.Intn(256)) & kk
-
-	case 0xD000: // DXYN: DRW Vx, Vy, nibble
-		// Draw N-byte sprite at (Vx, Vy) using XOR mode
-		// Sprite data is read from memory starting at address I
-		c.Registers[0xF] = 0 // Reset collision flag
-		for row := range uint16(n) {
-			spriteByte, err := mem.Read(c.IndexRegister + row)
-			if err != nil {
-				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
-			}
-			for col := range uint16(8) {
-				// Check if bit is set in sprite
-				if (spriteByte & (0x80 >> col)) != 0 {
-					// Wrap coordinates (standard Chip-8 behavior)
-					posX := (c.Registers[x] + uint8(col)) % 64
-					posY := (c.Registers[y] + uint8(row)) % 32
-					collision, _ := disp.SetPixel(posX, posY)
-					if collision {
-						c.Registers[0xF] = 1 // Set collision flag
-					}
-				}
-			}
-		}
-
-	case 0xE000: // Keyboard Operations
-		switch kk {
-		case 0x9E: // SKP Vx
-			// Skip next instruction if key Vx is pressed
-			if keyb.IsKeyPressed(c.Registers[x]) {
-				c.ProgramCounter += 2
-			}
-		case 0xA1: // SKNP Vx
-			// Skip next instruction if key Vx is NOT pressed
-			if !keyb.IsKeyPressed(c.Registers[x]) {
-				c.ProgramCounter += 2
-			}
-		}
-
-	case 0xF000: // Miscellaneous Operations
-		switch kk {
-		case 0x07: // LD Vx, DT
-			// Load delay timer value into Vx
-			c.Registers[x] = c.DelayTimer
-
-		case 0x0A: // LD Vx, K
-			// Wait for key press (blocking opcode)
-			// If no key is pressed, decrement PC to re-execute this instruction
-			if key, pressed := keyb.AnyKeyPressed(); pressed {
-				c.Registers[x] = key
-			} else {
-				c.ProgramCounter -= 2
-			}
-
-		case 0x15: // LD DT, Vx
-			// Set delay timer from Vx
-			c.DelayTimer = c.Registers[x]
-
-		case 0x18: // LD ST, Vx
-			// Set sound timer from Vx (triggers beep when > 0)
-			c.SoundTimer = c.Registers[x]
-
-		case 0x1E: // ADD I, Vx
-			// Add Vx to index register I
-			c.IndexRegister += uint16(c.Registers[x])
-
-		case 0x29: // LD F, Vx
-			// Set I to the font sprite address for digit Vx
-			// Font characters 0-F are 5 bytes each, stored at 0x000-0x050
-			c.IndexRegister = uint16(c.Registers[x]) * 5
-
-		case 0x33: // BCD: Vx
-			// Store BCD representation of Vx at I, I+1, I+2
-			val := c.Registers[x]
-			if err := mem.Write(c.IndexRegister, val/100); err != nil {
-				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
-			}
-			if err := mem.Write(c.IndexRegister+1, (val/10)%10); err != nil {
-				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
-			}
-			if err := mem.Write(c.IndexRegister+2, val%10); err != nil {
-				return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
-			}
-
-		case 0x55: // LD [I], Vx
-			// Store registers V0 through Vx in memory starting at I
-			for i := range x + 1 {
-				if err := mem.Write(c.IndexRegister+uint16(i), c.Registers[i]); err != nil {
-					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
-				}
-			}
-
-		case 0x65: // LD Vx, [I]
-			// Load registers V0 through Vx from memory starting at I
-			for i := range x + 1 {
-				val, err := mem.Read(c.IndexRegister + uint16(i))
-				if err != nil {
-					return &MemorySyncError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2, Child: err}
-				}
-				c.Registers[i] = val
-			}
-		}
-
-	default:
-		// Unrecognized opcode
-		return &InvalidOpcodeError{Opcode: opcode, ProgramCounter: c.ProgramCounter - 2}
+	group := opcode & 0xF000
+	handler, ok := opcodeHandlers[group]
+	if !ok {
+		return c.handleInvalidOpcode(opcode)
 	}
+	return handler(c, opcode, mem, disp, keyb, x, y, nnn, kk, n)
+}
 
+func handleGroup0(
+	c *CPU,
+	opcode uint16,
+	_ *memory.Memory,
+	disp display.Display,
+	_ keyboard.Keyboard,
+	_, _ uint8,
+	_ uint16,
+	_ byte,
+	_ byte,
+) error {
+	return c.handle0xxx(opcode, disp)
+}
+
+func handleGroup1(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	_, _ uint8,
+	nnn uint16,
+	_ byte,
+	_ byte,
+) error {
+	c.ProgramCounter = nnn
+	return nil
+}
+
+func handleGroup2(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	_, _ uint8,
+	nnn uint16,
+	_ byte,
+	_ byte,
+) error {
+	return c.handle2xxx(nnn)
+}
+
+func handleGroup3(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	x uint8,
+	_ uint8,
+	_ uint16,
+	kk byte,
+	_ byte,
+) error {
+	if c.Registers[x] == kk {
+		c.ProgramCounter += 2
+	}
+	return nil
+}
+
+func handleGroup4(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	x uint8,
+	_ uint8,
+	_ uint16,
+	kk byte,
+	_ byte,
+) error {
+	if c.Registers[x] != kk {
+		c.ProgramCounter += 2
+	}
+	return nil
+}
+
+func handleGroup5(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	x, y uint8,
+	_ uint16,
+	_ byte,
+	_ byte,
+) error {
+	if c.Registers[x] == c.Registers[y] {
+		c.ProgramCounter += 2
+	}
+	return nil
+}
+
+func handleGroup6(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	x uint8,
+	_ uint8,
+	_ uint16,
+	kk byte,
+	_ byte,
+) error {
+	c.Registers[x] = kk
+	return nil
+}
+
+func handleGroup7(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	x uint8,
+	_ uint8,
+	_ uint16,
+	kk byte,
+	_ byte,
+) error {
+	c.Registers[x] += kk
+	return nil
+}
+
+func handleGroup8(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	x, y uint8,
+	_ uint16,
+	_ byte,
+	n byte,
+) error {
+	return c.handle8xxx(x, y, n)
+}
+
+func handleGroup9(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	x, y uint8,
+	_ uint16,
+	_ byte,
+	_ byte,
+) error {
+	if c.Registers[x] != c.Registers[y] {
+		c.ProgramCounter += 2
+	}
+	return nil
+}
+
+func handleGroupA(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	_, _ uint8,
+	nnn uint16,
+	_ byte,
+	_ byte,
+) error {
+	c.IndexRegister = nnn
+	return nil
+}
+
+func handleGroupB(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	_, _ uint8,
+	nnn uint16,
+	_ byte,
+	_ byte,
+) error {
+	c.ProgramCounter = nnn + uint16(c.Registers[0])
+	return nil
+}
+
+func handleGroupC(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	_ keyboard.Keyboard,
+	x uint8,
+	_ uint8,
+	_ uint16,
+	kk byte,
+	_ byte,
+) error {
+	c.Registers[x] = byte(rand.Intn(256)) & kk
+	return nil
+}
+
+func handleGroupD(
+	c *CPU,
+	_ uint16,
+	mem *memory.Memory,
+	disp display.Display,
+	_ keyboard.Keyboard,
+	x, y uint8,
+	_ uint16,
+	_ byte,
+	n byte,
+) error {
+	return c.handleDxxx(x, y, n, mem, disp)
+}
+
+func handleGroupE(
+	c *CPU,
+	_ uint16,
+	_ *memory.Memory,
+	_ display.Display,
+	keyb keyboard.Keyboard,
+	x uint8,
+	_ uint8,
+	_ uint16,
+	kk byte,
+	_ byte,
+) error {
+	return c.handleExxx(x, kk, keyb)
+}
+
+func handleGroupF(
+	c *CPU,
+	_ uint16,
+	mem *memory.Memory,
+	_ display.Display,
+	keyb keyboard.Keyboard,
+	x uint8,
+	_ uint8,
+	_ uint16,
+	kk byte,
+	_ byte,
+) error {
+	return c.handleFxxx(x, kk, mem, keyb)
+}
+
+func (c *CPU) handleInvalidOpcode(opcode uint16) error {
+	return &InvalidOpcodeError{
+		Opcode:         opcode,
+		ProgramCounter: c.ProgramCounter - 2,
+	}
+}
+
+func (c *CPU) handle0xxx(opcode uint16, disp display.Display) error {
+	switch opcode {
+	case 0x00E0:
+		disp.Clear()
+	case 0x00EE:
+		if c.StackPointer == 0 {
+			return &StackError{
+				IsOverflow:     false,
+				ProgramCounter: c.ProgramCounter - 2,
+			}
+		}
+		c.StackPointer--
+		c.ProgramCounter = c.Stack[c.StackPointer]
+	default:
+		return &InvalidOpcodeError{
+			Opcode:         opcode,
+			ProgramCounter: c.ProgramCounter - 2,
+		}
+	}
+	return nil
+}
+
+func (c *CPU) handle2xxx(nnn uint16) error {
+	if c.StackPointer >= 16 {
+		return &StackError{
+			IsOverflow:     true,
+			ProgramCounter: c.ProgramCounter - 2,
+		}
+	}
+	c.Stack[c.StackPointer] = c.ProgramCounter
+	c.StackPointer++
+	c.ProgramCounter = nnn
+	return nil
+}
+
+func (c *CPU) handle8xxx(x, y uint8, n byte) error {
+	switch n {
+	case 0x0:
+		c.Registers[x] = c.Registers[y]
+	case 0x1:
+		c.Registers[x] |= c.Registers[y]
+	case 0x2:
+		c.Registers[x] &= c.Registers[y]
+	case 0x3:
+		c.Registers[x] ^= c.Registers[y]
+	case 0x4:
+		return c.handleAddCarry(x, y)
+	case 0x5:
+		return c.handleSub(x, y, true)
+	case 0x6:
+		return c.handleShiftRight(x)
+	case 0x7:
+		return c.handleSubReverse(x, y)
+	case 0xE:
+		return c.handleShiftLeft(x)
+	}
+	return nil
+}
+
+func (c *CPU) handleAddCarry(x, y uint8) error {
+	sum := uint16(c.Registers[x]) + uint16(c.Registers[y])
+	c.Registers[0xF] = 0
+	if sum > 255 {
+		c.Registers[0xF] = 1
+	}
+	c.Registers[x] = byte(sum & 0xFF)
+	return nil
+}
+
+func (c *CPU) handleSub(x, y uint8, normal bool) error {
+	c.Registers[0xF] = 1
+	if c.Registers[x] < c.Registers[y] {
+		c.Registers[0xF] = 0
+	}
+	if normal {
+		c.Registers[x] -= c.Registers[y]
+	} else {
+		c.Registers[x] = c.Registers[y] - c.Registers[x]
+	}
+	return nil
+}
+
+func (c *CPU) handleSubReverse(x, y uint8) error {
+	c.Registers[0xF] = 1
+	if c.Registers[y] < c.Registers[x] {
+		c.Registers[0xF] = 0
+	}
+	c.Registers[x] = c.Registers[y] - c.Registers[x]
+	return nil
+}
+
+func (c *CPU) handleShiftRight(x uint8) error {
+	c.Registers[0xF] = c.Registers[x] & 0x1
+	c.Registers[x] >>= 1
+	return nil
+}
+
+func (c *CPU) handleShiftLeft(x uint8) error {
+	c.Registers[0xF] = (c.Registers[x] & 0x80) >> 7
+	c.Registers[x] <<= 1
+	return nil
+}
+
+func (c *CPU) handleDxxx(
+	x, y uint8,
+	n byte,
+	mem *memory.Memory,
+	disp display.Display,
+) error {
+	c.Registers[0xF] = 0
+	for row := range uint16(n) {
+		spriteByte, err := mem.Read(c.IndexRegister + row)
+		if err != nil {
+			return &MemorySyncError{
+				Opcode: 0xD000 | (uint16(x) << 8) | (uint16(y) << 4) | uint16(
+					n,
+				),
+				ProgramCounter: c.ProgramCounter - 2,
+				Child:          err,
+			}
+		}
+		for col := range uint16(8) {
+			if (spriteByte & (0x80 >> col)) != 0 {
+				posX := (c.Registers[x] + uint8(col)) % 64
+				posY := (c.Registers[y] + uint8(row)) % 32
+				collision, _ := disp.SetPixel(posX, posY)
+				if collision {
+					c.Registers[0xF] = 1
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (c *CPU) handleExxx(x uint8, kk byte, keyb keyboard.Keyboard) error {
+	switch kk {
+	case 0x9E:
+		if keyb.IsKeyPressed(c.Registers[x]) {
+			c.ProgramCounter += 2
+		}
+	case 0xA1:
+		if !keyb.IsKeyPressed(c.Registers[x]) {
+			c.ProgramCounter += 2
+		}
+	}
+	return nil
+}
+
+func (c *CPU) handleFxxx(
+	x uint8,
+	kk byte,
+	mem *memory.Memory,
+	keyb keyboard.Keyboard,
+) error {
+	switch kk {
+	case 0x07:
+		c.Registers[x] = c.DelayTimer
+	case 0x0A:
+		return c.handleKeyWait(x, keyb)
+	case 0x15:
+		c.DelayTimer = c.Registers[x]
+	case 0x18:
+		c.SoundTimer = c.Registers[x]
+	case 0x1E:
+		c.IndexRegister += uint16(c.Registers[x])
+	case 0x29:
+		c.IndexRegister = uint16(c.Registers[x]) * 5
+	case 0x33:
+		return c.handleBCD(x, mem)
+	case 0x55:
+		return c.handleStoreRegs(x, mem)
+	case 0x65:
+		return c.handleLoadRegs(x, mem)
+	}
+	return nil
+}
+
+func (c *CPU) handleKeyWait(x uint8, keyb keyboard.Keyboard) error {
+	if key, pressed := keyb.AnyKeyPressed(); pressed {
+		c.Registers[x] = key
+	} else {
+		c.ProgramCounter -= 2
+	}
+	return nil
+}
+
+func (c *CPU) handleBCD(x uint8, mem *memory.Memory) error {
+	val := c.Registers[x]
+	opcode := 0x3000 | (uint16(x) << 8)
+	if err := mem.Write(c.IndexRegister, val/100); err != nil {
+		return &MemorySyncError{
+			Opcode:         opcode,
+			ProgramCounter: c.ProgramCounter - 2,
+			Child:          err,
+		}
+	}
+	if err := mem.Write(c.IndexRegister+1, (val/10)%10); err != nil {
+		return &MemorySyncError{
+			Opcode:         opcode,
+			ProgramCounter: c.ProgramCounter - 2,
+			Child:          err,
+		}
+	}
+	if err := mem.Write(c.IndexRegister+2, val%10); err != nil {
+		return &MemorySyncError{
+			Opcode:         opcode,
+			ProgramCounter: c.ProgramCounter - 2,
+			Child:          err,
+		}
+	}
+	return nil
+}
+
+func (c *CPU) handleStoreRegs(x uint8, mem *memory.Memory) error {
+	opcode := 0xF000 | (uint16(x) << 8) | 0x55
+	for i := uint8(0); i <= x; i++ {
+		if err := mem.Write(c.IndexRegister+uint16(i), c.Registers[i]); err != nil {
+			return &MemorySyncError{
+				Opcode:         opcode,
+				ProgramCounter: c.ProgramCounter - 2,
+				Child:          err,
+			}
+		}
+	}
+	return nil
+}
+
+func (c *CPU) handleLoadRegs(x uint8, mem *memory.Memory) error {
+	opcode := 0xF000 | (uint16(x) << 8) | 0x65
+	for i := uint8(0); i <= x; i++ {
+		val, err := mem.Read(c.IndexRegister + uint16(i))
+		if err != nil {
+			return &MemorySyncError{
+				Opcode:         opcode,
+				ProgramCounter: c.ProgramCounter - 2,
+				Child:          err,
+			}
+		}
+		c.Registers[i] = val
+	}
 	return nil
 }

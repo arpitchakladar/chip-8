@@ -12,8 +12,6 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator/display"
 	"github.com/arpitchakladar/chip-8/internal/emulator/keyboard"
 	"github.com/arpitchakladar/chip-8/internal/emulator/memory"
-
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 // ProgramStart is the memory address where CHIP-8 programs begin (0x200).
@@ -22,31 +20,16 @@ const ProgramStart = 0x200
 // Emulator represents a complete CHIP-8 virtual machine.
 // It coordinates the CPU, memory, display, keyboard, and audio subsystems.
 type Emulator struct {
-	CPU        *cpu.CPU
-	Memory     *memory.Memory
-	Display    display.Display
-	Keyboard   keyboard.Keyboard
-	Audio      audio.Audio
-	ClockSpeed uint32
-	MemoryLock sync.Mutex
-}
-
-// WithSDL creates a new Emulator with SDL2-based display, keyboard, and audio.
-// The clockSpeed parameter specifies CPU instructions per second (e.g., 100000 for 100kHz).
-func WithSDL(clockSpeed uint32) *Emulator {
-	e := &Emulator{
-		CPU:        cpu.New(),
-		Memory:     memory.New(),
-		Display:    display.New(),
-		Keyboard:   keyboard.New(),
-		Audio:      audio.New(),
-		MemoryLock: sync.Mutex{},
-		ClockSpeed: clockSpeed,
-	}
-
-	e.Memory.LoadFontSet()
-	e.CPU.ProgramCounter = ProgramStart
-	return e
+	CPU          *cpu.CPU
+	Memory       *memory.Memory
+	Display      display.Display
+	Keyboard     keyboard.Keyboard
+	Audio        audio.Audio
+	ClockSpeed   uint32
+	memoryLock   sync.Mutex
+	running      bool
+	runLock      sync.Mutex
+	cancelRunner context.CancelFunc
 }
 
 // LoadROM loads a CHIP-8 ROM into memory starting at ProgramStart (0x200).
@@ -62,8 +45,19 @@ func (e *Emulator) LoadROM(romData []byte) error {
 // Run starts the emulator main loop.
 // It initializes the display and audio subsystems, then runs the CPU and display loops.
 // The function blocks until the emulator is closed or an error occurs.
-func (e *Emulator) Run() error {
+func (e *Emulator) Run(parentContext context.Context) error {
+	e.runLock.Lock()
+	if e.running {
+		e.runLock.Unlock()
+		return fmt.Errorf("emulator is already running")
+	}
+	e.running = true
+	e.runLock.Unlock()
+
 	if err := e.Display.Init(); err != nil {
+		e.runLock.Lock()
+		e.running = false
+		e.runLock.Unlock()
 		return fmt.Errorf("failed to init display: %w", err)
 	}
 
@@ -75,40 +69,49 @@ func (e *Emulator) Run() error {
 		if err := e.Display.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error closing display: %v\n", err)
 		}
-		e.Audio.Close()
+		if err := e.Audio.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error closing audio device: %v\n", err)
+		}
 	}()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	runEmulatorContext, cancelRunEmulatorContext := context.WithCancel(
+		parentContext,
+	)
+	e.cancelRunner = cancelRunEmulatorContext
 	errChan := make(chan error, 1)
-	defer cancel()
+	defer cancelRunEmulatorContext()
 
-	go e.runCPU(ctx, errChan)
-	e.runDisplay(ctx, errChan)
+	go e.runCPU(runEmulatorContext, errChan)
+	// Cannot be goroutine as SDL2 wants* to be on the main thread
+	e.runDisplay(runEmulatorContext, errChan)
 
-	return <-errChan
+	err := <-errChan
+	e.runLock.Lock()
+	e.running = false
+	e.runLock.Unlock()
+	return err
 }
 
 // runDisplay handles the display update loop at 60Hz.
-// It polls for SDL events, updates timers, and renders the display.
-func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
+// It polls for keyboard events, updates timers, and renders the display.
+func (e *Emulator) runDisplay(
+	runEmulatorContext context.Context,
+	errChan chan<- error,
+) {
 	uiClock := time.NewTicker(time.Second / 60)
 	defer uiClock.Stop()
 
-	sdlKeyboard, isSDL := e.Keyboard.(*keyboard.SDLKeyboard)
-
 	for {
 		select {
-		case <-ctx.Done():
+		case <-runEmulatorContext.Done():
 			return
 		case <-uiClock.C:
-			if isSDL {
-				e.handleSDLEvents(sdlKeyboard, errChan)
-			}
+			e.Keyboard.PollEvents()
 
-			e.MemoryLock.Lock()
+			e.memoryLock.Lock()
 			timerErr := e.updateTimers()
 			displayErr := e.Display.Present()
-			e.MemoryLock.Unlock()
+			e.memoryLock.Unlock()
 
 			if timerErr != nil {
 				errChan <- timerErr
@@ -122,33 +125,22 @@ func (e *Emulator) runDisplay(ctx context.Context, errChan chan<- error) {
 	}
 }
 
-// handleSDLEvents processes SDL keyboard and quit events.
-// This is SDL-specific and will be called when using SDLKeyboard.
-func (e *Emulator) handleSDLEvents(sdlKeyboard *keyboard.SDLKeyboard, errChan chan<- error) {
-	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-		switch t := event.(type) {
-		case *sdl.QuitEvent:
-			errChan <- nil
-			return
-		case *sdl.KeyboardEvent:
-			sdlKeyboard.HandleKeyboard(t)
-		}
-	}
-}
-
 // runCPU runs the CPU execution loop at the configured ClockSpeed.
-func (e *Emulator) runCPU(ctx context.Context, errChan chan<- error) {
+func (e *Emulator) runCPU(
+	runEmulatorContext context.Context,
+	errChan chan<- error,
+) {
 	cpuClock := time.NewTicker(time.Second / time.Duration(e.ClockSpeed))
 	defer cpuClock.Stop()
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-runEmulatorContext.Done():
 			return
 		case <-cpuClock.C:
-			e.MemoryLock.Lock()
+			e.memoryLock.Lock()
 			err := e.tick()
-			e.MemoryLock.Unlock()
+			e.memoryLock.Unlock()
 			if err != nil {
 				errChan <- err
 				return
@@ -177,13 +169,14 @@ func (e *Emulator) tick() error {
 // updateTimers decrements the delay and sound timers at 60Hz.
 func (e *Emulator) updateTimers() error {
 	if e.CPU.SoundTimer > 0 {
-		if err := e.Audio.GenerateBeep(); err != nil {
+		if err := e.Audio.Play(); err != nil {
 			return err
 		}
-		e.Audio.Play()
 		e.CPU.SoundTimer--
 	} else {
-		e.Audio.Pause()
+		if err := e.Audio.Pause(); err != nil {
+			return err
+		}
 	}
 
 	if e.CPU.DelayTimer > 0 {
@@ -191,4 +184,12 @@ func (e *Emulator) updateTimers() error {
 	}
 
 	return nil
+}
+
+// Stops the runner (CPU and Display goroutine) threads.
+func (e *Emulator) Destroy() {
+	e.runLock.Lock()
+	defer e.runLock.Unlock()
+	e.running = false
+	e.cancelRunner()
 }

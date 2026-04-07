@@ -9,6 +9,7 @@ type Display interface {
 	Init() error
 
 	// Clear clears the entire display buffer to all pixels off.
+	// clears the display buffer without affecting the screen.
 	Clear()
 
 	// SetPixel toggles a pixel at the specified coordinates using XOR mode.
@@ -21,9 +22,6 @@ type Display interface {
 	// Present renders the current display buffer to the screen.
 	// This should be called at 60Hz.
 	Present() error
-
-	// Reset clears the display buffer without affecting the screen.
-	Reset()
 
 	// Close releases display resources.
 	// Should be safe to call multiple times.

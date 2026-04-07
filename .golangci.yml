@@ -1,0 +1,78 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    # Correctness
+    - errcheck        # unchecked errors
+    - govet           # suspicious constructs
+    - staticcheck     # staticcheck suite (replaces megacheck)
+    - unused          # unused code
+    - ineffassign     # assignments with no effect
+    - makezero        # slice incorrectly initialized then appended to
+    - nilnil          # returning nil error and nil value together
+    - nilerr          # returning nil instead of the error
+    # - unparam         # always-same function parameters
+
+    # Bugs
+    - bodyclose       # HTTP response bodies not closed
+    - contextcheck    # non-inherited context in function calls
+    - durationcheck   # multiplying two durations together
+    - gocritic        # broad collection of checks
+    - noctx           # HTTP requests without context
+    - rowserrcheck    # sql.Rows.Err() not checked
+    - sqlclosecheck   # sql.Rows/Stmt not closed
+    - wastedassign    # wasted assignments
+
+    # Style / maintainability
+    - goconst         # repeated strings that could be constants
+    - godot           # comments should end with a period
+    - misspell        # common spelling mistakes in comments/strings
+    - whitespace      # unnecessary blank lines
+    - unconvert       # unnecessary type conversions
+    - predeclared     # shadowing predeclared identifiers
+    - thelper         # test helpers missing t.Helper()
+    - tparallel       # missing t.Parallel() in tests
+
+    # Security
+    # - gosec           # common security issues
+
+    # Complexity
+    - cyclop          # cyclomatic complexity
+    - gocognit        # cognitive complexity
+    - funlen          # function length
+
+issues:
+  exclude-dirs:
+    - wasm
+
+  exclude-rules:
+    # WASM build files often need unsafe or platform-specific patterns
+    - path: ".*_wasm\\.go"
+      linters:
+        - gosec
+    # Test files are allowed longer functions and magic numbers
+    - path: "_test\\.go"
+      linters:
+        - funlen
+        - cyclop
+        - gocognit
+        - goconst
+
+linters-settings:
+  cyclop:
+    max-complexity: 10
+  gocognit:
+    min-complexity: 20
+  funlen:
+    lines: 80
+    statements: 50
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+      - style
+  gosec:
+    excludes:
+      - G103  # unsafe.Pointer — legitimate in WASM interop
+      - G104  # unhandled errors in defer (overlaps errcheck)

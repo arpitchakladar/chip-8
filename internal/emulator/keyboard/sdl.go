@@ -1,3 +1,5 @@
+//go:build !wasm || !js
+
 package keyboard
 
 // SDLKeyboard tracks the state of the 16 CHIP-8 keys.
@@ -15,7 +17,7 @@ type SDLKeyboard struct {
 }
 
 // New creates a new SDLKeyboard instance with all keys initialized to released.
-func New() *SDLKeyboard {
+func WithSDL() *SDLKeyboard {
 	return new(SDLKeyboard)
 }
 
@@ -57,12 +59,22 @@ func (kb *SDLKeyboard) SetKey(key byte, pressed bool) {
 	}
 }
 
+// PollEvents processes SDL keyboard events.
+// Call this at 60Hz to update the keyboard state.
+func (kb *SDLKeyboard) PollEvents() {
+	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		if kbdEvent, ok := event.(*sdl.KeyboardEvent); ok {
+			kb.HandleKeyboard(kbdEvent)
+		}
+	}
+}
+
 // HandleKeyboard updates the keyboard state based on an SDL keyboard event.
 // It maps PC keyboard keys to CHIP-8 hex keys (0-F) and tracks press/release state.
 //
 // The key mapping follows the standard CHIP-8 layout:
 //
-//	 PC Key  | CHIP-8
+//	    PC Key  | CHIP-8
 //		--------|--------
 //		1 2 3 4 | 1 2 3 C
 //		q w e r | 4 5 6 D

@@ -11,6 +11,7 @@ __START:
 	LD ST, V0        ; First, put a value in a register (V0 is already loaded)
 	LD V1, 15        ; 15 Frames of beep
 	LD ST, V1        ; This triggers the "Beep" in your emulator
+	LD DT, V1
 
 	; 3. Visual feedback
 	; Draw a small block so we know the CPU is alive
@@ -22,13 +23,13 @@ __START:
 BEEP_WAIT:
 	; 4. Check if sound timer is still running
 	; We stay in this loop until the timer hits 0
-	LD V4, ST
+	LD V4, DT
 	SE V4, 0x00      ; Skip if ST == 0
 	JP BEEP_WAIT     ; Otherwise, keep waiting
 
 	; 5. Clear screen and repeat
 	CLS
-	JP START
+	JP __START
 
 ; --- Sprite Data ---
 BLOCK:

@@ -46,181 +46,306 @@ func New(labels map[string]uint16) *Parser {
 // Returns:
 //   - []byte: the binary opcode (2 bytes for most instructions, 1 for DB)
 //   - error: if the mnemonic is unknown, arguments are invalid, or values are out of range
-func (p *Parser) Parse(mnemonic string, args []string, line uint16) ([]byte, error) {
+func (p *Parser) Parse(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
 	upperMnemonic := strings.ToUpper(mnemonic)
 
-	var opcode uint16
-
-	switch upperMnemonic {
-	case "CLS":
-		opcode = p.Encoder.Raw(encoder.MaskCLS)
-	case "RET":
-		opcode = p.Encoder.Raw(encoder.MaskRET)
-
-	case "JP":
-		if len(args) == 2 && strings.ToUpper(args[0]) == "V0" {
-			addr, err := p.resolveValue(args[1], upperMnemonic, line, 12)
-			if err != nil {
-				return nil, p.parseErr(mnemonic, args, line, err)
-			}
-			opcode = p.Encoder.Addr(encoder.MaskJPV0, addr)
-		} else if len(args) == 1 {
-			addr, err := p.resolveValue(args[0], upperMnemonic, line, 12)
-			if err != nil {
-				return nil, p.parseErr(mnemonic, args, line, err)
-			}
-			opcode = p.Encoder.Addr(encoder.MaskJP, addr)
-		} else {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 1, len(args)})
-		}
-
-	case "CALL":
-		if len(args) != 1 {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 1, len(args)})
-		}
-		addr, err := p.resolveValue(args[0], upperMnemonic, line, 12)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		opcode = p.Encoder.Addr(encoder.MaskCALL, addr)
-
-	case "SE":
-		res, err := p.handleSkip(encoder.MaskSE, encoder.MaskSER, upperMnemonic, args, line)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		return res, nil
-
-	case "SNE":
-		res, err := p.handleSkip(encoder.MaskSNE, encoder.MaskSNER, upperMnemonic, args, line)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		return res, nil
-
-	case "ADD":
-		if len(args) != 2 {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 2, len(args)})
-		}
-		if args[0] == "I" {
-			vx, err := p.parseReg(args[1], upperMnemonic, line)
-			if err != nil {
-				return nil, p.parseErr(mnemonic, args, line, err)
-			}
-			opcode = p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E)
-		} else if p.isRegister(args[1]) {
-			return p.handleRegReg(encoder.MaskALU, upperMnemonic, args, 0x4, line)
-		} else {
-			vx, err := p.parseReg(args[0], upperMnemonic, line)
-			if err != nil {
-				return nil, p.parseErr(mnemonic, args, line, err)
-			}
-			val, err := p.resolveValue(args[1], upperMnemonic, line, 8)
-			if err != nil {
-				return nil, p.parseErr(mnemonic, args, line, err)
-			}
-			opcode = p.Encoder.RegImm(encoder.MaskADD, vx, uint8(val))
-		}
-
-	case "OR":
-		return p.handleRegReg(encoder.MaskALU, upperMnemonic, args, 0x1, line)
-	case "AND":
-		return p.handleRegReg(encoder.MaskALU, upperMnemonic, args, 0x2, line)
-	case "XOR":
-		return p.handleRegReg(encoder.MaskALU, upperMnemonic, args, 0x3, line)
-	case "SUB":
-		return p.handleRegReg(encoder.MaskALU, upperMnemonic, args, 0x5, line)
-	case "SHR":
-		return p.handleRegReg(encoder.MaskALU, upperMnemonic, args, 0x6, line)
-	case "SUBN":
-		return p.handleRegReg(encoder.MaskALU, upperMnemonic, args, 0x7, line)
-	case "SHL":
-		return p.handleRegReg(encoder.MaskALU, upperMnemonic, args, 0xE, line)
-
-	case "LD":
-		res, err := p.handleLoad(args, line)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		return res, nil
-
-	case "RND":
-		if len(args) != 2 {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 2, len(args)})
-		}
-		vx, err := p.parseReg(args[0], upperMnemonic, line)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		val, err := p.resolveValue(args[1], upperMnemonic, line, 8)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		opcode = p.Encoder.RegImm(encoder.MaskRND, vx, uint8(val))
-
-	case "DRW":
-		if len(args) != 3 {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 3, len(args)})
-		}
-		vx, err := p.parseReg(args[0], upperMnemonic, line)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		vy, err := p.parseReg(args[1], upperMnemonic, line)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		n, err := p.resolveValue(args[2], upperMnemonic, line, 4)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		opcode = p.Encoder.RegNibble(encoder.MaskDRW, vx, vy, uint8(n))
-
-	case "SKP":
-		if len(args) != 1 {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 1, len(args)})
-		}
-		vx, err := p.parseReg(args[0], upperMnemonic, line)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		opcode = p.Encoder.RegOnly(encoder.MaskKEY, vx, 0x9E)
-
-	case "SKNP":
-		if len(args) != 1 {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 1, len(args)})
-		}
-		vx, err := p.parseReg(args[0], upperMnemonic, line)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		opcode = p.Encoder.RegOnly(encoder.MaskKEY, vx, 0xA1)
-
-	case "DW":
-		if len(args) != 1 {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 1, len(args)})
-		}
-		val, err := p.resolveValue(args[0], upperMnemonic, line, 16)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		return p.toBinary(val), nil
-
-	case "DB":
-		if len(args) != 1 {
-			return nil, p.parseErr(mnemonic, args, line, &WrongArgCountError{upperMnemonic, line, 1, len(args)})
-		}
-		val, err := p.resolveValue(args[0], upperMnemonic, line, 8)
-		if err != nil {
-			return nil, p.parseErr(mnemonic, args, line, err)
-		}
-		return []byte{byte(val)}, nil
-
-	default:
-		return nil, p.parseErr(mnemonic, args, line, &UnknownMnemonicError{upperMnemonic, line})
+	if mask, ok := simpleHandlers[upperMnemonic]; ok {
+		return p.toBinary(p.Encoder.Raw(mask)), nil
 	}
 
-	return p.toBinary(opcode), nil
+	return p.dispatchParse(upperMnemonic, args, line)
+}
+
+var simpleHandlers = map[string]uint16{
+	"CLS": encoder.MaskCLS,
+	"RET": encoder.MaskRET,
+}
+
+type parseHandler func(*Parser, string, []string, uint16) ([]byte, error)
+
+var mnemonicHandlers = map[string]parseHandler{
+	"JP":   (*Parser).handleJP,
+	"CALL": (*Parser).handleCall,
+	"SE":   (*Parser).handleSkipOp,
+	"SNE":  (*Parser).handleSkipOp,
+	"ADD":  (*Parser).handleAdd,
+	"OR":   (*Parser).handleALU,
+	"AND":  (*Parser).handleALU,
+	"XOR":  (*Parser).handleALU,
+	"SUB":  (*Parser).handleALU,
+	"SHR":  (*Parser).handleALU,
+	"SUBN": (*Parser).handleALU,
+	"SHL":  (*Parser).handleALU,
+	"LD":   wrapHandler((*Parser).handleLoad),
+	"RND":  (*Parser).handleRND,
+	"DRW":  (*Parser).handleDRW,
+	"SKP":  (*Parser).handleKeySkip,
+	"SKNP": (*Parser).handleKeySkip,
+	"DW":   (*Parser).handleData,
+	"DB":   (*Parser).handleData,
+}
+
+func wrapHandler(
+	h func(*Parser, []string, uint16) ([]byte, error),
+) parseHandler {
+	return func(p *Parser, _ string, args []string, line uint16) ([]byte, error) {
+		return h(p, args, line)
+	}
+}
+
+func (p *Parser) dispatchParse(
+	upperMnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	if handler, ok := mnemonicHandlers[upperMnemonic]; ok {
+		return handler(p, upperMnemonic, args, line)
+	}
+	return nil, p.parseErr(
+		upperMnemonic,
+		args,
+		line,
+		&UnknownMnemonicError{upperMnemonic, line},
+	)
+}
+
+func (p *Parser) handleJP(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	switch len(args) {
+	case 2:
+		if strings.ToUpper(args[0]) == "V0" {
+			addr, err := p.resolveValue(args[1], mnemonic, line, 12)
+			if err != nil {
+				return nil, p.parseErr(mnemonic, args, line, err)
+			}
+			return p.toBinary(p.Encoder.Addr(encoder.MaskJPV0, addr)), nil
+		}
+		fallthrough
+	case 1:
+		addr, err := p.resolveValue(args[0], mnemonic, line, 12)
+		if err != nil {
+			return nil, p.parseErr(mnemonic, args, line, err)
+		}
+		return p.toBinary(p.Encoder.Addr(encoder.MaskJP, addr)), nil
+	default:
+		return nil, p.parseErr(
+			mnemonic,
+			args,
+			line,
+			&WrongArgCountError{mnemonic, line, 1, len(args)},
+		)
+	}
+}
+
+func (p *Parser) handleCall(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	if len(args) != 1 {
+		return nil, p.parseErr(
+			mnemonic,
+			args,
+			line,
+			&WrongArgCountError{mnemonic, line, 1, len(args)},
+		)
+	}
+	addr, err := p.resolveValue(args[0], mnemonic, line, 12)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	return p.toBinary(p.Encoder.Addr(encoder.MaskCALL, addr)), nil
+}
+
+func (p *Parser) handleSkipOp(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	immBase, regBase := encoder.MaskSE, encoder.MaskSER
+	if mnemonic == "SNE" {
+		immBase, regBase = encoder.MaskSNE, encoder.MaskSNER
+	}
+	res, err := p.handleSkip(immBase, regBase, mnemonic, args, line)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	return res, nil
+}
+
+func (p *Parser) handleAdd(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	if len(args) != 2 {
+		return nil, p.parseErr(
+			mnemonic,
+			args,
+			line,
+			&WrongArgCountError{mnemonic, line, 2, len(args)},
+		)
+	}
+	if args[0] == "I" {
+		vx, err := p.parseReg(args[1], mnemonic, line)
+		if err != nil {
+			return nil, p.parseErr(mnemonic, args, line, err)
+		}
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x1E)), nil
+	}
+	if p.isRegister(args[1]) {
+		return p.handleRegReg(
+			encoder.MaskALU,
+			mnemonic,
+			args,
+			0x4,
+			line,
+		)
+	}
+	vx, err := p.parseReg(args[0], mnemonic, line)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	val, err := p.resolveValue(args[1], mnemonic, line, 8)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	return p.toBinary(p.Encoder.RegImm(encoder.MaskADD, vx, uint8(val))), nil
+}
+
+func (p *Parser) handleALU(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	suffixes := map[string]uint16{
+		"OR": 0x1, "AND": 0x2, "XOR": 0x3,
+		"SUB": 0x5, "SHR": 0x6, "SUBN": 0x7, "SHL": 0xE,
+	}
+	suffix, ok := suffixes[mnemonic]
+	if !ok {
+		return nil, p.parseErr(
+			mnemonic,
+			args,
+			line,
+			&UnknownMnemonicError{mnemonic, 0},
+		)
+	}
+	return p.handleRegReg(encoder.MaskALU, mnemonic, args, suffix, line)
+}
+
+func (p *Parser) handleRND(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	if len(args) != 2 {
+		return nil, p.parseErr(
+			mnemonic,
+			args,
+			line,
+			&WrongArgCountError{mnemonic, line, 2, len(args)},
+		)
+	}
+	vx, err := p.parseReg(args[0], mnemonic, line)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	val, err := p.resolveValue(args[1], mnemonic, line, 8)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	return p.toBinary(p.Encoder.RegImm(encoder.MaskRND, vx, uint8(val))), nil
+}
+
+func (p *Parser) handleDRW(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	if len(args) != 3 {
+		return nil, p.parseErr(
+			mnemonic,
+			args,
+			line,
+			&WrongArgCountError{mnemonic, line, 3, len(args)},
+		)
+	}
+	vx, err := p.parseReg(args[0], mnemonic, line)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	vy, err := p.parseReg(args[1], mnemonic, line)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	n, err := p.resolveValue(args[2], mnemonic, line, 4)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	return p.toBinary(
+		p.Encoder.RegNibble(encoder.MaskDRW, vx, vy, uint8(n)),
+	), nil
+}
+
+func (p *Parser) handleKeySkip(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	if len(args) != 1 {
+		return nil, p.parseErr(
+			mnemonic,
+			args,
+			line,
+			&WrongArgCountError{mnemonic, line, 1, len(args)},
+		)
+	}
+	vx, err := p.parseReg(args[0], mnemonic, line)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	var opcode uint16
+	if mnemonic == "SKNP" {
+		opcode = 0xA1
+	} else {
+		opcode = 0x9E
+	}
+	return p.toBinary(p.Encoder.RegOnly(encoder.MaskKEY, vx, opcode)), nil
+}
+
+func (p *Parser) handleData(
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
+	if len(args) != 1 {
+		return nil, p.parseErr(
+			mnemonic,
+			args,
+			line,
+			&WrongArgCountError{mnemonic, line, 1, len(args)},
+		)
+	}
+	bits := 8
+	if mnemonic == "DW" {
+		bits = 16
+	}
+	val, err := p.resolveValue(args[0], mnemonic, line, bits)
+	if err != nil {
+		return nil, p.parseErr(mnemonic, args, line, err)
+	}
+	if bits == 16 {
+		return p.toBinary(val), nil
+	}
+	return []byte{byte(val)}, nil
 }
 
 // --- Helper Handlers ---
@@ -232,7 +357,6 @@ func (p *Parser) handleLoad(args []string, line uint16) ([]byte, error) {
 	}
 	dst, src := args[0], args[1]
 
-	// LD I, addr
 	if dst == "I" {
 		addr, err := p.resolveValue(src, "LD", line, 12)
 		if err != nil {
@@ -241,60 +365,72 @@ func (p *Parser) handleLoad(args []string, line uint16) ([]byte, error) {
 		return p.toBinary(p.Encoder.Addr(encoder.MaskLDI, addr)), nil
 	}
 
-	// LD Vx, [Source]
 	if p.isRegister(dst) {
-		vx, err := p.parseReg(dst, "LD", line)
-		if err != nil {
-			return nil, err
-		}
-		switch {
-		case src == "DT":
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x07)), nil
-		case src == "K":
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x0A)), nil
-		case p.isRegister(src):
-			vy, err := p.parseReg(src, "LD", line)
-			if err != nil {
-				return nil, err
-			}
-			return p.toBinary(p.Encoder.RegReg(encoder.MaskALU, vx, vy, 0x0)), nil
-		case src == "[I]":
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x65)), nil
-		default:
-			val, err := p.resolveValue(src, "LD", line, 8)
-			if err != nil {
-				return nil, err
-			}
-			return p.toBinary(p.Encoder.RegImm(encoder.MaskLD, vx, uint8(val))), nil
-		}
+		return p.handleLoadVxSrc(dst, src, line)
 	}
 
-	// LD [Target], Vx
 	if p.isRegister(src) {
-		vx, err := p.parseReg(src, "LD", line)
-		if err != nil {
-			return nil, err
-		}
-		switch dst {
-		case "DT":
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x15)), nil
-		case "ST":
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x18)), nil
-		case "F":
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x29)), nil
-		case "B":
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x33)), nil
-		case "[I]":
-			return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x55)), nil
-		}
+		return p.handleLoadDstVx(dst, src, line)
 	}
 
 	return nil, &InvalidLoadError{line, dst, src}
 }
 
+func (p *Parser) handleLoadVxSrc(dst, src string, line uint16) ([]byte, error) {
+	vx, err := p.parseReg(dst, "LD", line)
+	if err != nil {
+		return nil, err
+	}
+	switch {
+	case src == "DT":
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x07)), nil
+	case src == "K":
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x0A)), nil
+	case p.isRegister(src):
+		vy, err := p.parseReg(src, "LD", line)
+		if err != nil {
+			return nil, err
+		}
+		return p.toBinary(p.Encoder.RegReg(encoder.MaskALU, vx, vy, 0x0)), nil
+	case src == "[I]":
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x65)), nil
+	default:
+		val, err := p.resolveValue(src, "LD", line, 8)
+		if err != nil {
+			return nil, err
+		}
+		return p.toBinary(p.Encoder.RegImm(encoder.MaskLD, vx, uint8(val))), nil
+	}
+}
+
+func (p *Parser) handleLoadDstVx(dst, src string, line uint16) ([]byte, error) {
+	vx, err := p.parseReg(src, "LD", line)
+	if err != nil {
+		return nil, err
+	}
+	switch dst {
+	case "DT":
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x15)), nil
+	case "ST":
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x18)), nil
+	case "F":
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x29)), nil
+	case "B":
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x33)), nil
+	case "[I]":
+		return p.toBinary(p.Encoder.RegOnly(encoder.MaskMISC, vx, 0x55)), nil
+	}
+	return nil, &InvalidLoadError{line, dst, src}
+}
+
 // handleSkip processes SE (skip if equal) and SNE (skip if not equal) instructions.
 // It handles both register-to-immediate and register-to-register comparisons.
-func (p *Parser) handleSkip(immBase, regBase uint16, mnemonic string, args []string, line uint16) ([]byte, error) {
+func (p *Parser) handleSkip(
+	immBase, regBase uint16,
+	mnemonic string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, &WrongArgCountError{mnemonic, line, 2, len(args)}
 	}
@@ -319,7 +455,13 @@ func (p *Parser) handleSkip(immBase, regBase uint16, mnemonic string, args []str
 }
 
 // handleRegReg processes two-register arithmetic/logic instructions (OR, AND, XOR, SUB, etc.).
-func (p *Parser) handleRegReg(base uint16, mnemonic string, args []string, suffix uint16, line uint16) ([]byte, error) {
+func (p *Parser) handleRegReg(
+	base uint16,
+	mnemonic string,
+	args []string,
+	suffix uint16,
+	line uint16,
+) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, &WrongArgCountError{mnemonic, line, 2, len(args)}
 	}
@@ -351,7 +493,11 @@ func (p *Parser) isRegister(s string) bool {
 
 // parseReg parses a register string (Vx) and returns the register index.
 // It returns an error if the string is not a valid register.
-func (p *Parser) parseReg(s string, mnemonic string, line uint16) (uint8, error) {
+func (p *Parser) parseReg(
+	s string,
+	mnemonic string,
+	line uint16,
+) (uint8, error) {
 	if !p.isRegister(s) {
 		return 0, &InvalidRegisterError{mnemonic, line, s}
 	}
@@ -367,16 +513,26 @@ func (p *Parser) parseReg(s string, mnemonic string, line uint16) (uint8, error)
 // resolveValue resolves a string to a numeric value.
 // It first checks the label map, then tries to parse as a literal (hex or decimal).
 // The bits parameter specifies the maximum bit width for range checking.
-func (p *Parser) resolveValue(s string, mnemonic string, line uint16, bits int) (uint16, error) {
+func (p *Parser) resolveValue(
+	s string,
+	mnemonic string,
+	line uint16,
+	bits int,
+) (uint16, error) {
 	var val uint16
 	var ok bool
 
 	// 1. Try Labels
 	if val, ok = p.Labels[s]; !ok {
 		// 2. Try Literal (Hex or Dec)
-		clean := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(s, "0X", ""), "0x", ""), "$", "")
+		clean := strings.ReplaceAll(
+			strings.ReplaceAll(strings.ReplaceAll(s, "0X", ""), "0x", ""),
+			"$",
+			"",
+		)
 		base := 10
-		if strings.Contains(strings.ToUpper(s), "0X") || strings.Contains(s, "$") {
+		if strings.Contains(strings.ToUpper(s), "0X") ||
+			strings.Contains(s, "$") {
 			base = 16
 		}
 
@@ -393,8 +549,8 @@ func (p *Parser) resolveValue(s string, mnemonic string, line uint16, bits int) 
 	}
 
 	// 3. Range Check
-	max := (uint32(1) << bits) - 1
-	if uint32(val) > max {
+	maxValue := (uint32(1) << bits) - 1
+	if uint32(val) > maxValue {
 		return 0, &ImmediateOutOfRangeError{mnemonic, line, s, val, bits}
 	}
 
@@ -402,7 +558,12 @@ func (p *Parser) resolveValue(s string, mnemonic string, line uint16, bits int) 
 }
 
 // parseErr wraps a child error into a ParseError with context about the failing instruction.
-func (p *Parser) parseErr(mnemonic string, args []string, line uint16, child error) error {
+func (p *Parser) parseErr(
+	mnemonic string,
+	args []string,
+	line uint16,
+	child error,
+) error {
 	// If it's already a ParseError, don't double wrap
 	if _, ok := child.(*ParseError); ok {
 		return child
