@@ -1,7 +1,7 @@
 package cpu
 
 // The CPU is responsible for identifying and running
-// each opcode
+// each opcode.
 type CPU struct {
 	// Registers are the 16 general-purpose 8-bit registers.
 	// Historically referred to as V0 through VF.

@@ -1,3 +1,5 @@
+//go:build !wasm || !js
+
 package audio
 
 import (
@@ -22,7 +24,7 @@ type SDLAudio struct {
 
 // New creates a new SDLAudio instance with an uninitialized audio device.
 // Call Init() before use to open the audio device.
-func New() *SDLAudio {
+func WithSDL() *SDLAudio {
 	return new(SDLAudio)
 }
 
@@ -91,23 +93,27 @@ func (a *SDLAudio) GenerateBeep() error {
 
 // Play unpauses the audio device to resume sound output.
 // Use this when the sound timer is greater than 0 to start/beep.
-func (a *SDLAudio) Play() {
+func (a *SDLAudio) Play() error {
 	sdl.PauseAudioDevice(a.Device, false)
+	return nil
 }
 
 // Pause pauses the audio device to stop sound output.
 // Use this when the sound timer reaches 0 to silence the beep.
-func (a *SDLAudio) Pause() {
+func (a *SDLAudio) Pause() error {
 	sdl.PauseAudioDevice(a.Device, true)
+	return nil
 }
 
 // Close stops and releases the audio device resources.
 // It first silences the device by pausing, then closes the SDL audio device,
 // and finally resets the device ID to 0. Safe to call multiple times.
-func (a *SDLAudio) Close() {
+func (a *SDLAudio) Close() error {
 	if a.Device != 0 {
 		sdl.PauseAudioDevice(a.Device, true) // Silence first
 		sdl.CloseAudioDevice(a.Device)
 		a.Device = 0 // Reset ID
 	}
+
+	return nil
 }

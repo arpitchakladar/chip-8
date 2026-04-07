@@ -16,4 +16,10 @@ type Keyboard interface {
 	// SetKey sets the pressed state of a CHIP-8 key.
 	// Key should be 0-15.
 	SetKey(key byte, pressed bool)
+
+	// PollEvents processes platform-specific input events.
+	// This should be called periodically (e.g., at 60Hz).
+	// For SDL: polls and processes SDL keyboard events.
+	// For Web: can be a no-op if using event-driven updates.
+	PollEvents()
 }
