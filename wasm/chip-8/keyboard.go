@@ -9,6 +9,8 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
+// KeyboardHandlers holds JavaScript event handler functions for keyboard input.
+// These can be used to remove event listeners when needed.
 type KeyboardHandlers struct {
 	KeyDown    js.Func
 	KeyUp      js.Func
@@ -19,6 +21,9 @@ type KeyboardHandlers struct {
 	WindowBlur js.Func
 }
 
+// setupKeyboardListeners attaches keyboard and focus event handlers to the canvas.
+// It handles key input, focus management, and clearing stuck keys on blur.
+// Returns a KeyboardHandlers struct for cleanup if needed.
 func setupKeyboardListeners(
 	vm *emulator.Emulator,
 	canvas js.Value,
@@ -46,6 +51,7 @@ func setupKeyboardListeners(
 	return handlers
 }
 
+// createClickHandler creates a click handler that focuses the canvas.
 func createClickHandler(canvas js.Value) js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
 		canvas.Call("focus")
@@ -53,6 +59,7 @@ func createClickHandler(canvas js.Value) js.Func {
 	})
 }
 
+// createFocusHandler creates a mouseenter handler that focuses the canvas.
 func createFocusHandler(canvas js.Value) js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
 		canvas.Call("focus")
@@ -60,6 +67,7 @@ func createFocusHandler(canvas js.Value) js.Func {
 	})
 }
 
+// createBlurHandler creates a mouseleave handler that blurs the canvas.
 func createBlurHandler(canvas js.Value) js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
 		canvas.Call("blur")
@@ -67,6 +75,7 @@ func createBlurHandler(canvas js.Value) js.Func {
 	})
 }
 
+// createClearKeysHandler creates a blur handler that clears all pressed keys.
 func createClearKeysHandler(vm *emulator.Emulator) js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
 		for i := range 16 {
@@ -76,6 +85,7 @@ func createClearKeysHandler(vm *emulator.Emulator) js.Func {
 	})
 }
 
+// createKeyHandler creates a keydown or keyup handler for CHIP-8 keyboard input.
 func createKeyHandler(vm *emulator.Emulator, pressed bool) js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
 		if !vm.IsRunning() {
@@ -91,6 +101,8 @@ func createKeyHandler(vm *emulator.Emulator, pressed bool) js.Func {
 	})
 }
 
+// keyToChip8 maps JavaScript key values to CHIP-8 key indices (0-15).
+// Returns nil if the key is not mapped.
 func keyToChip8(key string) *byte {
 	keyMap := map[string]byte{
 		"1": 0x1, "2": 0x2, "3": 0x3, "4": 0xC,

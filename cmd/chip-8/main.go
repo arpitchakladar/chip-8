@@ -1,6 +1,10 @@
 //go:build !wasm || !js
 
 // Package main provides a CHIP-8 emulator and assembler command-line tool.
+//
+// Usage:
+//   - chip-8 run [-c <hz>] <rom>   - Run a .ch8 file
+//   - chip-8 compile [-o <out>] <files...> - Assemble .asm files to .ch8
 package main
 
 import (
@@ -10,8 +14,11 @@ import (
 	"strings"
 )
 
+// defaultClockSpeed is the default CPU clock speed in Hz.
 const defaultClockSpeed = 100000
 
+// main is the entry point for the chip-8 command.
+// It dispatches to subcommands: run or compile.
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -64,6 +71,7 @@ func main() {
 	}
 }
 
+// printUsage prints the usage information for the chip-8 command.
 func printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  chip-8 run [-c <hz>] <rom>   - Run a .ch8 file")

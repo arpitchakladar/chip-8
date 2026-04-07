@@ -11,6 +11,9 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/assembler"
 )
 
+// compileAssembly assembles one or more .asm files into a CHIP-8 ROM file.
+// Files are ordered by __START and __END markers: start files first,
+// then regular files, then end files.
 func compileAssembly(filePaths []string, outputPath string) {
 	orderedPaths := orderByMarkers(filePaths)
 	allContent := readAllFiles(orderedPaths)
@@ -22,6 +25,9 @@ func compileAssembly(filePaths []string, outputPath string) {
 	assembleAndWrite(allContent, outputPath)
 }
 
+// orderByMarkers reads all input files, categorizes them by __START and __END
+// markers, and returns them in the correct order for assembly.
+// Exits with an error if no file contains __START or __END.
 func orderByMarkers(filePaths []string) []string {
 	var startFiles, endFiles, regularFiles []string
 	hasStartMarker := false
@@ -59,6 +65,7 @@ func orderByMarkers(filePaths []string) []string {
 	return append(startFiles, append(regularFiles, endFiles...)...)
 }
 
+// categorizeFile determines whether a file contains __START, __END, both, or neither.
 func categorizeFile(path string) string {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -80,6 +87,7 @@ func categorizeFile(path string) string {
 	return "regular"
 }
 
+// readAllFiles reads all files from the given paths and concatenates their contents.
 func readAllFiles(filePaths []string) strings.Builder {
 	var allContent strings.Builder
 
@@ -97,6 +105,9 @@ func readAllFiles(filePaths []string) strings.Builder {
 	return allContent
 }
 
+// determineOutputPath determines the output path for the compiled ROM file.
+// If only one input file, uses that name with .ch8 extension.
+// If multiple files, defaults to "combined.ch8".
 func determineOutputPath(filePaths []string) string {
 	outputPath := strings.TrimSuffix(
 		filePaths[0],
@@ -108,6 +119,7 @@ func determineOutputPath(filePaths []string) string {
 	return outputPath
 }
 
+// assembleAndWrite assembles the combined source and writes the result to the output path.
 func assembleAndWrite(source strings.Builder, outputPath string) {
 	fmt.Printf("Assembling...\n")
 
