@@ -12,10 +12,6 @@ import (
 )
 
 const (
-	// Width is the display width in pixels (standard CHIP-8).
-	Width = 64
-	// Height is the display height in pixels (standard CHIP-8).
-	Height = 32
 	// Scale is the scaling factor for rendering pixels to screen.
 	// Each CHIP-8 pixel will be rendered as Scale x Scale on screen.
 	Scale = 15
@@ -23,9 +19,8 @@ const (
 
 // SDLDisplay maintains the CHIP-8 display state and SDL2 rendering resources.
 type SDLDisplay struct {
-	// Pixels is the display buffer (2048 bytes for 64x32 display).
-	// Each byte represents one pixel: 0 = off, 1 = on.
-	Pixels [Width * Height]byte
+	// buffer is the display buffer for pixel storage.
+	buffer *DisplayBuffer
 	// window is the SDL2 window handle.
 	window *sdl.Window
 	// renderer is the SDL2 renderer for drawing to the window.
@@ -36,7 +31,7 @@ type SDLDisplay struct {
 // The pixel buffer is initialized to all zeros (black).
 // Call Init() before use to create the SDL window.
 func WithSDL() *SDLDisplay {
-	return new(SDLDisplay)
+	return &SDLDisplay{buffer: NewDisplayBuffer()}
 }
 
 // Init initializes the SDL2 subsystem and creates the window and renderer.
@@ -79,7 +74,7 @@ func (d *SDLDisplay) Init() error {
 // It is called by the CLS (0x00E0) opcode to clear the display.
 // Note: This only clears the in-memory buffer, not the actual screen.
 func (d *SDLDisplay) Clear() {
-	d.Pixels = [Width * Height]byte{}
+	d.buffer.Clear()
 }
 
 // SetPixel toggles a pixel at the specified coordinates using XOR mode.
@@ -98,28 +93,7 @@ func (d *SDLDisplay) Clear() {
 //   - error: *CoordinateError if coordinates are out of bounds (before wrapping),
 //     or nil if coordinates are valid (even after wrapping)
 func (d *SDLDisplay) SetPixel(x, y uint8) (bool, error) {
-	var err *CoordinateError
-
-	// Check if coordinates were out of bounds (before wrapping)
-	// This allows detection of "strict mode" errors if needed
-	if x >= Width || y >= Height {
-		err = &CoordinateError{X: x, Y: y}
-	}
-
-	// Wrap coordinates to display bounds
-	x %= Width
-	y %= Height
-
-	// Calculate pixel index in buffer
-	index := uint16(x) + (uint16(y) * Width)
-
-	// Check for collision: pixel was on (1) before XOR
-	collision := d.Pixels[index] == 1
-
-	// XOR the pixel: 0 -> 1, or 1 -> 0
-	d.Pixels[index] ^= 1
-
-	return collision, err
+	return d.buffer.SetPixel(x, y)
 }
 
 // Present renders the current pixel buffer to the SDL window.
@@ -157,7 +131,7 @@ func (d *SDLDisplay) Present() error {
 	}
 
 	// Draw each "on" pixel as a scaled rectangle
-	for i, val := range d.Pixels {
+	for i, val := range d.buffer.Pixels {
 		if val == 1 {
 			// Calculate pixel position
 			x := int32(i % Width)
