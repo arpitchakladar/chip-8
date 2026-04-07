@@ -38,7 +38,7 @@ func chip8New(this js.Value, args []js.Value) any {
 		return map[string]string{"error": "a canvas element is required"}
 	}
 	if len(args) > 1 {
-		clockSpeed = uint32(args[0].Int())
+		clockSpeed = uint32(args[1].Int())
 	}
 
 	canvas := args[0]

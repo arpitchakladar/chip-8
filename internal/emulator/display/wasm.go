@@ -53,10 +53,10 @@ func (d *WASMDisplay) render() {
 		scale = newScale
 	}
 
-	ctx.Call("fillStyle", "black")
+	ctx.Set("fillStyle", "black")
 	ctx.Call("fillRect", 0, 0, width, height)
 
-	ctx.Call("setFillStyle", "white")
+	ctx.Set("fillStyle", "white")
 
 	pixels := d.buffer.GetPixels()
 	for i, val := range pixels {

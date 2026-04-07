@@ -63,6 +63,12 @@ func (a *WASMAudio) Play() error {
 		return nil
 	}
 
+	if !a.Oscillator.IsUndefined() && !a.Oscillator.IsNull() {
+		a.Oscillator.Call("stop")
+		a.Oscillator = js.Value{}
+		a.GainNode = js.Value{}
+	}
+
 	if err := a.GenerateBeep(); err != nil {
 		return err
 	}
