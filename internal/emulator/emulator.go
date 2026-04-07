@@ -56,7 +56,9 @@ func (e *Emulator) Run(parentContext context.Context) error {
 		if err := e.Display.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error closing display: %v\n", err)
 		}
-		e.Audio.Close()
+		if err := e.Audio.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error closing audio device: %v\n", err)
+		}
 	}()
 
 	runEmulatorContext, cancelRunEmulatorContext := context.WithCancel(
@@ -153,10 +155,14 @@ func (e *Emulator) updateTimers() error {
 		if err := e.Audio.GenerateBeep(); err != nil {
 			return err
 		}
-		e.Audio.Play()
+		if err := e.Audio.Play(); err != nil {
+			return err
+		}
 		e.CPU.SoundTimer--
 	} else {
-		e.Audio.Pause()
+		if err := e.Audio.Pause(); err != nil {
+			return err
+		}
 	}
 
 	if e.CPU.DelayTimer > 0 {

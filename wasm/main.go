@@ -27,6 +27,8 @@ func registerCallbacks() {
 	js.Global().Set("chip8LoadROM", js.FuncOf(chip8LoadROM))
 	js.Global().Set("chip8Run", js.FuncOf(chip8Run))
 	js.Global().Set("chip8Destroy", js.FuncOf(chip8Destroy))
+	js.Global().Set("chip8SetKey", js.FuncOf(chip8SetKey))
+	js.Global().Set("chip8PlayAudio", js.FuncOf(chip8PlayAudio))
 }
 
 func chip8New(this js.Value, args []js.Value) any {
@@ -89,6 +91,44 @@ func chip8Destroy(this js.Value, args []js.Value) any {
 	}
 
 	vm.Destroy()
+
+	return nil
+}
+
+func chip8SetKey(this js.Value, args []js.Value) any {
+	if len(args) < 3 {
+		return map[string]string{
+			"error": "VM ID, key, and pressed state are required",
+		}
+	}
+
+	vm := VMs[args[0].String()]
+	if vm == nil {
+		return map[string]string{"error": "emulator not initialized"}
+	}
+
+	key := byte(args[1].Int())
+	pressed := args[2].Bool()
+	vm.Keyboard.SetKey(key, pressed)
+
+	return nil
+}
+
+func chip8PlayAudio(this js.Value, args []js.Value) any {
+	if len(args) < 1 {
+		return map[string]string{"error": "VM ID is required"}
+	}
+
+	vm := VMs[args[0].String()]
+	if vm == nil {
+		return map[string]string{"error": "emulator not initialized"}
+	}
+
+	if err := vm.Audio.Play(); err != nil {
+		return map[string]string{
+			"error": fmt.Sprintf("audio device error: %s", err),
+		}
+	}
 
 	return nil
 }

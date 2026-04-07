@@ -13,12 +13,12 @@ type Audio interface {
 	GenerateBeep() error
 
 	// Play starts/resumes audio playback.
-	Play()
+	Play() error
 
 	// Pause stops audio playback.
-	Pause()
+	Pause() error
 
 	// Close releases audio resources.
 	// Should be safe to call multiple times.
-	Close()
+	Close() error
 }

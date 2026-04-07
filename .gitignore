@@ -59,3 +59,4 @@ docs/build
 
 # --- The output binary ---
 chip-8
+*.wasm
