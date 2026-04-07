@@ -27,8 +27,9 @@ func registerCallbacks() {
 	js.Global().Set("chip8LoadROM", js.FuncOf(chip8LoadROM))
 	js.Global().Set("chip8Run", js.FuncOf(chip8Run))
 	js.Global().Set("chip8Destroy", js.FuncOf(chip8Destroy))
-	js.Global().Set("chip8SetKey", js.FuncOf(chip8SetKey))
 	js.Global().Set("chip8PlayAudio", js.FuncOf(chip8PlayAudio))
+	js.Global().
+		Set("chip8SetKeyboardHandler", js.FuncOf(chip8SetKeyboardHandler))
 }
 
 func chip8New(this js.Value, args []js.Value) any {
@@ -95,25 +96,6 @@ func chip8Destroy(this js.Value, args []js.Value) any {
 	return nil
 }
 
-func chip8SetKey(this js.Value, args []js.Value) any {
-	if len(args) < 3 {
-		return map[string]string{
-			"error": "VM ID, key, and pressed state are required",
-		}
-	}
-
-	vm := VMs[args[0].String()]
-	if vm == nil {
-		return map[string]string{"error": "emulator not initialized"}
-	}
-
-	key := byte(args[1].Int())
-	pressed := args[2].Bool()
-	vm.Keyboard.SetKey(key, pressed)
-
-	return nil
-}
-
 func chip8PlayAudio(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
 		return map[string]string{"error": "VM ID is required"}
@@ -130,5 +112,60 @@ func chip8PlayAudio(this js.Value, args []js.Value) any {
 		}
 	}
 
+	return nil
+}
+
+func chip8SetKeyboardHandler(this js.Value, args []js.Value) any {
+	if len(args) < 1 {
+		return map[string]string{"error": "VM ID is required"}
+	}
+
+	vm := VMs[args[0].String()]
+	if vm == nil {
+		return map[string]string{"error": "emulator not initialized"}
+	}
+
+	document := js.Global().Get("document")
+	document.Call(
+		"addEventListener",
+		"keydown",
+		js.FuncOf(func(this js.Value, args []js.Value) any {
+			event := args[0]
+			key := event.Get("key").String()
+			chip8Key := keyToChip8(key)
+			if chip8Key != nil {
+				vm.Keyboard.SetKey(*chip8Key, true)
+			}
+			return nil
+		}),
+	)
+
+	document.Call(
+		"addEventListener",
+		"keyup",
+		js.FuncOf(func(this js.Value, args []js.Value) any {
+			event := args[0]
+			key := event.Get("key").String()
+			chip8Key := keyToChip8(key)
+			if chip8Key != nil {
+				vm.Keyboard.SetKey(*chip8Key, false)
+			}
+			return nil
+		}),
+	)
+
+	return nil
+}
+
+func keyToChip8(key string) *byte {
+	keyMap := map[string]byte{
+		"1": 0x1, "2": 0x2, "3": 0x3, "4": 0xC,
+		"q": 0x4, "w": 0x5, "e": 0x6, "r": 0xD,
+		"a": 0x7, "s": 0x8, "d": 0x9, "f": 0xE,
+		"z": 0xA, "x": 0x0, "c": 0xB, "v": 0xF,
+	}
+	if ch, ok := keyMap[key]; ok {
+		return &ch
+	}
 	return nil
 }
