@@ -4,14 +4,13 @@
 // This package exposes the emulator functionality to JavaScript, allowing
 // web applications to run CHIP-8 ROMs directly in the browser.
 //
-// Exposed JavaScript functions:
-//   - chip8Compile(assemblyCode): Compiles CHIP-8 assembly to bytecode
-//   - chip8New(canvasElement, clockSpeed?): Creates a new emulator instance
-//   - chip8LoadROM(vmId, romData): Loads a ROM into the specified VM
-//   - chip8Run(vmId): Starts the emulator execution
-//   - chip8Destroy(vmId): Stops and destroys a VM instance
-//   - chip8PlayAudio(vmId): Manually triggers audio playback
-//   - chip8SetKeyboardHandler(vmId): Attaches keyboard event handlers
+// Exposed JavaScript object:
+//   - CHIP8: Object with methods for creating and managing emulator instances
+//   - new CHIP8(canvasElement): Creates a new emulator instance
+//   - .compile(assemblyCode): Compiles CHIP-8 assembly to bytecode
+//   - .loadROM(romData): Loads a ROM into the VM
+//   - .run(): Starts the emulator execution
+//   - .destroy(): Stops and destroys the VM instance
 package main
 
 import (
@@ -48,7 +47,7 @@ func registerCallbacks() {
 }
 
 // chip8Compile compiles CHIP-8 assembly code to bytecode.
-// Returns a Uint8Array containing the compiled ROM, or an error object on failure.
+// Returns a Uint8Array containing the compiled ROM.
 // Parameter: assemblyCode (string) - The CHIP-8 assembly source code.
 func chip8Compile(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
@@ -69,17 +68,23 @@ func chip8Compile(this js.Value, args []js.Value) any {
 	return uint8Array
 }
 
-// chip8New creates a new CHIP-8 emulator instance.
-// Parameters:
-//   - canvasElement: A JavaScript canvas element for rendering
-//   - clockSpeed: (optional) CPU speed in instructions per second, defaults to 100000
+// chip8New acts as a JavaScript constructor for the CHIP-8 emulator.
+// It is intended to be used with `new CHIP8(...)`.
 //
-// Returns: A unique VM ID string used for subsequent operations, or error object.
+// Parameters:
+//   - canvasElement: A JavaScript canvas element for rendering (required)
+//   - clockSpeed: (optional) CPU speed in instructions per second (defaults to 100000)
+//
+// JavaScript usage:
+//
+//	const chip = new CHIP8(canvas, 500);
 func chip8New(this js.Value, args []js.Value) any {
 	clockSpeed := defaultClockSpeed
+
 	if len(args) < 1 {
 		throw("a canvas element is required")
 	}
+
 	if len(args) > 1 {
 		clockSpeed = uint32(args[1].Int())
 	}
@@ -87,40 +92,42 @@ func chip8New(this js.Value, args []js.Value) any {
 	canvas := args[0]
 
 	vm := emulator.WithWASM(canvas, clockSpeed)
-	vmObj := js.Global().Get("Object").New()
-	vmObj.Set("loadROM", js.FuncOf(func(this js.Value, args []js.Value) any {
+
+	// Attach methods to THIS (the JS instance)
+
+	this.Set("loadROM", js.FuncOf(func(this js.Value, args []js.Value) any {
 		jsData := args[0]
 		romData := make([]byte, jsData.Length())
+
 		for i := 0; i < jsData.Length(); i++ {
 			romData[i] = uint8(jsData.Index(i).Int())
 		}
+
 		if err := vm.LoadROM(romData); err != nil {
 			throw(err.Error())
 		}
 		return nil
 	}))
 
-	vmObj.Set("run", js.FuncOf(func(this js.Value, args []js.Value) any {
-		errChan := make(chan error, 1)
-
+	this.Set("run", js.FuncOf(func(this js.Value, args []js.Value) any {
 		go func() {
 			if err := vm.Run(context.Background()); err != nil {
-				errChan <- err
+				// You may want to surface this to JS later
+				println("VM error:", err.Error())
 			}
 		}()
-
 		return nil
 	}))
 
-	vmObj.Set("destroy", js.FuncOf(func(this js.Value, args []js.Value) any {
+	this.Set("destroy", js.FuncOf(func(this js.Value, args []js.Value) any {
 		vm.Destroy()
-
 		return nil
 	}))
 
 	setupKeyboardListeners(vm)
 
-	return vmObj
+	// IMPORTANT: return nil for constructor usage
+	return nil
 }
 
 func setupKeyboardListeners(vm *emulator.Emulator) any {

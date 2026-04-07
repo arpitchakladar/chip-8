@@ -80,7 +80,7 @@
 
 			async function runAudioInput() {
 				const canvas = document.getElementById("canvas1");
-				const vm = CHIP8(canvas, 500);
+				const vm = new CHIP8(canvas, 500);
 
 				const response = await fetch("audio_input.asm");
 				const asmCode = await response.text();
@@ -94,7 +94,7 @@
 
 			async function runHelloWorld() {
 				const canvas = document.getElementById("canvas2");
-				const vm = CHIP8(canvas, 500);
+				const vm = new CHIP8(canvas, 500);
 
 				const responses = await Promise.all([
 					fetch("hello_world.asm"),

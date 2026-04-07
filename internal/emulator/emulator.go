@@ -1,3 +1,5 @@
+// Package emulator provides the core CHIP-8 emulator functionality.
+// It coordinates the CPU, memory, display, keyboard, and audio subsystems.
 package emulator
 
 import (
@@ -92,6 +94,7 @@ func (e *Emulator) Run(parentContext context.Context) error {
 	return err
 }
 
+// IsRunning returns true if the emulator is currently running.
 func (e *Emulator) IsRunning() bool {
 	e.runLock.Lock()
 	isRunning := e.running
