@@ -1,3 +1,5 @@
+// Package parser provides opcode generation for the CHIP-8 assembler.
+// It performs the second pass of assembly, converting instructions to binary opcodes.
 package parser
 
 import (
