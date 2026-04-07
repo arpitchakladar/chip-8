@@ -16,6 +16,17 @@
 			color: #eee;
 			font-family: monospace;
 		}
+		.emulators {
+			display: flex;
+			gap: 40px;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+		.emulator {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
 		canvas {
 			border: 4px solid #444;
 			image-rendering: pixelated;
@@ -32,6 +43,7 @@
 			color: #fff;
 			border: none;
 			border-radius: 4px;
+			margin: 5px;
 		}
 		button:hover {
 			background: #5a5a7a;
@@ -40,22 +52,32 @@
 </head>
 <body>
 	<h1>CHIP-8 Emulator</h1>
-	<canvas id="canvas" width="640" height="320"></canvas>
-	<div class="controls">
-		<button id="runBtn">Run</button>
+	<div class="emulators">
+		<div class="emulator">
+			<h2>Audio Input</h2>
+			<canvas id="canvas1" width="640" height="320"></canvas>
+			<div class="controls">
+				<button onclick="runAudioInput()">Run</button>
+			</div>
+		</div>
+		<div class="emulator">
+			<h2>Hello World</h2>
+			<canvas id="canvas2" width="640" height="320"></canvas>
+			<div class="controls">
+				<button onclick="runHelloWorld()">Run</button>
+			</div>
+		</div>
 	</div>
-		<script src="/wasm_exec.js"></script>
+	<script src="wasm_exec.js"></script>
 	<script>
-		const canvas = document.getElementById('canvas');
-		const runBtn = document.getElementById('runBtn');
-
 		const go = new Go();
 		WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject)
 			.then(result => {
 				go.run(result.instance);
 			});
 
-		runBtn.addEventListener('click', async () => {
+		async function runAudioInput() {
+			const canvas = document.getElementById('canvas1');
 			const vmId = chip8New(canvas, 500);
 			chip8SetKeyboardHandler(vmId);
 
@@ -65,7 +87,20 @@
 
 			chip8LoadROM(vmId, romData);
 			chip8Run(vmId);
-		});
+		}
+
+		async function runHelloWorld() {
+			const canvas = document.getElementById('canvas2');
+			const vmId = chip8New(canvas, 500);
+			chip8SetKeyboardHandler(vmId);
+
+			const response = await fetch('hello_world.ch8');
+			const buffer = await response.arrayBuffer();
+			const romData = new Uint8Array(buffer);
+
+			chip8LoadROM(vmId, romData);
+			chip8Run(vmId);
+		}
 	</script>
 </body>
 </html>
