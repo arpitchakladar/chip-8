@@ -1,5 +1,6 @@
 //go:build !wasm || !js
 
+// Package keyboard provides an SDL2-compatible keyboard implementation for the CHIP-8 emulator.
 package keyboard
 
 // SDLKeyboard tracks the state of the 16 CHIP-8 keys.
