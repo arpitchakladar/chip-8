@@ -92,6 +92,13 @@ func (e *Emulator) Run(parentContext context.Context) error {
 	return err
 }
 
+func (e *Emulator) IsRunning() bool {
+	e.runLock.Lock()
+	isRunning := e.running
+	e.runLock.Unlock()
+	return isRunning
+}
+
 // runDisplay handles the display update loop at 60Hz.
 // It polls for keyboard events, updates timers, and renders the display.
 func (e *Emulator) runDisplay(
