@@ -34,6 +34,10 @@ var (
 	) // Active emulator instances
 )
 
+func throw(message string) {
+	panic(js.Global().Get("Error").New(message))
+}
+
 func main() {
 	// Register JavaScript callbacks and start the WASM event loop
 	registerCallbacks()
@@ -59,9 +63,7 @@ func registerCallbacks() {
 // Parameter: assemblyCode (string) - The CHIP-8 assembly source code.
 func chip8Compile(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
-		errObj := js.Global().Get("Object").New()
-		errObj.Set("error", "the assembly code string is required")
-		return errObj
+		throw("the assembly code string is required")
 	}
 
 	assemblyCode := args[0].String()
@@ -69,9 +71,7 @@ func chip8Compile(this js.Value, args []js.Value) any {
 
 	compiled, err := asm.Assemble()
 	if err != nil {
-		errObj := js.Global().Get("Object").New()
-		errObj.Set("error", err.Error())
-		return errObj
+		throw(err.Error())
 	}
 
 	uint8Array := js.Global().Get("Uint8Array").New(len(compiled))
@@ -89,7 +89,7 @@ func chip8Compile(this js.Value, args []js.Value) any {
 func chip8New(this js.Value, args []js.Value) any {
 	clockSpeed := defaultClockSpeed
 	if len(args) < 1 {
-		return map[string]string{"error": "a canvas element is required"}
+		throw("a canvas element is required")
 	}
 	if len(args) > 1 {
 		clockSpeed = uint32(args[1].Int())
@@ -113,7 +113,7 @@ func chip8New(this js.Value, args []js.Value) any {
 // Returns: null on success, or error object on failure.
 func chip8LoadROM(this js.Value, args []js.Value) any {
 	if len(args) < 2 {
-		return map[string]string{"error": "VM ID and ROM data are required"}
+		throw("VM ID and ROM data are required")
 	}
 
 	vm := VMs[args[0].String()]
@@ -124,7 +124,7 @@ func chip8LoadROM(this js.Value, args []js.Value) any {
 	}
 
 	if err := vm.LoadROM(romData); err != nil {
-		return map[string]string{"error": err.Error()}
+		throw(err.Error())
 	}
 	return nil
 }
@@ -134,12 +134,12 @@ func chip8LoadROM(this js.Value, args []js.Value) any {
 // Returns: null on success (runs asynchronously), or error object on failure.
 func chip8Run(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
-		return map[string]string{"error": "VM ID is required"}
+		throw("VM ID is required")
 	}
 
 	vm := VMs[args[0].String()]
 	if vm == nil {
-		return map[string]string{"error": "emulator not initialized"}
+		throw("emulator not initialized")
 	}
 
 	errChan := make(chan error, 1)
@@ -159,7 +159,7 @@ func chip8Run(this js.Value, args []js.Value) any {
 func chip8Destroy(this js.Value, args []js.Value) any {
 	vm := VMs[args[0].String()]
 	if vm == nil {
-		return map[string]string{"error": "no VM was found."}
+		throw("no VM was found.")
 	}
 
 	vm.Destroy()
@@ -173,18 +173,16 @@ func chip8Destroy(this js.Value, args []js.Value) any {
 // Returns: null on success, or error object on failure.
 func chip8PlayAudio(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
-		return map[string]string{"error": "VM ID is required"}
+		throw("VM ID is required")
 	}
 
 	vm := VMs[args[0].String()]
 	if vm == nil {
-		return map[string]string{"error": "emulator not initialized"}
+		throw("emulator not initialized")
 	}
 
 	if err := vm.Audio.Play(); err != nil {
-		return map[string]string{
-			"error": fmt.Sprintf("audio device error: %s", err),
-		}
+		throw(fmt.Sprintf("audio device error: %s", err))
 	}
 
 	return nil
@@ -196,12 +194,12 @@ func chip8PlayAudio(this js.Value, args []js.Value) any {
 // Returns: null on success, or error object on failure.
 func chip8SetKeyboardHandler(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
-		return map[string]string{"error": "VM ID is required"}
+		throw("VM ID is required")
 	}
 
 	vm := VMs[args[0].String()]
 	if vm == nil {
-		return map[string]string{"error": "emulator not initialized"}
+		throw("emulator not initialized")
 	}
 
 	document := js.Global().Get("document")
