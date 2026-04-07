@@ -1,3 +1,5 @@
+// Package audio provides audio output implementations for the CHIP-8 emulator.
+// Implement the Audio interface to provide sound for different platforms.
 package audio
 
 // Audio represents the audio subsystem for the CHIP-8 emulator.
