@@ -15,6 +15,7 @@ package main
 
 import (
 	"context"
+	"strings"
 	"syscall/js"
 
 	"github.com/arpitchakladar/chip-8/internal/assembler"
@@ -139,50 +140,97 @@ func newEmulator(this js.Value, args []js.Value) any {
 		return nil
 	}))
 
-	setupKeyboardListeners(vm)
+	setupKeyboardListeners(vm, canvas)
 
 	// IMPORTANT: return nil for constructor usage
 	return nil
 }
 
-func setupKeyboardListeners(vm *emulator.Emulator) any {
-	document := js.Global().Get("document")
+type KeyboardHandlers struct {
+	KeyDown    js.Func
+	KeyUp      js.Func
+	Click      js.Func
+	MouseEnter js.Func
+	MouseLeave js.Func
+	Blur       js.Func
+	WindowBlur js.Func
+}
 
-	document.Call(
-		"addEventListener",
-		"keydown",
-		js.FuncOf(func(this js.Value, args []js.Value) any {
-			if !vm.IsRunning() {
-				return nil
-			}
-			event := args[0]
-			key := event.Get("key").String()
-			chip8Key := keyToChip8(key)
-			if chip8Key != nil {
-				vm.Keyboard.SetKey(*chip8Key, true)
-			}
+// setupKeyboardListeners attaches keyboard and focus event handlers to the canvas.
+// It returns a KeyboardHandlers struct for cleanup if needed.
+func setupKeyboardListeners(
+	vm *emulator.Emulator,
+	canvas js.Value,
+) *KeyboardHandlers {
+	canvas.Set("tabIndex", 0)
+
+	handlers := &KeyboardHandlers{}
+
+	handlers.Click = createClickHandler(canvas)
+	handlers.MouseEnter = createFocusHandler(canvas)
+	handlers.MouseLeave = createBlurHandler(canvas)
+	handlers.Blur = createClearKeysHandler(vm)
+	handlers.WindowBlur = createClearKeysHandler(vm)
+	handlers.KeyDown = createKeyHandler(vm, true)
+	handlers.KeyUp = createKeyHandler(vm, false)
+
+	canvas.Call("addEventListener", "click", handlers.Click)
+	canvas.Call("addEventListener", "mouseenter", handlers.MouseEnter)
+	canvas.Call("addEventListener", "mouseleave", handlers.MouseLeave)
+	canvas.Call("addEventListener", "blur", handlers.Blur)
+	canvas.Call("addEventListener", "keydown", handlers.KeyDown)
+	canvas.Call("addEventListener", "keyup", handlers.KeyUp)
+	js.Global().Call("addEventListener", "blur", handlers.WindowBlur)
+
+	return handlers
+}
+
+func createClickHandler(canvas js.Value) js.Func {
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		canvas.Call("focus")
+		return nil
+	})
+}
+
+func createFocusHandler(canvas js.Value) js.Func {
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		canvas.Call("focus")
+		return nil
+	})
+}
+
+func createBlurHandler(canvas js.Value) js.Func {
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		canvas.Call("blur")
+		return nil
+	})
+}
+
+func createClearKeysHandler(vm *emulator.Emulator) js.Func {
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		for i := range 16 {
+			vm.Keyboard.SetKey(byte(i), false)
+		}
+		return nil
+	})
+}
+
+func createKeyHandler(vm *emulator.Emulator, pressed bool) js.Func {
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		if !vm.IsRunning() {
 			return nil
-		}),
-	)
+		}
 
-	document.Call(
-		"addEventListener",
-		"keyup",
-		js.FuncOf(func(this js.Value, args []js.Value) any {
-			if !vm.IsRunning() {
-				return nil
-			}
-			event := args[0]
-			key := event.Get("key").String()
-			chip8Key := keyToChip8(key)
-			if chip8Key != nil {
-				vm.Keyboard.SetKey(*chip8Key, false)
-			}
-			return nil
-		}),
-	)
+		event := args[0]
+		event.Call("preventDefault")
 
-	return nil
+		key := strings.ToLower(event.Get("key").String())
+		if chip8Key := keyToChip8(key); chip8Key != nil {
+			vm.Keyboard.SetKey(*chip8Key, pressed)
+		}
+
+		return nil
+	})
 }
 
 // keyToChip8 maps JavaScript keyboard events to CHIP-8 key codes.
