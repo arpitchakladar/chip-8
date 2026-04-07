@@ -8,10 +8,6 @@ type Audio interface {
 	// Returns an error if initialization fails.
 	Init() error
 
-	// GenerateBeep generates a beep sound and queues it for playback.
-	// The beep should play for approximately 1 second at 440Hz (A4 pitch).
-	GenerateBeep() error
-
 	// Play starts/resumes audio playback.
 	Play() error
 

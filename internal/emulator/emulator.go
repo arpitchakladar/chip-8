@@ -152,9 +152,6 @@ func (e *Emulator) tick() error {
 // updateTimers decrements the delay and sound timers at 60Hz.
 func (e *Emulator) updateTimers() error {
 	if e.CPU.SoundTimer > 0 {
-		if err := e.Audio.GenerateBeep(); err != nil {
-			return err
-		}
 		if err := e.Audio.Play(); err != nil {
 			return err
 		}
