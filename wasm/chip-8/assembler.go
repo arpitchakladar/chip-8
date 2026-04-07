@@ -8,6 +8,13 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/assembler"
 )
 
+// NewAssembler is a JavaScript constructor for the CHIP-8 assembler.
+// It creates an assembler instance from assembly source code.
+//
+// Parameters:
+//   - sourceCode: CH8 assembly source code (required)
+//
+// Returns: The assembler instance with an assemble method.
 func NewAssembler(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
 		throw("assembly code string is required")
@@ -21,6 +28,7 @@ func NewAssembler(this js.Value, args []js.Value) any {
 	return nil
 }
 
+// assembleHandler creates a function that assembles the source code to bytecode.
 func assembleHandler(
 	asm *assembler.Assembler,
 ) func(this js.Value, args []js.Value) any {

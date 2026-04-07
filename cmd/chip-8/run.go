@@ -10,6 +10,8 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
+// runEmulator loads and runs a CHIP-8 ROM file with the specified clock speed.
+// Returns the exit status code (0 for success, 1 for error).
 func runEmulator(path string, clockSpeed uint32) int {
 	vm := emulator.WithSDL(clockSpeed)
 	fmt.Printf("Starting emulator with: %s (clock: %d Hz)\n", path, clockSpeed)
