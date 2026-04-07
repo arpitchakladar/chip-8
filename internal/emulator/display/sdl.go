@@ -1,5 +1,6 @@
 //go:build !wasm || !js
 
+// Package display provides an SDL2-compatible display implementation for the CHIP-8 emulator.
 package display
 
 // SDLDisplay manages the display output for the CHIP-8 emulator.

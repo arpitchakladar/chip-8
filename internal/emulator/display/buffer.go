@@ -1,3 +1,5 @@
+// Package display provides display output for the CHIP-8 emulator.
+// Includes the Display interface and implementations for SDL2 and WebAssembly.
 package display
 
 const (

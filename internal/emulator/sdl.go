@@ -1,5 +1,6 @@
 //go:build !wasm || !js
 
+// Package emulator provides the core CHIP-8 emulator functionality for native platforms.
 package emulator
 
 import (

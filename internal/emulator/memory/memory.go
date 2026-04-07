@@ -1,3 +1,5 @@
+// Package memory provides memory management for the CHIP-8 emulator.
+// Handles 4KB of RAM with read/write operations and font set loading.
 package memory
 
 // Memory provides the read/write interface for CHIP-8 system memory.
