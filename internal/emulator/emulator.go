@@ -27,6 +27,8 @@ type Emulator struct {
 	Audio        audio.Audio
 	ClockSpeed   uint32
 	memoryLock   sync.Mutex
+	running      bool
+	runLock      sync.Mutex
 	cancelRunner context.CancelFunc
 }
 
@@ -44,7 +46,18 @@ func (e *Emulator) LoadROM(romData []byte) error {
 // It initializes the display and audio subsystems, then runs the CPU and display loops.
 // The function blocks until the emulator is closed or an error occurs.
 func (e *Emulator) Run(parentContext context.Context) error {
+	e.runLock.Lock()
+	if e.running {
+		e.runLock.Unlock()
+		return fmt.Errorf("emulator is already running")
+	}
+	e.running = true
+	e.runLock.Unlock()
+
 	if err := e.Display.Init(); err != nil {
+		e.runLock.Lock()
+		e.running = false
+		e.runLock.Unlock()
 		return fmt.Errorf("failed to init display: %w", err)
 	}
 
@@ -72,7 +85,11 @@ func (e *Emulator) Run(parentContext context.Context) error {
 	// Cannot be goroutine as SDL2 wants* to be on the main thread
 	e.runDisplay(runEmulatorContext, errChan)
 
-	return <-errChan
+	err := <-errChan
+	e.runLock.Lock()
+	e.running = false
+	e.runLock.Unlock()
+	return err
 }
 
 // runDisplay handles the display update loop at 60Hz.
@@ -171,5 +188,8 @@ func (e *Emulator) updateTimers() error {
 
 // Stops the runner (CPU and Display goroutine) threads.
 func (e *Emulator) Destroy() {
+	e.runLock.Lock()
+	defer e.runLock.Unlock()
+	e.running = false
 	e.cancelRunner()
 }
