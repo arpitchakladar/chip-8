@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"syscall/js"
 
+	"github.com/arpitchakladar/chip-8/internal/assembler"
 	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
@@ -23,6 +24,7 @@ func main() {
 }
 
 func registerCallbacks() {
+	js.Global().Set("chip8Compile", js.FuncOf(chip8Compile))
 	js.Global().Set("chip8New", js.FuncOf(chip8New))
 	js.Global().Set("chip8LoadROM", js.FuncOf(chip8LoadROM))
 	js.Global().Set("chip8Run", js.FuncOf(chip8Run))
@@ -30,6 +32,25 @@ func registerCallbacks() {
 	js.Global().Set("chip8PlayAudio", js.FuncOf(chip8PlayAudio))
 	js.Global().
 		Set("chip8SetKeyboardHandler", js.FuncOf(chip8SetKeyboardHandler))
+}
+
+func chip8Compile(this js.Value, args []js.Value) any {
+	if len(args) < 1 {
+		return map[string]string{
+			"error": "the assembly code string is required",
+		}
+	}
+
+	assemblyCode := args[0].String()
+	asm := assembler.New(assemblyCode)
+	compiled, err := asm.Assemble()
+	if err != nil {
+		return map[string]string{"error": err.Error()}
+	}
+	uint8Array := js.Global().Get("Uint8Array").New(len(compiled))
+	js.CopyBytesToJS(uint8Array, compiled)
+
+	return uint8Array
 }
 
 func chip8New(this js.Value, args []js.Value) any {
