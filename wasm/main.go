@@ -36,17 +36,21 @@ func registerCallbacks() {
 
 func chip8Compile(this js.Value, args []js.Value) any {
 	if len(args) < 1 {
-		return map[string]string{
-			"error": "the assembly code string is required",
-		}
+		errObj := js.Global().Get("Object").New()
+		errObj.Set("error", "the assembly code string is required")
+		return errObj
 	}
 
 	assemblyCode := args[0].String()
 	asm := assembler.New(assemblyCode)
+
 	compiled, err := asm.Assemble()
 	if err != nil {
-		return map[string]string{"error": err.Error()}
+		errObj := js.Global().Get("Object").New()
+		errObj.Set("error", err.Error())
+		return errObj
 	}
+
 	uint8Array := js.Global().Get("Uint8Array").New(len(compiled))
 	js.CopyBytesToJS(uint8Array, compiled)
 
