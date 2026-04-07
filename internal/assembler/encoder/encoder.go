@@ -1,3 +1,5 @@
+// Package encoder provides opcode encoding utilities for the CHIP-8 assembler.
+// It builds 16-bit opcodes from instruction components using bit masks.
 package encoder
 
 // Encoder builds CHIP-8 opcodes from instruction components.
