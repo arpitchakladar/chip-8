@@ -1,3 +1,4 @@
+// Package assembler provides a two-pass assembler for converting CHIP-8 assembly source code into executable bytecode.
 package assembler
 
 import (

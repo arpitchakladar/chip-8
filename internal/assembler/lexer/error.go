@@ -1,3 +1,4 @@
+// Package lexer provides error types for the lexer.
 package lexer
 
 import "fmt"

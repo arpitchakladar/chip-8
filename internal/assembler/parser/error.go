@@ -1,3 +1,4 @@
+// Package parser provides error types for the assembler parser.
 package parser
 
 import (

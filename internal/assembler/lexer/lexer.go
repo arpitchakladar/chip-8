@@ -1,3 +1,5 @@
+// Package lexer provides tokenization and label resolution for the CHIP-8 assembler.
+// It performs the first pass of assembly, scanning for labels and building a label-to-address map.
 package lexer
 
 import "strings"
