@@ -24,12 +24,10 @@
 		</div>
 
 		<script src="reveal.js/reveal.js"></script>
-		<script src="reveal.js/plugin/markdown.js"></script>
 		<script src="reveal.js/plugin/highlight.js"></script>
 		<script data-last-script>
 			(async function () {
 				const go = new Go();
-				console.log(go);
 				const result = await WebAssembly.instantiateStreaming(
 					fetch("assets/main.wasm"),
 					go.importObject,
@@ -41,7 +39,7 @@
 					hash: true,
 					keyboard: true,
 					controls: false,
-					plugins: [RevealMarkdown, RevealHighlight],
+					plugins: [RevealHighlight],
 				});
 			})();
 		</script>
