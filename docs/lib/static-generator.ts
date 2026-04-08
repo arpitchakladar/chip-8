@@ -57,16 +57,20 @@ function prepareCodeFragments($: cheerio.CheerioAPI) {
 
 		// 1. Generate the GitHub Link
 		const codeSnippetElement = $container.find("[data-load-code]");
-		const codePath = codeSnippetElement.attr("data-load-code") || "No file";
+		const codePath = codeSnippetElement.attr("data-load-code");
 
-		const githubUrl = `https://github.com/arpitchakladar/chip-8/blob/master/${codePath}`;
-		const codeFilePathLink = `
-			<a href="${githubUrl}" class="secondary code-path">
-			${codePath}
-			</a>
-		`;
+		if (codePath) {
+			const githubUrl = `https://github.com/arpitchakladar/chip-8/blob/master/${codePath}`;
+			const codeFilePathLink = `
+				<a href="${githubUrl}" class="secondary code-path">
+				${codePath}
+				</a>
+			`;
 
-		$container.prepend(codeFilePathLink);
+			$container.prepend(codeFilePathLink);
+		} else {
+			$container.addClass("no-code-link");
+		}
 
 		// 2. Process Fragment Templates
 		const templates = $container.find("[data-code-fragment]");
