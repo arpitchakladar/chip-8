@@ -1,0 +1,17 @@
+canvas#snake-game {
+	border: 1px solid var(--primary);
+	background: var(--background);
+}
+
+button#snake-game-button {
+	padding: 10px 20px;
+	border: 1px solid var(--primary);
+	background: var(--background);
+	color: var(--primary);
+	border-radius: 8px;
+	font-family: "Press Start 2P", system-ui;
+	font-weight: 400;
+	font-style: normal;
+	font-size: 1em;
+	cursor: pointer;
+}

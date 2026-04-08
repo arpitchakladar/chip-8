@@ -33,14 +33,14 @@
 					go.importObject,
 				);
 				go.run(result.instance);
-				await Promise.all([cycleBackground(), runSnakeGame()]);
+				await Promise.all([cycleBackground(), setupSnakeGame()]);
 
 				Reveal.initialize({
 					hash: true,
 					keyboard: true,
 					controls: false,
 					plugins: [RevealHighlight],
-					loading: "lazy"
+					loading: "lazy",
 				});
 			})();
 		</script>
