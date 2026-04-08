@@ -43,7 +43,7 @@ in
     LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libraries}";
   };
 
-  scripts.chip-8.exec = "go run cmd/chip-8 $@";
+  scripts.chip-8.exec = "go run ./cmd/chip-8 $@";
   scripts.test-all.exec = "go test ./...";
 
   pre-commit.hooks = {

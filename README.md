@@ -68,17 +68,17 @@ Example:
 
 To assemble one or more .asm file into a .ch8 file:
 ```bash
-./chip-8 compile <path-to-asm1> <path-to-asm2> ...
+./chip-8 assemble <path-to-asm1> <path-to-asm2> ...
 ```
 
 Example:
 ```bash
-./chip-8 compile examples/hello_world.asm
+./chip-8 assemble examples/hello_world.asm
 ```
 
 To specify a custom output path:
 ```bash
-./chip-8 compile -o output.ch8 examples/hello_world.asm
+./chip-8 assemble -o output.ch8 examples/hello_world.asm
 ```
 
 This will output `examples/hello_world.ch8` by default, or `output.ch8` if `-o` is specified.

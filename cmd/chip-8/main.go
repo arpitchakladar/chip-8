@@ -4,7 +4,7 @@
 //
 // Usage:
 //   - chip-8 run [-c <hz>] <rom>   - Run a .ch8 file
-//   - chip-8 compile [-o <out>] <files...> - Assemble .asm files to .ch8
+//   - chip-8 assemble [-o <out>] <files...> - Assemble .asm files to .ch8
 package main
 
 import (
@@ -49,21 +49,21 @@ func main() {
 		statusCode := runEmulator(runCommand.Arg(0), uint32(*clockSpeed))
 		os.Exit(statusCode)
 
-	case "compile":
-		compileCommand := flag.NewFlagSet("compile", flag.ExitOnError)
-		outputPath := compileCommand.String("o", "", "Output file path")
-		if err := compileCommand.Parse(os.Args[2:]); err != nil {
+	case "assemble":
+		assembleCommand := flag.NewFlagSet("assemble", flag.ExitOnError)
+		outputPath := assembleCommand.String("o", "", "Output file path")
+		if err := assembleCommand.Parse(os.Args[2:]); err != nil {
 			fmt.Println("Error: invalid arguments")
-			compileCommand.Usage()
+			assembleCommand.Usage()
 			os.Exit(1)
 		}
 
-		if compileCommand.NArg() < 1 {
+		if assembleCommand.NArg() < 1 {
 			fmt.Println("Error: expected at least one .asm file")
-			compileCommand.Usage()
+			assembleCommand.Usage()
 			os.Exit(1)
 		}
-		compileAssembly(compileCommand.Args(), *outputPath)
+		assembleAssembly(assembleCommand.Args(), *outputPath)
 
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
@@ -76,11 +76,11 @@ func printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  chip-8 run [-c <hz>] <rom>   - Run a .ch8 file")
 	fmt.Println(
-		"  chip-8 compile [-o <out>] <files...> - Assemble .asm files to .ch8",
+		"  chip-8 assemble [-o <out>] <files...> - Assemble .asm files to .ch8",
 	)
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  chip-8 run rom.ch8")
 	fmt.Println("  chip-8 run -c 500 rom.ch8       # Run at 500 Hz")
-	fmt.Println("  chip-8 compile -o out.ch8 a.asm b.asm")
+	fmt.Println("  chip-8 assemble -o out.ch8 a.asm b.asm")
 }
