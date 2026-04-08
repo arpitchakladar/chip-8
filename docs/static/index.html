@@ -28,7 +28,14 @@
 		<script src="reveal.js/plugin/highlight.js"></script>
 		<script data-last-script>
 			(async function () {
-				await Promise.all([cycleBackground()]);
+				const go = new Go();
+				console.log(go);
+				const result = await WebAssembly.instantiateStreaming(
+					fetch("assets/main.wasm"),
+					go.importObject,
+				);
+				go.run(result.instance);
+				await Promise.all([cycleBackground(), runSnakeGame()]);
 
 				Reveal.initialize({
 					hash: true,
