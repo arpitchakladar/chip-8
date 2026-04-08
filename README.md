@@ -36,8 +36,17 @@ go mod download
 
 3. Build the binary:
 ```bash
-go build -o chip-8 ./cmd/chip-8
+./scripts/build-cmd.sh
 ```
+
+## Scripts
+
+The `scripts/` directory contains helper scripts:
+
+- `build-cmd.sh` - Build the native CLI binary
+- `build-wasm.sh` - Build the WebAssembly module
+- `build-wasm-dev.sh` - Build WASM and copy to `examples/` and `docs/static/`
+- `get-wasm-exec.sh` - Copy `wasm_exec.js` from Go runtime to a target directory
 
 ## Running the Emulator
 
@@ -188,8 +197,16 @@ The CHIP-8 emulator can be compiled to WebAssembly to run in web browsers.
 
 ### Building for Web
 
+Use `build-wasm.sh` to just build the WASM module to the project root:
+
 ```bash
-GOOS=js GOARCH=wasm go build -o examples/main.wasm ./cmd/chip-8
+./scripts/build-wasm.sh
+```
+
+Or use `build-wasm-dev.sh` to build and copy `main.wasm` and `wasm_exec.js` to the `examples/` and `docs/static/` directories for testing/development:
+
+```bash
+./scripts/build-wasm-dev.sh
 ```
 
 ### Running WASM in Browser
@@ -197,11 +214,19 @@ GOOS=js GOARCH=wasm go build -o examples/main.wasm ./cmd/chip-8
 You need a web server to serve the WASM files (browsers block WASM from file:// URLs).
 
 ```bash
+npx serve examples
+```
+
+Or with python:
+
+```bash
 cd examples
 python3 -m http.server 8080
 ```
 
 Then open `http://localhost:8080` in your browser.
+
+**Note:** Make sure to run `./scripts/build-wasm-dev.sh` first to generate `main.wasm` and `wasm_exec.js` in the `examples/` and `docs/static/` directories.
 
 ### JavaScript API
 
@@ -258,7 +283,7 @@ vm.run();
 await vm.handleKeyboard();
 ```
 
-See `examples/index.html` for a complete working example.
+See `examples/index.html` for a complete working example. But note to run `scripts/build-wasm-dev.sh` first.
 
 ## License
 
