@@ -205,6 +205,8 @@ Then open `http://localhost:8080` in your browser.
 
 ### JavaScript API
 
+**Note:** All WASM functions return JavaScript Promises.
+
 The WASM module exposes a `chip_8` global object with the following:
 
 #### `chip_8.Emulator(canvas, clockSpeed)`
@@ -240,18 +242,20 @@ Creates an assembler to compile CHIP-8 assembly code.
 
 ```javascript
 const canvas = document.getElementById("canvas");
-const vm = new chip_8.Emulator(canvas, 500);
+const vm = await chip_8.Emulator(canvas, 500);
 
 const response = await fetch("game.asm");
 const asmCode = await response.text();
-const assembler = new chip_8.Assembler(asmCode);
-const romData = assembler.assemble();
+const assembler = await chip_8.Assembler(asmCode);
+const romData = await assembler.assemble();
 
-vm.loadROM(romData);
+await vm.loadROM(romData);
+// Don't await otherwise the lines after it will only run when the
+// VM stops
 vm.run();
 
 // To make the emulator handle keyboard inputs automatically
-vm.handleKeyboard();
+await vm.handleKeyboard();
 ```
 
 See `examples/index.html` for a complete working example.
