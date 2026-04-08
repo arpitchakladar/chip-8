@@ -88,10 +88,10 @@
 				const romData = await assembler.assemble();
 				console.log(romData);
 
-				vm.loadROM(romData);
-				vm.run();
-				vm.handleKeyboard();
-				console.log(`Handling keyboard for audio: ${vm.isHandlingKeyboard()}`);
+				await vm.loadROM(romData);
+				vm.run(); // Awaiting will keep this stuck as long as the vm runs
+				await vm.handleKeyboard();
+				console.log(`Handling keyboard for audio: ${await vm.isHandlingKeyboard()}`);
 			}
 
 			async function runHelloWorld() {
@@ -108,9 +108,9 @@
 				const assembler = new chip_8.Assembler(asmCode);
 				const romData = assembler.assemble();
 
-				vm.loadROM(romData);
+				await vm.loadROM(romData);
 				vm.run();
-				console.log(`Handling keyboard for hello world: ${vm.isHandlingKeyboard()}`);
+				console.log(`Handling keyboard for hello world: ${await vm.isHandlingKeyboard()}`);
 			}
 		</script>
 	</body>

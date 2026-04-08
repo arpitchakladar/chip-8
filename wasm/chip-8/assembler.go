@@ -26,7 +26,7 @@ func NewAssembler(args []js.Value) (any, error) {
 
 	// Create the methods for our object
 	methods := map[string]any{
-		"assemble": AsyncWrapper(assembleHandler(asm)),
+		"assemble": asyncWrapper(assembleHandler(asm)),
 	}
 
 	// Return the map as a JS object

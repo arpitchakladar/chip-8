@@ -6,9 +6,9 @@ import (
 	"syscall/js"
 )
 
-// AsyncWrapper transforms a Go function into a JS Promise-returning function.
+// asyncWrapper transforms a Go function into a JS Promise-returning function.
 // The 'fn' should take JS args and return (result, error).
-func AsyncWrapper(fn func(args []js.Value) (any, error)) js.Func {
+func asyncWrapper(fn func(args []js.Value) (any, error)) js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
 		// Create a handler for the Promise
 		handler := js.FuncOf(func(this js.Value, pArgs []js.Value) any {
