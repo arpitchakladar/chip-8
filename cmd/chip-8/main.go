@@ -65,6 +65,9 @@ func main() {
 		}
 		assembleAssembly(assembleCommand.Args(), *outputPath)
 
+	case "help":
+		printUsage()
+
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		printUsage()
