@@ -26,7 +26,8 @@ echo "Creating directory: ${OUT_DIR}..."
 mkdir -p "$OUT_DIR"
 
 echo "Copying wasm_exec.js from GOROOT..."
-cp "$SOURCE_FILE" "$OUT_FILE"
+cp -f "$SOURCE_FILE" "$OUT_FILE"
+
+chmod 644 "$OUT_FILE"
 
 echo "Successfully saved to ${OUT_FILE}"
-
