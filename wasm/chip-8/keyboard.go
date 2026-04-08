@@ -4,6 +4,8 @@ package main
 
 import (
 	"strings"
+	"sync"
+	"sync/atomic"
 	"syscall/js"
 
 	"github.com/arpitchakladar/chip-8/internal/emulator"
@@ -12,15 +14,17 @@ import (
 // KeyboardHandler holds JavaScript event handler functions for keyboard input
 // and manages the canvas element.
 type KeyboardHandler struct {
-	Canvas     js.Value
-	vm         *emulator.Emulator
-	KeyDown    js.Func
-	KeyUp      js.Func
-	Click      js.Func
-	MouseEnter js.Func
-	MouseLeave js.Func
-	Blur       js.Func
-	WindowBlur js.Func
+	Canvas       js.Value
+	vm           *emulator.Emulator
+	KeyDown      js.Func
+	KeyUp        js.Func
+	Click        js.Func
+	MouseEnter   js.Func
+	MouseLeave   js.Func
+	Blur         js.Func
+	WindowBlur   js.Func
+	isActiveLock sync.Mutex
+	isActive     atomic.Bool
 }
 
 // NewKeyboardHandler creates a new KeyboardHandler with the given canvas and emulator.
@@ -37,6 +41,8 @@ func NewKeyboardHandler(
 // Setup attaches keyboard and focus event handlers to the canvas.
 // It handles key input, focus management, and clearing stuck keys on blur.
 func (h *KeyboardHandler) Setup() {
+	h.isActiveLock.Lock()
+
 	h.Canvas.Set("tabIndex", 0)
 
 	h.Click = h.createClickHandler()
@@ -54,10 +60,15 @@ func (h *KeyboardHandler) Setup() {
 	h.Canvas.Call("addEventListener", "keydown", h.KeyDown)
 	h.Canvas.Call("addEventListener", "keyup", h.KeyUp)
 	js.Global().Call("addEventListener", "blur", h.WindowBlur)
+
+	h.isActive.Store(true)
+	h.isActiveLock.Unlock()
 }
 
 // Remove removes all keyboard event handlers from the canvas and window.
 func (h *KeyboardHandler) Remove() {
+	h.isActiveLock.Lock()
+
 	h.Canvas.Call("removeEventListener", "click", h.Click)
 	h.Canvas.Call("removeEventListener", "mouseenter", h.MouseEnter)
 	h.Canvas.Call("removeEventListener", "mouseleave", h.MouseLeave)
@@ -65,6 +76,14 @@ func (h *KeyboardHandler) Remove() {
 	h.Canvas.Call("removeEventListener", "keydown", h.KeyDown)
 	h.Canvas.Call("removeEventListener", "keyup", h.KeyUp)
 	js.Global().Call("removeEventListener", "blur", h.WindowBlur)
+
+	h.isActive.Store(false)
+	h.isActiveLock.Unlock()
+}
+
+// IsActive returns whether the keyboard handler is currently active.
+func (h *KeyboardHandler) IsActive() bool {
+	return h.isActive.Load()
 }
 
 // createClickHandler creates a click handler that focuses the canvas.
