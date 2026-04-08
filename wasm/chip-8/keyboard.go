@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -40,8 +41,12 @@ func NewKeyboardHandler(
 
 // Setup attaches keyboard and focus event handlers to the canvas.
 // It handles key input, focus management, and clearing stuck keys on blur.
-func (h *KeyboardHandler) Setup() {
+func (h *KeyboardHandler) Setup() error {
 	h.isActiveLock.Lock()
+	if h.isActive.Load() {
+		h.isActiveLock.Unlock()
+		return fmt.Errorf("keyboard events are already being handled")
+	}
 
 	h.Canvas.Set("tabIndex", 0)
 
@@ -63,11 +68,17 @@ func (h *KeyboardHandler) Setup() {
 
 	h.isActive.Store(true)
 	h.isActiveLock.Unlock()
+
+	return nil
 }
 
 // Remove removes all keyboard event handlers from the canvas and window.
-func (h *KeyboardHandler) Remove() {
+func (h *KeyboardHandler) Remove() error {
 	h.isActiveLock.Lock()
+	if !h.isActive.Load() {
+		h.isActiveLock.Unlock()
+		return fmt.Errorf("keyboard are not being handled")
+	}
 
 	h.Canvas.Call("removeEventListener", "click", h.Click)
 	h.Canvas.Call("removeEventListener", "mouseenter", h.MouseEnter)
@@ -79,6 +90,8 @@ func (h *KeyboardHandler) Remove() {
 
 	h.isActive.Store(false)
 	h.isActiveLock.Unlock()
+
+	return nil
 }
 
 // IsActive returns whether the keyboard handler is currently active.

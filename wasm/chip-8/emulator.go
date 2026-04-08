@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"syscall/js"
 
 	"github.com/arpitchakladar/chip-8/internal/emulator"
@@ -49,7 +50,9 @@ func handleKeyboardHandler(
 	kh *KeyboardHandler,
 ) func(this js.Value, args []js.Value) any {
 	return func(this js.Value, args []js.Value) any {
-		kh.Setup()
+		if err := kh.Setup(); err != nil {
+			throw(err.Error())
+		}
 		return nil
 	}
 }
@@ -59,7 +62,9 @@ func releaseKeyboardhandler(
 	kh *KeyboardHandler,
 ) func(this js.Value, args []js.Value) any {
 	return func(this js.Value, args []js.Value) any {
-		kh.Remove()
+		if err := kh.Remove(); err != nil {
+			throw(err.Error())
+		}
 		return nil
 	}
 }
@@ -89,7 +94,7 @@ func runHandler(
 	return func(this js.Value, args []js.Value) any {
 		go func() {
 			if err := vm.Run(context.Background()); err != nil {
-				println("VM error:", err.Error())
+				throw(fmt.Sprintf("VM error: %s", err))
 			}
 		}()
 		return nil
@@ -102,7 +107,7 @@ func destroyHandler(
 	kh *KeyboardHandler,
 ) func(this js.Value, args []js.Value) any {
 	return func(this js.Value, args []js.Value) any {
-		kh.Remove()
+		_ = kh.Remove()
 		vm.Destroy()
 		return nil
 	}
