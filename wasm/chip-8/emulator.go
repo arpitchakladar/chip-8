@@ -40,7 +40,9 @@ func NewEmulator(this js.Value, args []js.Value) any {
 	this.Set("run", js.FuncOf(runHandler(vm)))
 	this.Set("destroy", js.FuncOf(destroyHandler(vm, kh)))
 	this.Set("handleKeyboard", js.FuncOf(handleKeyboardHandler(kh)))
-	this.Set("releaseKeyboard", js.FuncOf(releaseKeyboardhandler(kh)))
+	this.Set("releaseKeyboard", js.FuncOf(releaseKeyboardHandler(kh)))
+	this.Set("sendKey", js.FuncOf(sendKeyHandler(kh)))
+	this.Set("isHandlingKeyboard", js.FuncOf(isHandlingKeyboardHandler(kh)))
 
 	return nil
 }
@@ -58,7 +60,7 @@ func handleKeyboardHandler(
 }
 
 // releaseKeyboard removes keyboard handlers from the emulator.
-func releaseKeyboardhandler(
+func releaseKeyboardHandler(
 	kh *KeyboardHandler,
 ) func(this js.Value, args []js.Value) any {
 	return func(this js.Value, args []js.Value) any {
@@ -66,6 +68,30 @@ func releaseKeyboardhandler(
 			throw(err.Error())
 		}
 		return nil
+	}
+}
+
+// sendKeyHandler sends a key press/release to the emulator.
+func sendKeyHandler(
+	kh *KeyboardHandler,
+) func(this js.Value, args []js.Value) any {
+	return func(this js.Value, args []js.Value) any {
+		if len(args) < 2 {
+			throw("sendKey requires key and pressed arguments")
+		}
+		key := uint8(args[0].Int())
+		pressed := args[1].Bool()
+		kh.SendKey(key, pressed)
+		return nil
+	}
+}
+
+// isHandlingKeyboardHandler returns whether keyboard handling is active.
+func isHandlingKeyboardHandler(
+	kh *KeyboardHandler,
+) func(this js.Value, args []js.Value) any {
+	return func(this js.Value, args []js.Value) any {
+		return js.ValueOf(kh.IsActive())
 	}
 }
 

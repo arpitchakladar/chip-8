@@ -99,6 +99,11 @@ func (h *KeyboardHandler) IsActive() bool {
 	return h.isActive.Load()
 }
 
+// SendKey sets the key state for the given CHIP-8 key index.
+func (h *KeyboardHandler) SendKey(key uint8, pressed bool) {
+	h.vm.Keyboard.SetKey(key, pressed)
+}
+
 // createClickHandler creates a click handler that focuses the canvas.
 func (h *KeyboardHandler) createClickHandler() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
