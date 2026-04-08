@@ -1,0 +1,64 @@
+<section data-background-image="assets/the-emulator.png">
+	<h2>SDL2 Display</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|21-29|31-36|38-71|73-79|81-98|100-159|161-192"
+				data-load-code="internal/emulator/display/sdl.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="SDLDisplay struct"
+			data-code-fragment-text="Holds the <u>pixel buffer</u>, SDL window, and renderer."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="WithSDL constructor"
+			data-code-fragment-text="Creates a new SDLDisplay with an initialized empty buffer."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Init creates window"
+			data-code-fragment-text="Initializes SDL2, creates a centered window at <u>64*15 x 32*15</u> pixels."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Clear"
+			data-code-fragment-text="Clears the pixel buffer to all zeros (black)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="SetPixel"
+			data-code-fragment-text="Delegates to the <u>buffer</u> for XOR drawing with collision detection."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="6"
+			data-code-fragment-title="Present renders to screen"
+			data-code-fragment-text="Clears screen, draws all 'on' pixels as white rectangles, then <u>Present()</u> to flip."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="7"
+			data-code-fragment-title="Close cleanup"
+			data-code-fragment-text="Destroys renderer, window, and calls <u>sdl.Quit()</u>. Safe to call multiple times."
+		></div>
+	</div>
+</section>

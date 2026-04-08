@@ -6,7 +6,7 @@
 			<code
 				class="language-go"
 				data-fragment-index="1"
-				data-line-numbers="|14-19|21|22-37|39-48|50-63|71-106|122-143|145-155|157-215"
+				data-line-numbers="|75-79|81-86|50-67"
 				data-load-code="internal/emulator/cpu/opcodes.go"
 			>
 			</code>
@@ -22,57 +22,15 @@
 		<div
 			data-code-fragment
 			data-code-fragment-indexes="2"
-			data-code-fragment-title="The big switch"
-			data-code-fragment-text="The CPU instruction execution is just <u>one large switch statement</u> that decides what handler to run."
+			data-code-fragment-title="Finding the group"
+			data-code-fragment-text="Find the group that the opcode belongs to and <u>dispatch</u> the appropriate handler."
 		></div>
 
 		<div
 			data-code-fragment
 			data-code-fragment-indexes="3"
-			data-code-fragment-title="System ops"
-			data-code-fragment-text="CLS clears the display, RET returns from subroutine. Unknown 0NNN calls are <u>invalid</u>."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="4"
-			data-code-fragment-title="Jump & Call"
-			data-code-fragment-text="JP sets PC to nnn, CALL pushes PC to stack then jumps. Stack has <u>16 levels</u> max."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="5"
-			data-code-fragment-title="Compare & Skip"
-			data-code-fragment-text="SE/SNE skip next instruction if condition matches. Can compare register-to-register or register-to-immediate."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="6"
-			data-code-fragment-title="ALU operations"
-			data-code-fragment-text="Arithmetic and bitwise: MOV, OR, AND, XOR, ADD (with carry), SUB, SHR, SUBN, SHL. <u>VF</u> used for <u>carry/borrow flags</u>."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="7"
-			data-code-fragment-title="Display draw"
-			data-code-fragment-text="DRW reads n bytes from I as sprite, XORs to display. <u>VF set on collision</u>. Coordinates wrap around 64x32."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="8"
-			data-code-fragment-title="Keyboard"
-			data-code-fragment-text="SKP skips if key pressed, SKNP skips if not pressed. Keys identified by <u>register value</u>."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="9"
-			data-code-fragment-title="Misc & I/O"
-			data-code-fragment-text="Timer ops (LD DT, LD ST), key wait (blocking), font lookup (LD F), BCD conversion, memory <u>LD [I], Vx</u> and <u>LD Vx, [I]</u>."
+			data-code-fragment-title="The big switch"
+			data-code-fragment-text="The CPU instruction execution is just <u>one large switch statement</u> that decides what handler to run. Here however we are using a map for cleanliness."
 		></div>
 	</div>
 </section>

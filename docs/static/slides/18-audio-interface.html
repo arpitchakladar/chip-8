@@ -1,0 +1,43 @@
+<section data-background-image="assets/the-emulator.png">
+	<h2>The Audio Interface</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|5-8|9-11|13-14,16-17|19-21"
+				data-load-code="internal/emulator/audio/interface.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="The Audio Interface"
+			data-code-fragment-text="A <u>go interface</u> for audio output. CHIP-8 has a simple <u>beep</u> sound."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="Init"
+			data-code-fragment-text="Initializes the audio subsystem."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Play/Pause"
+			data-code-fragment-text="Start or stop the beep. Called based on the <u>sound timer</u>."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Close"
+			data-code-fragment-text="Releases audio resources."
+		></div>
+	</div>
+</section>

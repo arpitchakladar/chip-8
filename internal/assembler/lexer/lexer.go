@@ -34,7 +34,7 @@ func New(source string, currentAddr uint16) *Lexer {
 	}
 }
 
-// ScanLabels performs the first pass of assembly.
+// Lex performs the first pass of assembly.
 // It scans the source code for labels and builds a map of label names to their addresses.
 // It also collects all instruction lines for the parser to process in the second pass.
 //
@@ -47,7 +47,7 @@ func New(source string, currentAddr uint16) *Lexer {
 //   - labels: map of label name -> memory address
 //   - program: list of instruction lines to be parsed
 //   - error: if any validation fails
-func (l *Lexer) ScanLabels() (map[string]uint16, []Line, error) {
+func (l *Lexer) Lex() (map[string]uint16, []Line, error) {
 	labels := make(map[string]uint16)
 	var program []Line
 
