@@ -1,0 +1,29 @@
+<section data-background-image="assets/usage.png">
+	<h2>WASM Keyboard</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|13-17|37-43"
+				data-load-code="internal/emulator/keyboard/wasm.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="JavaScript-driven input"
+			data-code-fragment-text="WASMKeyboard uses <u>SetKey()</u> which JavaScript calls from <u>keydown/keyup</u> event handlers."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="Event-driven polling"
+			data-code-fragment-text="PollEvents is a no-op since events are <u>pushed directly</u> via SetKey from JavaScript."
+		></div>
+	</div>
+</section>
