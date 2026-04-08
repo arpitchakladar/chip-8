@@ -19,20 +19,7 @@ For a more detailed explanation of the project, see the [docs](https://arpitchak
 
 ### Installing SDL2
 
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install libsdl2-dev
-```
-
-**macOS:**
-```bash
-brew install sdl2
-```
-
-**Fedora:**
-```bash
-sudo dnf install SDL2-devel
-```
+See the [SDL2 installation guide](https://wiki.libsdl.org/SDL2/Installation) for your platform.
 
 ## Installation
 
@@ -194,6 +181,72 @@ The `examples/` directory contains sample assembly programs:
 ![RPS](https://github.com/user-attachments/assets/5236e161-7796-46b3-8380-737c8c9c6d91)
 
 To test out some other ROMs you may download them from [here](https://johnearnest.github.io/chip8Archive/).
+
+## WebAssembly (WASM)
+
+The CHIP-8 emulator can be compiled to WebAssembly to run in web browsers.
+
+### Building for Web
+
+```bash
+GOOS=js GOARCH=wasm go build -o examples/main.wasm ./cmd/chip-8
+```
+
+### Running WASM in Browser
+
+You need a web server to serve the WASM files (browsers block WASM from file:// URLs).
+
+```bash
+cd examples
+python3 -m http.server 8080
+```
+
+Then open `http://localhost:8080` in your browser.
+
+### JavaScript API
+
+The WASM module exposes a `chip_8` global object with the following:
+
+#### `chip_8.Emulator(canvas, clockSpeed)`
+
+Creates a new CHIP-8 emulator instance.
+
+**Parameters:**
+- `canvas` - A JavaScript canvas element for rendering
+- `clockSpeed` - CPU clock speed in Hz (e.g., 500 for 500 Hz)
+
+**Returns:** An emulator instance with the following methods:
+
+- `loadROM(data)` - Load ROM bytecode (Uint8Array)
+- `run()` - Start the emulator
+
+#### `chip_8.Assembler(source)`
+
+Creates an assembler to compile CHIP-8 assembly code.
+
+**Parameters:**
+- `source` - Assembly source code as a string
+
+**Returns:** An assembler with:
+
+- `assemble()` - Compiles the source and returns Uint8Array ROM data
+
+### Example Usage
+
+```javascript
+const canvas = document.getElementById("canvas");
+const vm = new chip_8.Emulator(canvas, 500);
+
+const response = await fetch("game.asm");
+const asmCode = await response.text();
+const assembler = new chip_8.Assembler(asmCode);
+const romData = assembler.assemble();
+
+vm.loadROM(romData);
+vm.run();
+```
+
+See `examples/index.html` for a complete working example.
 
 ## License
 

@@ -58,5 +58,5 @@ docs/node_modules
 docs/build
 
 # --- The output binary ---
-./chip-8
+chip-8
 *.wasm
