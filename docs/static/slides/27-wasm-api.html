@@ -1,25 +1,51 @@
 <section data-auto-animate data-background-image="assets/usage.png">
 	<h2>JavaScript API</h2>
-	<ul>
-		<li class="fragment">
-			<strong>chip_8.Emulator(canvas, clockSpeed)</strong>
-			<span class="secondary">- Creates emulator instance</span>
-		</li>
-		<li class="fragment">
-			<strong>vm.loadROM(data)</strong>
-			<span class="secondary">- Loads ROM bytecode</span>
-		</li>
-		<li class="fragment">
-			<strong>vm.run()</strong>
-			<span class="secondary">- Starts the emulator</span>
-		</li>
-		<li class="fragment">
-			<strong>chip_8.Assembler(source)</strong>
-			<span class="secondary">- Creates assembler</span>
-		</li>
-		<li class="fragment">
-			<strong>asm.assemble()</strong>
-			<span class="secondary">- Compiles to ROM data</span>
-		</li>
-	</ul>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|1-2|4-5|7-8|10-11"
+			>const canvas = document.getElementById("canvas");
+const vm = new chip_8.Emulator(canvas, 500);
+
+const response = await fetch("snake.asm");
+const asmCode = await response.text();
+
+const assembler = new chip_8.Assembler(asmCode);
+const romData = assembler.assemble();
+
+vm.loadROM(romData);
+vm.run();
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="Creating the VM"
+			data-code-fragment-text="Creates the emulator with a <u>JavaScript Canvas</u>."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="Fetching the source code"
+			data-code-fragment-text="Fetching the assembly <u>source code</u>."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Creating assembler"
+			data-code-fragment-text="Creating an <u>assembler</u> passing the source. And then having it assemble out final <u>ROM</u> binary."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Let it rip!"
+			data-code-fragment-text="Load the ROM into the VM and <u>run</u>."
+		></div>
 </section>

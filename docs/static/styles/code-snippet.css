@@ -12,6 +12,10 @@
 	border-radius: 0 8px 0 8px;
 }
 
+.no-code-link [data-code-fragment-element] {
+	top: 0;
+}
+
 .reveal .code-path {
 	text-align: left;
 	display: block;
