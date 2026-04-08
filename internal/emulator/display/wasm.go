@@ -5,14 +5,18 @@
 package display
 
 import (
+	"fmt"
 	"syscall/js"
 )
 
 // WASMDisplay implements the Display interface for WebAssembly/JS environments.
 // It uses an HTML5 Canvas element to render CHIP-8 graphics through the 2D context.
 type WASMDisplay struct {
-	buffer *DisplayBuffer
-	Canvas js.Value
+	buffer    *DisplayBuffer
+	Canvas    js.Value
+	ctx       js.Value
+	imageData js.Value
+	data      []byte
 }
 
 // WithWASM creates a new Display that uses an HTML5 Canvas for rendering.
@@ -24,8 +28,32 @@ func WithWASM(canvas js.Value) Display {
 	}
 }
 
+// Init initializes the WASM display.
+// It gets the 2D rendering context, sets the canvas to native 64x32 resolution,
+// preserves the original canvas dimensions via CSS, and pre-allocates the pixel buffer.
 func (d *WASMDisplay) Init() error {
-	// No initialization needed for canvas-based display
+	if d.Canvas.IsNull() || d.Canvas.IsUndefined() {
+		return nil
+	}
+
+	d.ctx = d.Canvas.Call("getContext", "2d")
+	if d.ctx.IsNull() || d.ctx.IsUndefined() {
+		return nil
+	}
+
+	canvasWidth := d.Canvas.Get("width").Int()
+	canvasHeight := d.Canvas.Get("height").Int()
+
+	d.Canvas.Set("width", Width)
+	d.Canvas.Set("height", Height)
+
+	style := d.Canvas.Get("style")
+	style.Set("width", js.ValueOf(fmt.Sprintf("%dpx", canvasWidth)))
+	style.Set("height", js.ValueOf(fmt.Sprintf("%dpx", canvasHeight)))
+
+	d.imageData = d.ctx.Call("createImageData", Width, Height)
+	d.data = make([]byte, Width*Height*4)
+
 	return nil
 }
 
@@ -40,46 +68,35 @@ func (d *WASMDisplay) SetPixel(x, y uint8) (bool, error) {
 }
 
 // Present renders the current display buffer to the HTML5 Canvas.
-// Draws each "on" pixel as a white rectangle, scaled to fit the canvas.
+// Uses ImageData for fast pixel rendering.
 func (d *WASMDisplay) Present() error {
-	d.render()
-
-	return nil
-}
-
-// render draws the current display buffer to the HTML5 Canvas.
-// It calculates the appropriate scale factor based on canvas dimensions
-// and draws each pixel as a filled rectangle.
-func (d *WASMDisplay) render() {
-	if d.Canvas.IsNull() || d.Canvas.IsUndefined() {
-		return
+	if d.ctx.IsNull() || d.ctx.IsUndefined() {
+		return nil
 	}
-
-	ctx := d.Canvas.Call("getContext", "2d")
-	if ctx.IsNull() || ctx.IsUndefined() {
-		return
-	}
-
-	width := d.Canvas.Get("width").Int()
-	height := d.Canvas.Get("height").Int()
-	scale := width / Width
-	if newScale := height / Height; newScale < scale {
-		scale = newScale
-	}
-
-	ctx.Set("fillStyle", "black")
-	ctx.Call("fillRect", 0, 0, width, height)
-
-	ctx.Set("fillStyle", "white")
 
 	pixels := d.buffer.GetPixels()
+
 	for i, val := range pixels {
+		offset := i * 4
 		if val == 1 {
-			x := (i % Width) * scale
-			y := (i / Width) * scale
-			ctx.Call("fillRect", x, y, scale, scale)
+			d.data[offset] = 255
+			d.data[offset+1] = 255
+			d.data[offset+2] = 255
+			d.data[offset+3] = 255
+		} else {
+			d.data[offset] = 0
+			d.data[offset+1] = 0
+			d.data[offset+2] = 0
+			d.data[offset+3] = 255
 		}
 	}
+
+	jsData := d.imageData.Get("data")
+	js.CopyBytesToJS(jsData, d.data)
+
+	d.ctx.Call("putImageData", d.imageData, 0, 0)
+
+	return nil
 }
 
 func (d *WASMDisplay) Close() error {
