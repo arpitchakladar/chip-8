@@ -12,4 +12,5 @@ async function runSnakeGame() {
 
 	vm.loadROM(romData);
 	vm.run();
+	vm.handleKeyboard();
 }

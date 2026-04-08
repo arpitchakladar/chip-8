@@ -87,10 +87,11 @@
 				console.log(asmCode);
 				const assembler = new chip_8.Assembler(asmCode);
 				const romData = assembler.assemble();
-				console.log(romData)
+				console.log(romData);
 
 				vm.loadROM(romData);
 				vm.run();
+				vm.handleKeyboard();
 			}
 
 			async function runHelloWorld() {
