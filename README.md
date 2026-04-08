@@ -219,6 +219,11 @@ Creates a new CHIP-8 emulator instance.
 
 - `loadROM(data)` - Load ROM bytecode (Uint8Array)
 - `run()` - Start the emulator
+- `destroy()` - Stop the emulator and release resources
+- `handleKeyboard()` - Attach keyboard event handlers
+- `releaseKeyboard()` - Remove keyboard event handlers
+- `sendKey(key, pressed)` - Send a key press/release (key: 0-15, pressed: boolean)
+- `isHandlingKeyboard()` - Returns whether keyboard handlers are active (boolean)
 
 #### `chip_8.Assembler(source)`
 
@@ -247,9 +252,6 @@ vm.run();
 
 // To make the emulator handle keyboard inputs automatically
 vm.handleKeyboard();
-
-// No keyboard inputs to be captured
-vm.releaseKeyboard();
 ```
 
 See `examples/index.html` for a complete working example.
