@@ -82,21 +82,13 @@ var mnemonicHandlers = map[string]parseHandler{
 	"SHR":  (*Parser).handleALU,
 	"SUBN": (*Parser).handleALU,
 	"SHL":  (*Parser).handleALU,
-	"LD":   wrapHandler((*Parser).handleLoad),
+	"LD":   (*Parser).handleLoad,
 	"RND":  (*Parser).handleRND,
 	"DRW":  (*Parser).handleDRW,
 	"SKP":  (*Parser).handleKeySkip,
 	"SKNP": (*Parser).handleKeySkip,
 	"DW":   (*Parser).handleData,
 	"DB":   (*Parser).handleData,
-}
-
-func wrapHandler(
-	h func(*Parser, []string, uint16) ([]byte, error),
-) parseHandler {
-	return func(p *Parser, _ string, args []string, line uint16) ([]byte, error) {
-		return h(p, args, line)
-	}
 }
 
 func (p *Parser) dispatchParse(
@@ -353,7 +345,11 @@ func (p *Parser) handleData(
 // --- Helper Handlers ---
 
 // handleLoad processes LD (load) instructions with various source/destination combinations.
-func (p *Parser) handleLoad(args []string, line uint16) ([]byte, error) {
+func (p *Parser) handleLoad(
+	_ string,
+	args []string,
+	line uint16,
+) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, &WrongArgCountError{"LD", line, 2, len(args)}
 	}
