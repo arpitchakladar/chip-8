@@ -14,6 +14,12 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator/memory"
 )
 
+const (
+	// MaxTickRate is limited to 250Hz in WASM due to browser timer resolution.
+	// runCPU uses batch execution to achieve higher effective clock speeds.
+	MaxTickRate = 250
+)
+
 // WithWASM creates a new Emulator configured for WebAssembly/JavaScript execution.
 // It uses HTML5 Canvas for display and Web Audio API for sound via the WASM implementations.
 //

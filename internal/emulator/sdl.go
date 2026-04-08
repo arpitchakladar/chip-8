@@ -13,6 +13,10 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator/memory"
 )
 
+const (
+	MaxTickRate = 1000000 // SDL2 can handle high tick rates directly
+)
+
 // WithSDL creates a new Emulator with SDL2-based display, keyboard, and audio.
 // The clockSpeed parameter specifies CPU instructions per second (e.g., 100000 for 100kHz).
 func WithSDL(clockSpeed uint32) *Emulator {

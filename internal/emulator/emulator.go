@@ -136,11 +136,15 @@ func (e *Emulator) runDisplay(
 }
 
 // runCPU runs the CPU execution loop at the configured ClockSpeed.
+// It uses a fixed ticker at MaxTickRate and executes ClockSpeed/MaxTickRate
+// instructions per tick to achieve the target clock speed.
 func (e *Emulator) runCPU(
 	runEmulatorContext context.Context,
 	errChan chan<- error,
 ) {
-	cpuClock := time.NewTicker(time.Second / time.Duration(e.ClockSpeed))
+	batchSize := max(int(e.ClockSpeed/MaxTickRate), 1)
+
+	cpuClock := time.NewTicker(time.Second / MaxTickRate)
 	defer cpuClock.Stop()
 
 	for {
@@ -149,12 +153,15 @@ func (e *Emulator) runCPU(
 			return
 		case <-cpuClock.C:
 			e.memoryLock.Lock()
-			err := e.tick()
-			e.memoryLock.Unlock()
-			if err != nil {
-				errChan <- err
-				return
+			for range batchSize {
+				err := e.tick()
+				if err != nil {
+					e.memoryLock.Unlock()
+					errChan <- err
+					return
+				}
 			}
+			e.memoryLock.Unlock()
 		}
 	}
 }
