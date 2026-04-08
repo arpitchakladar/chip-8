@@ -22,8 +22,8 @@ const canvasEmulatorKey = "chip8Emulator"
 //   - canvas: A JavaScript canvas element for rendering (required)
 //   - clockSpeed: CPU speed in Hz (optional, defaults to 100000)
 //
+// Usage: const vm = await chip_8.Emulator(canvas, clockSpeed);
 // Returns: A JS object { loadROM, run, destroy, ... }.
-// Usage: const vm = await chip_8.Emulator(canvas, clockSpeed).
 func NewEmulator(args []js.Value) (any, error) {
 	clockSpeed := defaultClockSpeed
 

@@ -85,7 +85,7 @@
 				const asmCode = await response.text();
 				console.log(asmCode);
 				const assembler = await chip_8.Assembler(asmCode);
-				const romData = assembler.assemble();
+				const romData = await assembler.assemble();
 				console.log(romData);
 
 				vm.loadROM(romData);

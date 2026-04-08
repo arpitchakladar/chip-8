@@ -14,8 +14,8 @@ import (
 // Parameters:
 //   - sourceCode: CH8 assembly source code (required)
 //
+// Usage: const asm = await chip_8.Assembler(source);
 // Returns: A JS object { assemble: function }.
-// Usage: const asm = await chip_8.Assembler(source).
 func NewAssembler(args []js.Value) (any, error) {
 	if len(args) < 1 {
 		return nil, fmt.Errorf("assembly code string is required")
@@ -26,7 +26,7 @@ func NewAssembler(args []js.Value) (any, error) {
 
 	// Create the methods for our object
 	methods := map[string]any{
-		"assemble": js.FuncOf(assembleHandler(asm)),
+		"assemble": AsyncWrapper(assembleHandler(asm)),
 	}
 
 	// Return the map as a JS object
@@ -34,16 +34,19 @@ func NewAssembler(args []js.Value) (any, error) {
 }
 
 // assembleHandler creates a function that assembles the source code to bytecode.
+//
+// Usage: const rom = await asm.assemble();
+// Returns: Uint8Array with the ROM data from the assembly file.
 func assembleHandler(
 	asm *assembler.Assembler,
-) func(this js.Value, args []js.Value) any {
-	return func(this js.Value, args []js.Value) any {
+) func(args []js.Value) (any, error) {
+	return func(args []js.Value) (any, error) {
 		compiled, err := asm.Assemble()
 		if err != nil {
-			throw(err.Error())
+			return nil, err
 		}
 		uint8Array := js.Global().Get("Uint8Array").New(len(compiled))
 		js.CopyBytesToJS(uint8Array, compiled)
-		return uint8Array
+		return uint8Array, nil
 	}
 }
