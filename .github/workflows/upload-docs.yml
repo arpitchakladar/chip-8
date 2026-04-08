@@ -18,6 +18,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build WASM
+        run: |
+          ./scripts/build-wasm.sh
+          cp wasm_exec.js docs/static/scripts/
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -28,6 +38,9 @@ jobs:
           cd docs
           npm install
           npm run build
+
+      - name: Copy WASM to build
+        run: cp main.wasm docs/build/assets/
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
