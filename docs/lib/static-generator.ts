@@ -220,15 +220,15 @@ export async function buildPresentation() {
 	const rawHtml = $.html();
 
 	// 6. Minify the output html
-	const minifiedHtml = await minify(rawHtml, {
-		collapseWhitespace: true,
-		removeComments: true,
-		minifyJS: true, // This minifies code inside <script> tags
-		minifyCSS: true, // This minifies code inside <style> tags
-		processConditionalComments: true,
-		removeEmptyAttributes: true,
-		decodeEntities: true,
-	});
+	// const minifiedHtml = await minify(rawHtml, {
+	// 	collapseWhitespace: true,
+	// 	removeComments: true,
+	// 	minifyJS: true, // This minifies code inside <script> tags
+	// 	minifyCSS: true, // This minifies code inside <style> tags
+	// 	processConditionalComments: true,
+	// 	removeEmptyAttributes: true,
+	// 	decodeEntities: true,
+	// });
 
-	return minifiedHtml;
+	return rawHtml;
 }

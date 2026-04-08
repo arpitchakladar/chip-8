@@ -6,7 +6,7 @@
 			<code
 				class="language-go"
 				data-fragment-index="1"
-				data-line-numbers="|23-24|29|100-113|115-120|62-74|174-192|334"
+				data-line-numbers="|51-63|72-92"
 				data-load-code="internal/assembler/parser/parser.go"
 			>
 			</code>
@@ -24,41 +24,6 @@
 			data-code-fragment-indexes="2"
 			data-code-fragment-title="The big switch is back"
 			data-code-fragment-text="A big switch statement routes each mnemonic to its <u>handler</u>."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="3"
-			data-code-fragment-title="ALU operations"
-			data-code-fragment-text="OR, AND, XOR, SUB, SHR, SUBN, SHL all use the same <u>handleRegReg</u> helper with different suffix values."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="4"
-			data-code-fragment-title="Load variations"
-			data-code-fragment-text="LD is the most complex opcode with many variants: register-to-register, immediate, I, DT, K, [I], etc."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="5"
-			data-code-fragment-title="Skip instructions"
-			data-code-fragment-text="SE and SNE can compare register-to-register or register-to-immediate. <u>handleSkip</u> abstracts this logic."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="6"
-			data-code-fragment-title="Data directives"
-			data-code-fragment-text="DW (define word, 2 bytes) and DB (define byte, 1 byte) output raw binary data directly."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="7"
-			data-code-fragment-title="Value resolution"
-			data-code-fragment-text="resolveValue tries labels first, then hex/dec literals. Finally <u>validates the bit width</u> for the context."
 		></div>
 	</div>
 </section>
