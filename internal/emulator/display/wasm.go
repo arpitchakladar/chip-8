@@ -50,6 +50,7 @@ func (d *WASMDisplay) Init() error {
 	style := d.Canvas.Get("style")
 	style.Set("width", js.ValueOf(fmt.Sprintf("%dpx", canvasWidth)))
 	style.Set("height", js.ValueOf(fmt.Sprintf("%dpx", canvasHeight)))
+	style.Set("image-rendering", js.ValueOf("pixelated"))
 
 	d.imageData = d.ctx.Call("createImageData", Width, Height)
 	d.data = make([]byte, Width*Height*4)

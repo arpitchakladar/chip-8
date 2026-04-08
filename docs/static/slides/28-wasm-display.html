@@ -6,7 +6,7 @@
 			<code
 				class="language-go"
 				data-fragment-index="1"
-				data-line-numbers="|11-16|18-25|27-30|32-34|36-48"
+				data-line-numbers="|14-19|24-28|31-54|61-97"
 				data-load-code="internal/emulator/display/wasm.go"
 			>
 			</code>
@@ -16,7 +16,7 @@
 			data-code-fragment
 			data-code-fragment-indexes="1"
 			data-code-fragment-title="WASMDisplay struct"
-			data-code-fragment-text="Holds pixel buffer and a <u>js.Value</u> reference to the HTML canvas."
+			data-code-fragment-text="Holds pixel buffer, cached 2D context, ImageData, and pre-allocated byte slice for RGBA data."
 		></div>
 
 		<div
@@ -29,22 +29,15 @@
 		<div
 			data-code-fragment
 			data-code-fragment-indexes="3"
-			data-code-fragment-title="Init/Close"
-			data-code-fragment-text="No-op for canvas (no window to create/cleanup)."
+			data-code-fragment-title="Init"
+			data-code-fragment-text="Gets 2D context, sets canvas to native 64x32, preserves dimensions via CSS, pre-allocates pixel buffer."
 		></div>
 
 		<div
 			data-code-fragment
 			data-code-fragment-indexes="4"
-			data-code-fragment-title="SetPixel/Clear"
-			data-code-fragment-text="Delegates to the buffer for XOR drawing."
-		></div>
-
-		<div
-			data-code-fragment
-			data-code-fragment-indexes="5"
-			data-code-fragment-title="Present via render"
-			data-code-fragment-text="Gets 2D context, auto-scales to fit canvas, draws each 'on' pixel as white rectangle."
+			data-code-fragment-title="Present"
+			data-code-fragment-text="Writes RGBA to byte slice, uses <u>js.CopyBytesToJS</u> to copy to ImageData, calls <u>putImageData</u> once per frame (fast)."
 		></div>
 	</div>
 </section>
