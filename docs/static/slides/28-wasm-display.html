@@ -1,0 +1,50 @@
+<section data-background-image="assets/usage.png">
+	<h2>WASM Display</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|11-16|18-25|27-30|32-34|36-48"
+				data-load-code="internal/emulator/display/wasm.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="WASMDisplay struct"
+			data-code-fragment-text="Holds pixel buffer and a <u>js.Value</u> reference to the HTML canvas."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="WithWASM"
+			data-code-fragment-text="Takes a <u>canvas element</u> from JavaScript and creates the display."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Init/Close"
+			data-code-fragment-text="No-op for canvas (no window to create/cleanup)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="SetPixel/Clear"
+			data-code-fragment-text="Delegates to the buffer for XOR drawing."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="Present via render"
+			data-code-fragment-text="Gets 2D context, auto-scales to fit canvas, draws each 'on' pixel as white rectangle."
+		></div>
+	</div>
+</section>

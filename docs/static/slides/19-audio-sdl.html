@@ -1,0 +1,71 @@
+<section data-background-image="assets/the-emulator.png">
+	<h2>SDL2 Audio</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|11-16|18-23|25-29|31-53|55-64|66-71|73-84|86-123"
+				data-load-code="internal/emulator/audio/sdl.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="Audio constants"
+			data-code-fragment-text="44.1kHz sample rate, 440Hz beep frequency (standard A4 pitch)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="SDLAudio struct"
+			data-code-fragment-text="Holds the SDL audio device ID."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="WithSDL constructor"
+			data-code-fragment-text="Creates the SDLAudio for Audio interface for SDL2."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Init opens audio device"
+			data-code-fragment-text="Opens default audio device with mono, 16-bit, 2048 sample buffer."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="Play generates and plays"
+			data-code-fragment-text="Calls generateBeep() to create audio data, then <u>unpauses</u> the device."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="6"
+			data-code-fragment-title="Pause"
+			data-code-fragment-text="Pauses the audio device to stop sound."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="7"
+			data-code-fragment-title="Close"
+			data-code-fragment-text="Pauses, closes the device, resets ID. Safe to call multiple times."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="8"
+			data-code-fragment-title="generateBeep square wave"
+			data-code-fragment-text="Generates a <u>square wave</u> at 440Hz: alternates between +3000 and -3000 amplitude."
+		></div>
+	</div>
+</section>

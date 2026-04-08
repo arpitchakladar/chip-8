@@ -1,0 +1,57 @@
+<section data-background-image="assets/the-emulator.png">
+	<h2>The Display Interface</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|6|7-9|11-13|15-20|22-24|26-28"
+				data-load-code="internal/emulator/display/interface.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="The Display Interface"
+			data-code-fragment-text="A <u>go interface</u> that defines how the emulator talks to different display implementations."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="Init"
+			data-code-fragment-text="Initializes the display. This is where the <u>window</u> is created (for SDL2)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Init"
+			data-code-fragment-text="<u>Clears</u> the display. Sets all pixels to black."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="SetPixel"
+			data-code-fragment-text="Sets a pixel at x,y using <u>XOR mode</u> (toggles). Returns true if there was <u>pixel collision</u>."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="Present"
+			data-code-fragment-text="Renders the display buffer to screen. Called at <u>60Hz</u>."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="6"
+			data-code-fragment-title="Close"
+			data-code-fragment-text="Releases display resources."
+		></div>
+	</div>
+</section>

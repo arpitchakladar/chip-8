@@ -12,37 +12,40 @@ const __dirname = path.dirname(__filename);
  * reads the files from node_modules/reveal.js/dist, and inlines them.
  */
 function inlineRevealAssets($: cheerio.CheerioAPI) {
-		const revealDistPath = path.join(__dirname, "../node_modules/reveal.js/dist");
+	const revealDistPath = path.join(
+		__dirname,
+		"../node_modules/reveal.js/dist",
+	);
 
-		// 1. Handle Reveal.js CSS
-		$('link[href^="reveal.js/"]').each((_, el) => {
-				const $el = $(el);
-				const fileName = $el.attr("href")!.replace("reveal.js/", "");
-				const filePath = path.join(revealDistPath, fileName);
+	// 1. Handle Reveal.js CSS
+	$('link[href^="reveal.js/"]').each((_, el) => {
+		const $el = $(el);
+		const fileName = $el.attr("href")!.replace("reveal.js/", "");
+		const filePath = path.join(revealDistPath, fileName);
 
-				if (fs.existsSync(filePath)) {
-						const css = fs.readFileSync(filePath, "utf8");
-						$el.replaceWith(`<style>\n${css}\n</style>`);
-						console.log(`	✓ Inlined Reveal CSS: ${fileName}`);
-				} else {
-						console.warn(`	× Reveal CSS not found: ${filePath}`);
-				}
-		});
+		if (fs.existsSync(filePath)) {
+			const css = fs.readFileSync(filePath, "utf8");
+			$el.replaceWith(`<style>\n${css}\n</style>`);
+			console.log(`	✓ Inlined Reveal CSS: ${fileName}`);
+		} else {
+			console.warn(`	× Reveal CSS not found: ${filePath}`);
+		}
+	});
 
-		// 2. Handle Reveal.js JS
-		$('script[src^="reveal.js/"]').each((_, el) => {
-				const $el = $(el);
-				const fileName = $el.attr("src")!.replace("reveal.js/", "");
-				const filePath = path.join(revealDistPath, fileName);
+	// 2. Handle Reveal.js JS
+	$('script[src^="reveal.js/"]').each((_, el) => {
+		const $el = $(el);
+		const fileName = $el.attr("src")!.replace("reveal.js/", "");
+		const filePath = path.join(revealDistPath, fileName);
 
-				if (fs.existsSync(filePath)) {
-						const js = fs.readFileSync(filePath, "utf8");
-						$el.replaceWith(`<script>\n${js}\n</script>`);
-						console.log(`	✓ Inlined Reveal JS: ${fileName}`);
-				} else {
-						console.warn(`	× Reveal JS not found: ${filePath}`);
-				}
-		});
+		if (fs.existsSync(filePath)) {
+			const js = fs.readFileSync(filePath, "utf8");
+			$el.replaceWith(`<script>\n${js}\n</script>`);
+			console.log(`	✓ Inlined Reveal JS: ${fileName}`);
+		} else {
+			console.warn(`	× Reveal JS not found: ${filePath}`);
+		}
+	});
 }
 
 /**
@@ -136,7 +139,8 @@ async function injectRemoteCode($: cheerio.CheerioAPI) {
 				const text = await response.text();
 
 				// Inject the raw text (Cheerio handles encoding < and >)
-				$block.text(text);
+				// Padd the end with 20 empty lines (for better scrolling)
+				$block.text(text + "\n".repeat(20));
 
 				// Remove attribute to clean up production HTML
 				$block.removeAttr("data-load-code");

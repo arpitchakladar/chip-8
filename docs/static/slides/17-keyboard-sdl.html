@@ -1,0 +1,64 @@
+<section data-background-image="assets/the-emulator.png">
+	<h2>SDL2 Keyboard</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|12-18|20-23|25-36|38-54|56-61|63-71|73-104"
+				data-load-code="internal/emulator/keyboard/sdl.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="SDLKeyboard struct"
+			data-code-fragment-text="Holds an array of 16 booleans representing the pressed state of CHIP-8 keys 0-F."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="WithSDL constructor"
+			data-code-fragment-text="Creates a new SDLKeyboard with all keys initialized to released."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="IsKeyPressed"
+			data-code-fragment-text="Returns true if the specified key (0-15) is currently pressed."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="AnyKeyPressed"
+			data-code-fragment-text="Returns the first pressed key. Used by <u>LD Vx, K</u> for blocking key wait."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="SetKey"
+			data-code-fragment-text="Sets the state of a key. Validates key is 0-15."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="6"
+			data-code-fragment-title="PollEvents"
+			data-code-fragment-text="Polls SDL for keyboard events and calls <u>HandleKeyboard</u> for each."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="7"
+			data-code-fragment-title="HandleKeyboard key mapping"
+			data-code-fragment-text="Maps PC keys (1,2,3,4,Q,W,E,R,...) to CHIP-8 keys (1,2,3,C,4,5,6,D,...) and updates state."
+		></div>
+	</div>
+</section>
