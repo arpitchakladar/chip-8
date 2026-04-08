@@ -10,8 +10,11 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
-// defaultClockSpeed is the default CPU clock speed in Hz.
 const defaultClockSpeed = uint32(100000)
+
+// This key in the canvas element identifies a canvas element
+// as a canvas element that is being used by an emulator.
+const canvasEmulatorKey = "chip8Emulator"
 
 // NewEmulator is a JavaScript constructor for the CHIP-8 emulator.
 // It creates a new emulator instance attached to a canvas element.
@@ -28,17 +31,24 @@ func NewEmulator(this js.Value, args []js.Value) any {
 		throw("a canvas element is required")
 	}
 
+	canvas := args[0]
+
+	if canvas.Get(canvasEmulatorKey).Truthy() {
+		throw("an emulator is already attached to this canvas")
+	}
+
 	if len(args) > 1 {
 		clockSpeed = uint32(args[1].Int())
 	}
 
-	canvas := args[0]
 	vm := emulator.WithWASM(canvas, clockSpeed)
 	kh := NewKeyboardHandler(canvas, vm)
 
+	canvas.Set(canvasEmulatorKey, js.ValueOf(true))
+
 	this.Set("loadROM", js.FuncOf(loadROMHandler(vm)))
-	this.Set("run", js.FuncOf(runHandler(vm)))
-	this.Set("destroy", js.FuncOf(destroyHandler(vm, kh)))
+	this.Set("run", js.FuncOf(runHandler(vm, canvas)))
+	this.Set("destroy", js.FuncOf(destroyHandler(vm, kh, canvas)))
 	this.Set("handleKeyboard", js.FuncOf(handleKeyboardHandler(kh)))
 	this.Set("releaseKeyboard", js.FuncOf(releaseKeyboardHandler(kh)))
 	this.Set("sendKey", js.FuncOf(sendKeyHandler(kh)))
@@ -116,6 +126,7 @@ func loadROMHandler(
 // runHandler creates a function that starts the emulator execution.
 func runHandler(
 	vm *emulator.Emulator,
+	_ js.Value,
 ) func(this js.Value, args []js.Value) any {
 	return func(this js.Value, args []js.Value) any {
 		go func() {
@@ -131,10 +142,12 @@ func runHandler(
 func destroyHandler(
 	vm *emulator.Emulator,
 	kh *KeyboardHandler,
+	canvas js.Value,
 ) func(this js.Value, args []js.Value) any {
 	return func(this js.Value, args []js.Value) any {
 		_ = kh.Remove()
 		vm.Destroy()
+		canvas.Delete(canvasEmulatorKey)
 		return nil
 	}
 }
