@@ -79,12 +79,12 @@
 
 			async function runAudioInput() {
 				const canvas = document.getElementById("canvas1");
-				const vm = new chip_8.Emulator(canvas, 500);
+				const vm = await chip_8.Emulator(canvas, 500);
 
 				const response = await fetch("audio_input.asm");
 				const asmCode = await response.text();
 				console.log(asmCode);
-				const assembler = new chip_8.Assembler(asmCode);
+				const assembler = await chip_8.Assembler(asmCode);
 				const romData = assembler.assemble();
 				console.log(romData);
 

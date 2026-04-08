@@ -3,29 +3,34 @@
 package main
 
 import (
+	"fmt"
 	"syscall/js"
 
 	"github.com/arpitchakladar/chip-8/internal/assembler"
 )
 
-// NewAssembler is a JavaScript constructor for the CHIP-8 assembler.
-// It creates an assembler instance from assembly source code.
+// NewAssembler is a standard JavaScript function that returns an assembler object.
 //
 // Parameters:
 //   - sourceCode: CH8 assembly source code (required)
 //
-// Returns: The assembler instance with an assemble method.
-func NewAssembler(this js.Value, args []js.Value) any {
+// Returns: A JS object { assemble: function }.
+// Usage: const asm = await chip_8.Assembler(source).
+func NewAssembler(args []js.Value) (any, error) {
 	if len(args) < 1 {
-		throw("assembly code string is required")
+		return nil, fmt.Errorf("assembly code string is required")
 	}
 
 	assemblyCode := args[0].String()
 	asm := assembler.New(assemblyCode)
 
-	this.Set("assemble", js.FuncOf(assembleHandler(asm)))
+	// Create the methods for our object
+	methods := map[string]any{
+		"assemble": js.FuncOf(assembleHandler(asm)),
+	}
 
-	return nil
+	// Return the map as a JS object
+	return js.ValueOf(methods), nil
 }
 
 // assembleHandler creates a function that assembles the source code to bytecode.

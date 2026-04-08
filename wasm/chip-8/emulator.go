@@ -16,45 +16,52 @@ const defaultClockSpeed = uint32(100000)
 // as a canvas element that is being used by an emulator.
 const canvasEmulatorKey = "chip8Emulator"
 
-// NewEmulator is a JavaScript constructor for the CHIP-8 emulator.
-// It creates a new emulator instance attached to a canvas element.
+// NewEmulator is a standard JavaScript function that returns an emulator instance.
 //
 // Parameters:
 //   - canvas: A JavaScript canvas element for rendering (required)
 //   - clockSpeed: CPU speed in Hz (optional, defaults to 100000)
 //
-// Returns: The emulator instance with loadROM, run, and destroy methods.
-func NewEmulator(this js.Value, args []js.Value) any {
+// Returns: A JS object { loadROM, run, destroy, ... }.
+// Usage: const vm = await chip_8.Emulator(canvas, clockSpeed).
+func NewEmulator(args []js.Value) (any, error) {
 	clockSpeed := defaultClockSpeed
 
 	if len(args) < 1 {
-		throw("a canvas element is required")
+		return nil, fmt.Errorf("a canvas element is required")
 	}
 
 	canvas := args[0]
 
+	// Check if the canvas already has an emulator attached
 	if canvas.Get(canvasEmulatorKey).Truthy() {
-		throw("an emulator is already attached to this canvas")
+		return nil, fmt.Errorf("an emulator is already attached to this canvas")
 	}
 
 	if len(args) > 1 {
 		clockSpeed = uint32(args[1].Int())
 	}
 
+	// Initialize the Go emulator logic
 	vm := emulator.WithWASM(canvas, clockSpeed)
 	kh := NewKeyboardHandler(canvas, vm)
 
+	// Mark the canvas as occupied
 	canvas.Set(canvasEmulatorKey, js.ValueOf(true))
 
-	this.Set("loadROM", js.FuncOf(loadROMHandler(vm)))
-	this.Set("run", js.FuncOf(runHandler(vm, canvas)))
-	this.Set("destroy", js.FuncOf(destroyHandler(vm, kh, canvas)))
-	this.Set("handleKeyboard", js.FuncOf(handleKeyboardHandler(kh)))
-	this.Set("releaseKeyboard", js.FuncOf(releaseKeyboardHandler(kh)))
-	this.Set("sendKey", js.FuncOf(sendKeyHandler(kh)))
-	this.Set("isHandlingKeyboard", js.FuncOf(isHandlingKeyboardHandler(kh)))
+	// Create the methods map
+	methods := map[string]any{
+		"loadROM":            js.FuncOf(loadROMHandler(vm)),
+		"run":                js.FuncOf(runHandler(vm, canvas)),
+		"destroy":            js.FuncOf(destroyHandler(vm, kh, canvas)),
+		"handleKeyboard":     js.FuncOf(handleKeyboardHandler(kh)),
+		"releaseKeyboard":    js.FuncOf(releaseKeyboardHandler(kh)),
+		"sendKey":            js.FuncOf(sendKeyHandler(kh)),
+		"isHandlingKeyboard": js.FuncOf(isHandlingKeyboardHandler(kh)),
+	}
 
-	return nil
+	// Return the object to JavaScript
+	return js.ValueOf(methods), nil
 }
 
 // handleKeyboard sets up keyboard handlers for the emulator.

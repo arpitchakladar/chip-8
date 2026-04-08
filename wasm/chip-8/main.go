@@ -27,7 +27,7 @@ func main() {
 // Creates a chip_8 object with Emulator and Assembler constructors.
 func registerCallbacks() {
 	chip8 := js.Global().Get("Object").New()
-	chip8.Set("Emulator", js.FuncOf(NewEmulator))
-	chip8.Set("Assembler", js.FuncOf(NewAssembler))
+	chip8.Set("Emulator", AsyncWrapper(NewEmulator))
+	chip8.Set("Assembler", AsyncWrapper(NewAssembler))
 	js.Global().Set("chip_8", chip8)
 }
