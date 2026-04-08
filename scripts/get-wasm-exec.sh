@@ -40,3 +40,4 @@ echo "Copying wasm_exec.js from GOROOT..."
 cp "$SOURCE_FILE" "$OUT_FILE"
 
 echo "Successfully saved to ${OUT_FILE}"
+
