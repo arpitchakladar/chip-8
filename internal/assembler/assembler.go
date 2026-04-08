@@ -47,7 +47,7 @@ func New(source string) *Assembler {
 func (a *Assembler) Assemble() ([]byte, error) {
 	// First pass: Lexer scans for labels
 	lexer := lexer.New(a.Source, a.ProgramCounter)
-	labels, lines, err := lexer.ScanLabels()
+	labels, lines, err := lexer.Lex()
 	if err != nil {
 		return nil, err
 	}
