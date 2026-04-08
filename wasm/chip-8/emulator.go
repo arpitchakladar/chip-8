@@ -33,14 +33,35 @@ func NewEmulator(this js.Value, args []js.Value) any {
 
 	canvas := args[0]
 	vm := emulator.WithWASM(canvas, clockSpeed)
+	kh := NewKeyboardHandler(canvas, vm)
 
 	this.Set("loadROM", js.FuncOf(loadROMHandler(vm)))
 	this.Set("run", js.FuncOf(runHandler(vm)))
-	this.Set("destroy", js.FuncOf(destroyHandler(vm)))
-
-	setupKeyboardListeners(vm, canvas)
+	this.Set("destroy", js.FuncOf(destroyHandler(vm, kh)))
+	this.Set("handleKeyboard", js.FuncOf(handleKeyboardHandler(kh)))
+	this.Set("releaseKeyboard", js.FuncOf(releaseKeyboardhandler(kh)))
 
 	return nil
+}
+
+// handleKeyboard sets up keyboard handlers for the emulator.
+func handleKeyboardHandler(
+	kh *KeyboardHandler,
+) func(this js.Value, args []js.Value) any {
+	return func(this js.Value, args []js.Value) any {
+		kh.Setup()
+		return nil
+	}
+}
+
+// releaseKeyboard removes keyboard handlers from the emulator.
+func releaseKeyboardhandler(
+	kh *KeyboardHandler,
+) func(this js.Value, args []js.Value) any {
+	return func(this js.Value, args []js.Value) any {
+		kh.Remove()
+		return nil
+	}
 }
 
 // loadROMHandler creates a function that loads ROM data into the emulator.
@@ -78,8 +99,10 @@ func runHandler(
 // destroyHandler creates a function that stops and destroys the emulator.
 func destroyHandler(
 	vm *emulator.Emulator,
+	kh *KeyboardHandler,
 ) func(this js.Value, args []js.Value) any {
 	return func(this js.Value, args []js.Value) any {
+		kh.Remove()
 		vm.Destroy()
 		return nil
 	}

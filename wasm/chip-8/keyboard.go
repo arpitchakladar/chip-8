@@ -9,9 +9,11 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/emulator"
 )
 
-// KeyboardHandlers holds JavaScript event handler functions for keyboard input.
-// These can be used to remove event listeners when needed.
-type KeyboardHandlers struct {
+// KeyboardHandler holds JavaScript event handler functions for keyboard input
+// and manages the canvas element.
+type KeyboardHandler struct {
+	Canvas     js.Value
+	vm         *emulator.Emulator
 	KeyDown    js.Func
 	KeyUp      js.Func
 	Click      js.Func
@@ -21,81 +23,95 @@ type KeyboardHandlers struct {
 	WindowBlur js.Func
 }
 
-// setupKeyboardListeners attaches keyboard and focus event handlers to the canvas.
-// It handles key input, focus management, and clearing stuck keys on blur.
-// Returns a KeyboardHandlers struct for cleanup if needed.
-func setupKeyboardListeners(
-	vm *emulator.Emulator,
+// NewKeyboardHandler creates a new KeyboardHandler with the given canvas and emulator.
+func NewKeyboardHandler(
 	canvas js.Value,
-) *KeyboardHandlers {
-	canvas.Set("tabIndex", 0)
+	vm *emulator.Emulator,
+) *KeyboardHandler {
+	return &KeyboardHandler{
+		Canvas: canvas,
+		vm:     vm,
+	}
+}
 
-	handlers := &KeyboardHandlers{}
+// Setup attaches keyboard and focus event handlers to the canvas.
+// It handles key input, focus management, and clearing stuck keys on blur.
+func (h *KeyboardHandler) Setup() {
+	h.Canvas.Set("tabIndex", 0)
 
-	handlers.Click = createClickHandler(canvas)
-	handlers.MouseEnter = createFocusHandler(canvas)
-	handlers.MouseLeave = createBlurHandler(canvas)
-	handlers.Blur = createClearKeysHandler(vm)
-	handlers.WindowBlur = createClearKeysHandler(vm)
-	handlers.KeyDown = createKeyHandler(vm, true)
-	handlers.KeyUp = createKeyHandler(vm, false)
+	h.Click = h.createClickHandler()
+	h.MouseEnter = h.createFocusHandler()
+	h.MouseLeave = h.createBlurHandler()
+	h.Blur = h.createClearKeysHandler()
+	h.WindowBlur = h.createClearKeysHandler()
+	h.KeyDown = h.createKeyHandler(true)
+	h.KeyUp = h.createKeyHandler(false)
 
-	canvas.Call("addEventListener", "click", handlers.Click)
-	canvas.Call("addEventListener", "mouseenter", handlers.MouseEnter)
-	canvas.Call("addEventListener", "mouseleave", handlers.MouseLeave)
-	canvas.Call("addEventListener", "blur", handlers.Blur)
-	canvas.Call("addEventListener", "keydown", handlers.KeyDown)
-	canvas.Call("addEventListener", "keyup", handlers.KeyUp)
-	js.Global().Call("addEventListener", "blur", handlers.WindowBlur)
+	h.Canvas.Call("addEventListener", "click", h.Click)
+	h.Canvas.Call("addEventListener", "mouseenter", h.MouseEnter)
+	h.Canvas.Call("addEventListener", "mouseleave", h.MouseLeave)
+	h.Canvas.Call("addEventListener", "blur", h.Blur)
+	h.Canvas.Call("addEventListener", "keydown", h.KeyDown)
+	h.Canvas.Call("addEventListener", "keyup", h.KeyUp)
+	js.Global().Call("addEventListener", "blur", h.WindowBlur)
+}
 
-	return handlers
+// Remove removes all keyboard event handlers from the canvas and window.
+func (h *KeyboardHandler) Remove() {
+	h.Canvas.Call("removeEventListener", "click", h.Click)
+	h.Canvas.Call("removeEventListener", "mouseenter", h.MouseEnter)
+	h.Canvas.Call("removeEventListener", "mouseleave", h.MouseLeave)
+	h.Canvas.Call("removeEventListener", "blur", h.Blur)
+	h.Canvas.Call("removeEventListener", "keydown", h.KeyDown)
+	h.Canvas.Call("removeEventListener", "keyup", h.KeyUp)
+	js.Global().Call("removeEventListener", "blur", h.WindowBlur)
 }
 
 // createClickHandler creates a click handler that focuses the canvas.
-func createClickHandler(canvas js.Value) js.Func {
+func (h *KeyboardHandler) createClickHandler() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
-		canvas.Call("focus")
+		h.Canvas.Call("focus")
 		return nil
 	})
 }
 
 // createFocusHandler creates a mouseenter handler that focuses the canvas.
-func createFocusHandler(canvas js.Value) js.Func {
+func (h *KeyboardHandler) createFocusHandler() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
-		canvas.Call("focus")
+		h.Canvas.Call("focus")
 		return nil
 	})
 }
 
 // createBlurHandler creates a mouseleave handler that blurs the canvas.
-func createBlurHandler(canvas js.Value) js.Func {
+func (h *KeyboardHandler) createBlurHandler() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
-		canvas.Call("blur")
+		h.Canvas.Call("blur")
 		return nil
 	})
 }
 
 // createClearKeysHandler creates a blur handler that clears all pressed keys.
-func createClearKeysHandler(vm *emulator.Emulator) js.Func {
+func (h *KeyboardHandler) createClearKeysHandler() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
 		for i := range 16 {
-			vm.Keyboard.SetKey(byte(i), false)
+			h.vm.Keyboard.SetKey(byte(i), false)
 		}
 		return nil
 	})
 }
 
 // createKeyHandler creates a keydown or keyup handler for CHIP-8 keyboard input.
-func createKeyHandler(vm *emulator.Emulator, pressed bool) js.Func {
+func (h *KeyboardHandler) createKeyHandler(pressed bool) js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
-		if !vm.IsRunning() {
+		if !h.vm.IsRunning() {
 			return nil
 		}
 		event := args[0]
 		event.Call("preventDefault")
 		key := strings.ToLower(event.Get("key").String())
 		if chip8Key := keyToChip8(key); chip8Key != nil {
-			vm.Keyboard.SetKey(*chip8Key, pressed)
+			h.vm.Keyboard.SetKey(*chip8Key, pressed)
 		}
 		return nil
 	})
