@@ -98,8 +98,8 @@
 				const vm = new chip_8.Emulator(canvas, 500);
 
 				const responses = await Promise.all([
-					fetch("hello_world.asm"),
-					fetch("hello_world_sprites.asm"),
+					fetch("hello_world/hello_world.asm"),
+					fetch("hello_world/hello_world_sprites.asm"),
 				]);
 				const asmCode = (
 					await Promise.all(responses.map((response) => response.text()))
