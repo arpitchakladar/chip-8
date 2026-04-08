@@ -244,6 +244,12 @@ const romData = assembler.assemble();
 
 vm.loadROM(romData);
 vm.run();
+
+// To make the emulator handle keyboard inputs automatically
+vm.handleKeyboard();
+
+// No keyboard inputs to be captured
+vm.releaseKeyboard();
 ```
 
 See `examples/index.html` for a complete working example.
