@@ -1,0 +1,50 @@
+<section data-background-image="assets/the-emulator.png">
+	<h2>The Keyboard Interface</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|5-8|9-11|13-16|18-20|22-26"
+				data-load-code="internal/emulator/keyboard/interface.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="The Keyboard Interface"
+			data-code-fragment-text="A <u>go interface</u> for handling input. CHIP-8 has <u>16 keys</u> (0-F)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="IsKeyPressed"
+			data-code-fragment-text="Check if a specific key (0-15) is currently pressed."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="AnyKeyPressed"
+			data-code-fragment-text="Returns the first pressed key. Used by <u>LD Vx, K</u> instruction for waiting on key input."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="SetKey"
+			data-code-fragment-text="Sets the state of a key (pressed/release)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="PollEvents"
+			data-code-fragment-text="Processes input events. Called at <u>60Hz</u>."
+		></div>
+	</div>
+</section>

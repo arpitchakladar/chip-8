@@ -1,0 +1,50 @@
+<section data-background-image="assets/usage.png">
+	<h2>WASM Keyboard</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|9-11|13-17|19-23|25-35|37-43|45-47"
+				data-load-code="internal/emulator/keyboard/wasm.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="WASMKeyboard struct"
+			data-code-fragment-text="Simple array of 16 booleans for key states."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="WithWASM"
+			data-code-fragment-text="Creates a new WASMKeyboard (must be connected to JS event handlers)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="IsKeyPressed/AnyKeyPressed"
+			data-code-fragment-text="Same logic as SDL keyboard implementation."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="SetKey"
+			data-code-fragment-text="JavaScript calls this from <u>keydown/keyup</u> event handlers to update state."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="PollEvents no-op"
+			data-code-fragment-text="Events are <u>pushed</u> via SetKey, not polled. Interface compatibility only."
+		></div>
+	</div>
+</section>

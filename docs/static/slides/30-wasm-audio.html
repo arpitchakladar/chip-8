@@ -1,0 +1,50 @@
+<section data-background-image="assets/usage.png">
+	<h2>WASM Audio</h2>
+
+	<div data-code-snippet style="position: relative; width: 100%">
+		<pre>
+			<code
+				class="language-go"
+				data-fragment-index="1"
+				data-line-numbers="|11-18|20-37|39-45|47-86|88-104"
+				data-load-code="internal/emulator/audio/wasm.go"
+			>
+			</code>
+		</pre>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="1"
+			data-code-fragment-title="WASMAudio struct"
+			data-code-fragment-text="Holds <u>AudioContext</u>, oscillator, and gain node references."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="2"
+			data-code-fragment-title="WithWASM"
+			data-code-fragment-text="Creates AudioContext from Web Audio API (with Safari fallback)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="3"
+			data-code-fragment-title="Init"
+			data-code-fragment-text="Lazy initialization (browser requires <u>user gesture</u> to start audio)."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="4"
+			data-code-fragment-title="Play creates oscillator"
+			data-code-fragment-text="Creates square wave oscillator at 440Hz, connects to gain node, then to destination."
+		></div>
+
+		<div
+			data-code-fragment
+			data-code-fragment-indexes="5"
+			data-code-fragment-title="Pause stops sound"
+			data-code-fragment-text="Calls <u>stop()</u> on the oscillator."
+		></div>
+	</div>
+</section>
