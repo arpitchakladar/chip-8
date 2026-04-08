@@ -11,10 +11,10 @@ import (
 	"github.com/arpitchakladar/chip-8/internal/assembler"
 )
 
-// compileAssembly assembles one or more .asm files into a CHIP-8 ROM file.
+// assembleAssembly assembles one or more .asm files into a CHIP-8 ROM file.
 // Files are ordered by __START and __END markers: start files first,
 // then regular files, then end files.
-func compileAssembly(filePaths []string, outputPath string) {
+func assembleAssembly(filePaths []string, outputPath string) {
 	orderedPaths := orderByMarkers(filePaths)
 	allContent := readAllFiles(orderedPaths)
 
