@@ -38,3 +38,7 @@ indent_style = tab
 [*.asm]
 indent_style = tab
 indent_size = 4
+
+[*.sh]
+indent_style = tab
+indent_size = 4
