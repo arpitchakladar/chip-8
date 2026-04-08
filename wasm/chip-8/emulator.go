@@ -16,92 +16,99 @@ const defaultClockSpeed = uint32(100000)
 // as a canvas element that is being used by an emulator.
 const canvasEmulatorKey = "chip8Emulator"
 
-// NewEmulator is a JavaScript constructor for the CHIP-8 emulator.
-// It creates a new emulator instance attached to a canvas element.
+// NewEmulator is a standard JavaScript function that returns an emulator instance.
 //
 // Parameters:
 //   - canvas: A JavaScript canvas element for rendering (required)
 //   - clockSpeed: CPU speed in Hz (optional, defaults to 100000)
 //
-// Returns: The emulator instance with loadROM, run, and destroy methods.
-func NewEmulator(this js.Value, args []js.Value) any {
+// Usage: const vm = await chip_8.Emulator(canvas, clockSpeed);
+// Returns: A JS object { loadROM, run, destroy, ... }.
+func NewEmulator(args []js.Value) (any, error) {
 	clockSpeed := defaultClockSpeed
 
 	if len(args) < 1 {
-		throw("a canvas element is required")
+		return nil, fmt.Errorf("a canvas element is required")
 	}
 
 	canvas := args[0]
 
+	// Check if the canvas already has an emulator attached
 	if canvas.Get(canvasEmulatorKey).Truthy() {
-		throw("an emulator is already attached to this canvas")
+		return nil, fmt.Errorf("an emulator is already attached to this canvas")
 	}
 
 	if len(args) > 1 {
 		clockSpeed = uint32(args[1].Int())
 	}
 
+	// Initialize the Go emulator logic
 	vm := emulator.WithWASM(canvas, clockSpeed)
 	kh := NewKeyboardHandler(canvas, vm)
 
+	// Mark the canvas as occupied
 	canvas.Set(canvasEmulatorKey, js.ValueOf(true))
 
-	this.Set("loadROM", js.FuncOf(loadROMHandler(vm)))
-	this.Set("run", js.FuncOf(runHandler(vm, canvas)))
-	this.Set("destroy", js.FuncOf(destroyHandler(vm, kh, canvas)))
-	this.Set("handleKeyboard", js.FuncOf(handleKeyboardHandler(kh)))
-	this.Set("releaseKeyboard", js.FuncOf(releaseKeyboardHandler(kh)))
-	this.Set("sendKey", js.FuncOf(sendKeyHandler(kh)))
-	this.Set("isHandlingKeyboard", js.FuncOf(isHandlingKeyboardHandler(kh)))
+	// Create the methods map
+	methods := map[string]any{
+		"loadROM":            asyncWrapper(loadROMHandler(vm)),
+		"run":                asyncWrapper(runHandler(vm, canvas)),
+		"destroy":            asyncWrapper(destroyHandler(vm, kh, canvas)),
+		"handleKeyboard":     asyncWrapper(handleKeyboardHandler(kh)),
+		"releaseKeyboard":    asyncWrapper(releaseKeyboardHandler(kh)),
+		"sendKey":            asyncWrapper(sendKeyHandler(kh)),
+		"isHandlingKeyboard": asyncWrapper(isHandlingKeyboardHandler(kh)),
+	}
 
-	return nil
+	// Return the object to JavaScript
+	return js.ValueOf(methods), nil
 }
 
 // handleKeyboard sets up keyboard handlers for the emulator.
 func handleKeyboardHandler(
 	kh *KeyboardHandler,
-) func(this js.Value, args []js.Value) any {
-	return func(this js.Value, args []js.Value) any {
+) func(args []js.Value) (any, error) {
+	return func(args []js.Value) (any, error) {
 		if err := kh.Setup(); err != nil {
-			throw(err.Error())
+			return nil, err
 		}
-		return nil
+		return nil, nil
 	}
 }
 
 // releaseKeyboard removes keyboard handlers from the emulator.
 func releaseKeyboardHandler(
 	kh *KeyboardHandler,
-) func(this js.Value, args []js.Value) any {
-	return func(this js.Value, args []js.Value) any {
+) func(args []js.Value) (any, error) {
+	return func(args []js.Value) (any, error) {
 		if err := kh.Remove(); err != nil {
-			throw(err.Error())
+			return nil, err
 		}
-		return nil
+		return nil, nil
 	}
 }
 
 // sendKeyHandler sends a key press/release to the emulator.
 func sendKeyHandler(
 	kh *KeyboardHandler,
-) func(this js.Value, args []js.Value) any {
-	return func(this js.Value, args []js.Value) any {
+) func(args []js.Value) (any, error) {
+	return func(args []js.Value) (any, error) {
 		if len(args) < 2 {
-			throw("sendKey requires key and pressed arguments")
+			return nil, fmt.Errorf("sendKey requires key and pressed arguments")
 		}
 		key := uint8(args[0].Int())
 		pressed := args[1].Bool()
 		kh.SendKey(key, pressed)
-		return nil
+		return nil, nil
 	}
 }
 
 // isHandlingKeyboardHandler returns whether keyboard handling is active.
 func isHandlingKeyboardHandler(
 	kh *KeyboardHandler,
-) func(this js.Value, args []js.Value) any {
-	return func(this js.Value, args []js.Value) any {
-		return js.ValueOf(kh.IsActive())
+) func(args []js.Value) (any, error) {
+	return func(args []js.Value) (any, error) {
+		return js.ValueOf(kh.IsActive()), nil
 	}
 }
 
@@ -109,17 +116,17 @@ func isHandlingKeyboardHandler(
 // Parameter: romData (Uint8Array) - The ROM bytecode to load.
 func loadROMHandler(
 	vm *emulator.Emulator,
-) func(this js.Value, args []js.Value) any {
-	return func(this js.Value, args []js.Value) any {
+) func(args []js.Value) (any, error) {
+	return func(args []js.Value) (any, error) {
 		jsData := args[0]
 		romData := make([]byte, jsData.Length())
 		for i := 0; i < jsData.Length(); i++ {
 			romData[i] = uint8(jsData.Index(i).Int())
 		}
 		if err := vm.LoadROM(romData); err != nil {
-			throw(err.Error())
+			return nil, err
 		}
-		return nil
+		return nil, nil
 	}
 }
 
@@ -127,14 +134,13 @@ func loadROMHandler(
 func runHandler(
 	vm *emulator.Emulator,
 	_ js.Value,
-) func(this js.Value, args []js.Value) any {
-	return func(this js.Value, args []js.Value) any {
-		go func() {
-			if err := vm.Run(context.Background()); err != nil {
-				throw(fmt.Sprintf("VM error: %s", err))
-			}
-		}()
-		return nil
+) func(args []js.Value) (any, error) {
+	return func(args []js.Value) (any, error) {
+		if err := vm.Run(context.Background()); err != nil {
+			return nil, err
+		}
+
+		return nil, nil
 	}
 }
 
@@ -143,11 +149,14 @@ func destroyHandler(
 	vm *emulator.Emulator,
 	kh *KeyboardHandler,
 	canvas js.Value,
-) func(this js.Value, args []js.Value) any {
-	return func(this js.Value, args []js.Value) any {
-		_ = kh.Remove()
+) func(args []js.Value) (any, error) {
+	return func(args []js.Value) (any, error) {
+		err := kh.Remove()
 		vm.Destroy()
 		canvas.Delete(canvasEmulatorKey)
-		return nil
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	}
 }

@@ -11,11 +11,6 @@ package main
 
 import "syscall/js"
 
-// throw throws a JavaScript error with the given message.
-func throw(message string) {
-	panic(js.Global().Get("Error").New(message))
-}
-
 // main is the entry point for the WebAssembly module.
 // It registers the JavaScript callbacks and blocks forever.
 func main() {
@@ -27,7 +22,7 @@ func main() {
 // Creates a chip_8 object with Emulator and Assembler constructors.
 func registerCallbacks() {
 	chip8 := js.Global().Get("Object").New()
-	chip8.Set("Emulator", js.FuncOf(NewEmulator))
-	chip8.Set("Assembler", js.FuncOf(NewAssembler))
+	chip8.Set("Emulator", asyncWrapper(NewEmulator))
+	chip8.Set("Assembler", asyncWrapper(NewAssembler))
 	js.Global().Set("chip_8", chip8)
 }

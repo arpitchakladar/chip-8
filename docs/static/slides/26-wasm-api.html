@@ -4,23 +4,23 @@
 	<div data-code-snippet style="position: relative; width: 100%">
 		<pre>
 			<code
-				class="language-go"
+				class="language-javascript"
 				data-fragment-index="1"
 				data-line-numbers="|1-2|4-5|7-8|10-11|13-14,16-17"
 			>const canvas = document.getElementById("canvas");
-const vm = new chip_8.Emulator(canvas, 500);
+const vm = await chip_8.Emulator(canvas, 500);
 
 const response = await fetch("snake.asm");
 const asmCode = await response.text();
 
-const assembler = new chip_8.Assembler(asmCode);
-const romData = assembler.assemble();
+const assembler = await chip_8.Assembler(asmCode);
+const romData = await assembler.assemble();
 
-vm.loadROM(romData);
+await vm.loadROM(romData);
 vm.run();
 
 // To make the emulator handle keyboard inputs automatically
-vm.handleKeyboard();
+await vm.handleKeyboard();
 			</code>
 		</pre>
 
