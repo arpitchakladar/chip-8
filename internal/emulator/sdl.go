@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	MaxTickRate = 1000000 // SDL2 can handle high tick rates directly
+	MaxTickRate = uint32(1000000) // SDL2 can handle high tick rates directly
 )
 
 // WithSDL creates a new Emulator with SDL2-based display, keyboard, and audio.

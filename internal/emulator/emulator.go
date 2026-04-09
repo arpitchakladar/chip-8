@@ -144,7 +144,9 @@ func (e *Emulator) runCPU(
 ) {
 	batchSize := max(int(e.ClockSpeed/MaxTickRate), 1)
 
-	cpuClock := time.NewTicker(time.Second / MaxTickRate)
+	cpuClock := time.NewTicker(
+		time.Second / time.Duration(min(MaxTickRate, e.ClockSpeed)),
+	)
 	defer cpuClock.Stop()
 
 	for {
