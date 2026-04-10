@@ -1,6 +1,6 @@
 # CHIP-8
 
-A Chip-8 virtual machine and assembler written in Go with SDL2 for graphics and audio.
+A cross-platform Chip-8 virtual machine written in Go, supporting native execution via SDL2 and web-based via WebAssembly.
 
 ## Demo
 
