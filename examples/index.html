@@ -71,7 +71,7 @@
 		<script>
 			const go = new Go();
 			WebAssembly.instantiateStreaming(
-				fetch("main.wasm"),
+				fetch("chip-8.wasm"),
 				go.importObject,
 			).then((result) => {
 				go.run(result.instance);
@@ -96,7 +96,7 @@
 
 			async function runHelloWorld() {
 				const canvas = document.getElementById("canvas2");
-				const vm = new chip_8.Emulator(canvas, 500);
+				const vm = await chip_8.Emulator(canvas, 500);
 
 				const responses = await Promise.all([
 					fetch("hello_world/hello_world.asm"),
@@ -105,8 +105,8 @@
 				const asmCode = (
 					await Promise.all(responses.map((response) => response.text()))
 				).join("\n");
-				const assembler = new chip_8.Assembler(asmCode);
-				const romData = assembler.assemble();
+				const assembler = await chip_8.Assembler(asmCode);
+				const romData = await assembler.assemble();
 
 				await vm.loadROM(romData);
 				vm.run();

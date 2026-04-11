@@ -29,7 +29,7 @@
 			(async function () {
 				const go = new Go();
 				const result = await WebAssembly.instantiateStreaming(
-					fetch("assets/main.wasm"),
+					fetch("assets/chip-8.wasm"),
 					go.importObject,
 				);
 				go.run(result.instance);

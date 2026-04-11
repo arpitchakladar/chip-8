@@ -3,7 +3,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-GOARCH=wasm GOOS=js go build -o ./main.wasm ./wasm/chip-8
+GOARCH=wasm GOOS=js go build -o ./chip-8.wasm ./wasm/chip-8
 
 ./scripts/get-wasm-exec.sh ./
 

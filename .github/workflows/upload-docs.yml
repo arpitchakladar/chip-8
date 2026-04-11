@@ -40,7 +40,7 @@ jobs:
           npm run build
 
       - name: Copy WASM to build
-        run: cp main.wasm docs/build/assets/
+        run: cp chip-8.wasm docs/build/assets/
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
