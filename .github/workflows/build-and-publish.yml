@@ -20,6 +20,11 @@ jobs:
         with:
           go-version: '1.23'
 
+      - name: Install SDL2 Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev libsdl2-image-dev
+
       - name: Build CMD
         run: |
           ./scripts/build-cmd.sh
