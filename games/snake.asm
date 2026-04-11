@@ -24,7 +24,7 @@ INITIALIZE:
 
 	; Save these initial values to our RAM labels
 	LD I, SNAKE_VEL_X
-	LD [I], V2        ; Stores V0, V1, V2, V3, and V4 into RAM
+	LD [I], V2        ; Stores V0, V1 and V2 into RAM
 
 	LD I, SNAKE_BODY_DATA
 	LD V0, 32         ; Initial X axis of snake head
