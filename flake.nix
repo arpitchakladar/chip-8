@@ -1,5 +1,5 @@
 {
-  description = "chip-8 emulator";
+  description = "chip-8 emulator development environment";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     devenv = {

@@ -16,6 +16,17 @@ For a more detailed explanation of the project, see the [docs](https://arpitchak
 
 - **Go** 1.25 or later
 - **SDL2** development libraries
+- **Nix** (optional, for development environment)
+
+### Development Environment
+
+You can quickly enter the development environment with:
+
+```bash
+nix develop --no-pure-eval
+```
+
+This will provide Go, SDL2, and other dependencies automatically.
 
 ### Installing SDL2
 
